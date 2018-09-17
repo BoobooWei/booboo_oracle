@@ -12,6 +12,24 @@
 
 ### 安装前环境配置
 
+```shell
+[root@database ~]# cat /proc/version 
+Linux version 2.6.32-696.6.3.el6.x86_64 (mockbuild@c1bl.rdu2.centos.org) (gcc version 4.4.7 20120313 (Red Hat 4.4.7-18) (GCC) ) #1 SMP Wed Jul 12 14:17:22 UTC 2017
+[root@database ~]# cat /etc/redhat-release 
+CentOS release 6.8 (Final)
+```
+
+#### 安装依赖关系包
+
+```shell
+yum install -y binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel gcc gcc-c++ glibc glibc-common glibc-devel glibc-headers kernel-headers ksh libaio  libaio-devel libgcc libgomp libstdc++ libstdc++-devel make numactl-devel sysstat unixODBC unixODBC-devel
+curl -O "http://vault.centos.org/5.11/os/x86_64/CentOS/pdksh-5.2.14-37.el5_8.1.x86_64.rpm"
+rpm -e --nodeps ksh
+rpm -ivh pdksh-5.2.14-37.el5_8.1.x86_64.rpm 
+```
+
+
+
 
 #### 创建相关的组
 
