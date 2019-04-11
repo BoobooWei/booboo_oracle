@@ -1,6 +1,6 @@
 # SQL语句
 
-[toc]
+[TOC]
 
 
 ## 查询语句DQL
@@ -302,7 +302,7 @@ MARTIN
 >  五种：字符函数、数值函数、日期函数、转换函数、其他函数
 
 #### 字符函数
- 
+
 |字符串函数|函数名|解释|
 |:--|:--|:--|
 |大小写转换|LOWER(column or expression)|小写|
@@ -1037,7 +1037,7 @@ rr年份表示法，以50年为分界，已经取代了yy方式
 |now |50-99|date|50-99|本世纪|
 |now|0-49|date|50-99|上个世纪|
 |now|50-99|date|0-49|下个世纪|
- 
+
 
 ```shell
 SQL> select
@@ -1420,4 +1420,43 @@ from emp order by job;
 |:--|:--|:--|
 |查看用户的表|use dbname;show tables;|conn user/password;select * from tab;|
 |限制行数|select * from emp limit 5;|select * from emp where rownum < 6;|
+
+## 大小写区分
+
+### MySQL数据库名、表名、列名、别名大小写规则
+
+`lower_case_table_names = 0 `
+其中
+
+* 0：区分大小写
+* 1：不区分大小写 
+
+MySQL在Linux下数据库名、表名、列名、别名大小写规则是这样的： 
+* 数据库名与表名是严格区分大小写的； 
+* 表的别名是严格区分大小写的； 
+* 列名与列的别名在所有的情况下均是忽略大小写的； 
+* 变量名也是严格区分大小写的；
+
+```shell
+root@SH_MySQL-01 17:02:  [(none)]> select @@lower_case_table_names;
++--------------------------+
+| @@lower_case_table_names |
++--------------------------+
+|                        0 |
++--------------------------+
+1 row in set (0.00 sec)
+
+root@SH_MySQL-01 17:03:  [(none)]> use test;
+Database changed
+root@SH_MySQL-01 17:03:  [test]> select * from T1;
+ERROR 1146 (42S02): Table 'test.T1' doesn't exist
+root@SH_MySQL-01 17:03:  [test]> select * from t1;
++----+------+
+| id | num  |
++----+------+
+|  1 |  100 |
+|  2 |  200 |
++----+------+
+2 rows in set (0.00 sec)
+```
 

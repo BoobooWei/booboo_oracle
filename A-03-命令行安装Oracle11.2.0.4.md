@@ -162,7 +162,7 @@ export TMPDIR=/tmp
 export TEMP=/tmp
 export ORACLE_BASE=/alidata/app/oracle
 export ORACLE_HOME=\$ORACLE_BASE/product/11.2.0/dbhome_1/
-export ORACLE_SID=ORCL
+export ORACLE_SID=BOOBOO
 export NLS_LANG=AMERICAN_AMERICA.ZHS16GBK
 export PATH=\$ORACLE_HOME/bin:$PATH
 export LD_LIBRARY_PATH=\$ORACLE_HOME/lib:/lib:/usr/lib
@@ -199,6 +199,8 @@ fi
 tar zxvfP ${PKG_NAME}
 
 wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/pdksh-5.2.14-37.el5_8.1.i386.rpm && yum install pdksh-5.2.14-37.el5_8.1.i386.rpm -y
+bash /alidata/app/oraInventory/orainstRoot.sh
+bash /alidata/app/oracle/product/11.2.0/dbhome_1/root.sh
 ```
 
 练习
@@ -338,5 +340,3 @@ ORA-01034: ORACLE not available
 Process ID: 0
 Session ID: 0 Serial number: 0
 ```
-
-8. 创建数据库
