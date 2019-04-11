@@ -1,8 +1,41 @@
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [oracle 11g 数据库安装](#oracle-11g-数据库安装)
+	- [安装数据库软件有三种方法](#安装数据库软件有三种方法)
+		- [安装前环境配置](#安装前环境配置)
+			- [安装依赖关系包](#安装依赖关系包)
+			- [创建相关的组](#创建相关的组)
+			- [创建用户授予密码](#创建用户授予密码)
+- [设置oracle用户的口令:](#设置oracle用户的口令)
+			- [修改ora10g用户的系统环境变量](#修改ora10g用户的系统环境变量)
+- [使环境变量生效:](#使环境变量生效)
+			- [创建安装数据库软件的目录](#创建安装数据库软件的目录)
+			- [修改shell限制](#修改shell限制)
+			- [修改内核参数](#修改内核参数)
+- [使内核参数生效](#使内核参数生效)
+			- [将oracle安装介拷贝到系统下并解压](#将oracle安装介拷贝到系统下并解压)
+			- [总结](#总结)
+		- [使用OUI安装向导图形化安装](#使用oui安装向导图形化安装)
+			- [将虚拟机的图形输出到宿主机的方法](#将虚拟机的图形输出到宿主机的方法)
+			- [调用安装程序](#调用安装程序)
+		- [卸载oracle软件](#卸载oracle软件)
+- [1.停止oem](#1停止oem)
+- [2.停止监听](#2停止监听)
+- [3.停止数据库](#3停止数据库)
+- [删除相关文件](#删除相关文件)
+		- [静默安装](#静默安装)
+- [详细操作](#详细操作)
+		- [克隆安装](#克隆安装)
+		- [创建数据库](#创建数据库)
+- [详细操作](#详细操作)
+- [将sid改为db01](#将sid改为db01)
+		- [连接数据库](#连接数据库)
+- [查看当前数据库的状态:](#查看当前数据库的状态)
+
+<!-- /TOC -->
 # oracle 11g 数据库安装
 
 > 2017.04.19
-
-[TOC]
 
 ## 安装数据库软件有三种方法
 
@@ -13,9 +46,9 @@
 ### 安装前环境配置
 
 ```shell
-[root@database ~]# cat /proc/version 
+[root@database ~]# cat /proc/version
 Linux version 2.6.32-696.6.3.el6.x86_64 (mockbuild@c1bl.rdu2.centos.org) (gcc version 4.4.7 20120313 (Red Hat 4.4.7-18) (GCC) ) #1 SMP Wed Jul 12 14:17:22 UTC 2017
-[root@database ~]# cat /etc/redhat-release 
+[root@database ~]# cat /etc/redhat-release
 CentOS release 6.8 (Final)
 ```
 
@@ -25,7 +58,7 @@ CentOS release 6.8 (Final)
 yum install -y binutils compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel gcc gcc-c++ glibc glibc-common glibc-devel glibc-headers kernel-headers ksh libaio  libaio-devel libgcc libgomp libstdc++ libstdc++-devel make numactl-devel sysstat unixODBC unixODBC-devel
 curl -O "http://vault.centos.org/5.11/os/x86_64/CentOS/pdksh-5.2.14-37.el5_8.1.x86_64.rpm"
 rpm -e --nodeps ksh
-rpm -ivh pdksh-5.2.14-37.el5_8.1.x86_64.rpm 
+rpm -ivh pdksh-5.2.14-37.el5_8.1.x86_64.rpm
 ```
 
 
@@ -36,7 +69,7 @@ rpm -ivh pdksh-5.2.14-37.el5_8.1.x86_64.rpm
 > oinstall为产品所有者，dba是数据库的安全审核用户组，官方要求
 
 ```shell
-groupadd oinstall 
+groupadd oinstall
 groupadd dba
 ```
 
@@ -79,7 +112,7 @@ source .bashrc
 * ORACLE_BASE 软件解压后所在的位置
 * ORACLE_HOME 数据库的家目录（配置、数据、执行文件、库文件等）
 * PATH=$ORACLE_HOME/bin:$PATH 将oracle的可执行指令添加到PATH变量中
-* ORACLE_SID=orcl 
+* ORACLE_SID=orcl
 其他都是非主要的，将来中间件需要调用的参数
 * LD_LIBRARY_PATH oracle的库文件所在路径
 
@@ -88,7 +121,7 @@ source .bashrc
 #### 创建安装数据库软件的目录
 
 ```shell
-mkdir -p /u01/app/oracle 
+mkdir -p /u01/app/oracle
 chown -R oracle.oinstall /u01/app
 ```
 
@@ -250,13 +283,13 @@ Removing read,write,execute permissions for world.
 Changing groupname of /u01/app/oraInventory to oinstall.
 The execution of the script is complete.
 [root@install0 ~]# /u01/app/oracle/product/11.2.0/db_1/root.sh
-Performing root user operation for Oracle 11g 
+Performing root user operation for Oracle 11g
 
 The following environment variables are set as:
     ORACLE_OWNER= oracle
     ORACLE_HOME=  /u01/app/oracle/product/11.2.0/db_1
 
-Enter the full pathname of the local bin directory: [/usr/local/bin]: 
+Enter the full pathname of the local bin directory: [/usr/local/bin]:
    Copying dbhome to /usr/local/bin ...
    Copying oraenv to /usr/local/bin ...
    Copying coraenv to /usr/local/bin ...
@@ -329,7 +362,7 @@ cd ~/database
 [oracle@install0 database]$ grep password.ALL ../db.rsp
 oracle.install.db.config.starterdb.password.ALL=Oracle11g
 
-[oracle@install0 database]$ ./runInstaller -silent -responseFile /home/oracle/db.rsp 
+[oracle@install0 database]$ ./runInstaller -silent -responseFile /home/oracle/db.rsp
 Starting Oracle Universal Installer...
 
 Checking Temp space: must be greater than 120 MB.   Actual 28261 MB    Passed
@@ -347,7 +380,7 @@ As a root user, execute the following script(s):
 Successfully Setup Software.
 ```
 
-### 克隆安装 
+### 克隆安装
 
 > 第三种安装方法：克隆安装
 

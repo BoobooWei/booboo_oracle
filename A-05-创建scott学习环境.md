@@ -1,6 +1,5 @@
-[TOC]
 
-## 创建scott学习环境
+# 创建scott学习环境
 
 
 ```shell
@@ -10,13 +9,13 @@ sqlplus / as sysdba
 > @utlsampl.sql;
 
 sqlplus / as sysdba
-> conn scott/tiger; 
+> conn scott/tiger;
 ```
 
 练习
 
 ```shell
-[oracle@db admin]$ ll utlsampl.sql 
+[oracle@db admin]$ ll utlsampl.sql
 -rw-r--r-- 1 oracle oinstall 3676 Jun  2  2006 utlsampl.sql
 [oracle@db admin]$ pwd
 /alidata/app/oracle/product/11.2.0/dbhome_1/rdbms/admin
@@ -47,7 +46,6 @@ Connected to:
 Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
 With the Partitioning, OLAP, Data Mining and Real Application Testing options
 
-SQL> conn scott/tiger; 
+SQL> conn scott/tiger;
 Connected.
 ```
-

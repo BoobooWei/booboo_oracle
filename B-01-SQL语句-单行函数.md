@@ -1,8 +1,5 @@
 # SQL语句
 
-[TOC]
-
-
 ## 查询语句DQL
 
 ```shell
@@ -1045,7 +1042,7 @@ SQL> select
   3  to_char(to_date('07','yy'),'yyyy') yy07,
   4  to_char(to_date('97','yy'),'yyyy') yy97,
   5  to_char(to_date('07','rr'),'yyyy') rr07,
-  6  to_char(to_date('97','rr'),'yyyy') rr97 
+  6  to_char(to_date('97','rr'),'yyyy') rr97
   7  from dual;
 
 CURR YY07 YY97 RR07 RR97
@@ -1054,13 +1051,13 @@ CURR YY07 YY97 RR07 RR97
 
 # 将字符串97转换为日期时，一定注意rr和yy，建议不要用两位表示年份。
 
-SQL> select to_char(to_date('97-2-1','rr-mm-dd'),'yyyy-mm-dd') from dual; 
+SQL> select to_char(to_date('97-2-1','rr-mm-dd'),'yyyy-mm-dd') from dual;
 
 TO_CHAR(TO
 ----------
 1997-02-01
 
-SQL> select to_char(to_date('97-2-1','yy-mm-dd'),'yyyy-mm-dd') from dual; 
+SQL> select to_char(to_date('97-2-1','yy-mm-dd'),'yyyy-mm-dd') from dual;
 
 TO_CHAR(TO
 ----------
@@ -1075,7 +1072,7 @@ select sysdate,to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') from dual;
 select ename,sal,to_char(sal,'L999,999.99') from emp;
 select to_number('$800.00','L999.99') from dual;
 select to_date('2016-09-15','yyyy-mm-dd') from dual;
-select 
+select
 to_char(sysdate,'yyyy') curr_year,
 to_char(to_date('05','yy'),'yyyy') yy05,
 to_char(to_date('99','yy'),'yyyy') yy99,
@@ -1429,12 +1426,12 @@ from emp order by job;
 其中
 
 * 0：区分大小写
-* 1：不区分大小写 
+* 1：不区分大小写
 
-MySQL在Linux下数据库名、表名、列名、别名大小写规则是这样的： 
-* 数据库名与表名是严格区分大小写的； 
-* 表的别名是严格区分大小写的； 
-* 列名与列的别名在所有的情况下均是忽略大小写的； 
+MySQL在Linux下数据库名、表名、列名、别名大小写规则是这样的：
+* 数据库名与表名是严格区分大小写的；
+* 表的别名是严格区分大小写的；
+* 列名与列的别名在所有的情况下均是忽略大小写的；
 * 变量名也是严格区分大小写的；
 
 ```shell
@@ -1459,4 +1456,3 @@ root@SH_MySQL-01 17:03:  [test]> select * from t1;
 +----+------+
 2 rows in set (0.00 sec)
 ```
-

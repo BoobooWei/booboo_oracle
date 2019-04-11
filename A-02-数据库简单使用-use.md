@@ -1,10 +1,23 @@
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [数据库简单使用](#数据库简单使用)
+	- [第一次连接oracle数据库](#第一次连接oracle数据库)
+	- [解锁scott用户](#解锁scott用户)
+	- [配置数据库环境](#配置数据库环境)
+		- [开机自动启动数据库](#开机自动启动数据库)
+		- [安装插件rlwrap](#安装插件rlwrap)
+		- [美化结果集的脚本文件](#美化结果集的脚本文件)
+	- [客户端sqldeveloper工具的使用](#客户端sqldeveloper工具的使用)
+
+<!-- /TOC -->
+
 # 数据库简单使用
 
 ## 第一次连接oracle数据库
 
 1. 需要.bashrc中的变量 ORACLE_SID="你安装的数据库名"
 2. 通过sqlplus来执行
-- A. 本地匿名登陆	`sqlplus /` ；解释：“/”左右为 用户名/密码，现在是匿名登陆 
+- A. 本地匿名登陆	`sqlplus /` ；解释：“/”左右为 用户名/密码，现在是匿名登陆
 - B. 使用最高权限使用者登陆`sqlplus / as sysdba` ；解释： `as sysdba`是指定登陆用户的角色为oracle数据库sys用户，而sys用户在oracle内部的地位就等于root在linux中的地位，最大权限，不受库的限制，是管理用户
 
 > 为了学习sql语句，我们使用一个scott用户
@@ -146,4 +159,3 @@ hostname:172.25.0.11
 port:1521
 sid:db01
 ```
-
