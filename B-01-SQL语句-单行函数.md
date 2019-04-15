@@ -314,7 +314,7 @@ MARTIN
 ||TRIM(leading or trailing or both, trim_character FROM trim_source)|删除头尾字符，默认为空白，类似于python中strim|
 ||REPLACE(text,search_string,replacement_string)|查找并替换字符串|
 
-#### 字符函数示例
+#####  字符函数示例
 
 1. 记录中的字符串是区分大小写，如果想从海量数据中搜索scott用户，该如何去做呢？
 
@@ -1456,3 +1456,13 @@ root@SH_MySQL-01 17:03:  [test]> select * from t1;
 +----+------+
 2 rows in set (0.00 sec)
 ```
+
+### MySQL字符串大小写
+
+校对规则以其相关的字符集名开始，通常包括一个语言名，并且以_ci（大小写不敏感）、_cs（大小写敏感）或_bin（二元）结束 。
+
+比如 utf8字符集，
+
+* utf8_general_ci,表示不区分大小写，这个是utf8字符集默认的校对规则；
+* utf8_general_cs表示区分大小写；
+* utf8_bin表示二进制比较，同样也区分大小写。
