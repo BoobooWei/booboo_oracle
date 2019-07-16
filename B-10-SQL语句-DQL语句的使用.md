@@ -352,14 +352,20 @@ TO_CHAR(SYSDATE,'YY TO_CHAR(SYSDATE+TO_
 
 ### 增强的Group By
 
-```shell
+#### roll()
+
+```sql
 roll(a,b,c) --> n+1种聚集运算的结果
 
 group by a
 group by a,b
 group by a,b,c
 total
+```
 
+### cube()
+
+```sql
 cube(a,b,c) --> 2的n次方种聚集运算的结果
 group by a
 group by b
@@ -369,7 +375,11 @@ group by a,c
 group by b,c
 group by a,b,c
 total
+```
 
+### 练习
+
+```sql
 select deptno,job,sum(sal),grouping(deptno),grouping(job) 
 from emp group by rollup(deptno,job);
 
@@ -378,6 +388,66 @@ select decode(GROUPING(DEPTNO)||GROUPING(JOB),'01','subtotal '||deptno,'11','tot
 
 select deptno,job,mgr,sum(sal) 
 from emp group by grouping sets ((deptno,job),(job,mgr));
+```
+
+练习结果
+
+[mysql rollup帮助](https://dev.mysql.com/doc/refman/5.7/en/group-by-modifiers.html)
+
+```sql
+# mysql中对应的方法为 group by deptno, job with rollup 
+SQL> select deptno,job,sum(sal) from emp group by rollup(deptno, job);
+
+    DEPTNO JOB			SUM(SAL)
+---------- ------------------ ----------
+	10 CLERK		    1300
+	10 MANAGER		    2450
+	10 PRESIDENT		    5000
+	10			    8750
+	20 CLERK		    1900
+	20 ANALYST		    6000
+	20 MANAGER		    2975
+	20			   10875
+	30 CLERK		     950
+	30 MANAGER		    2850
+	30 SALESMAN		    5600
+
+    DEPTNO JOB			SUM(SAL)
+---------- ------------------ ----------
+	30			    9400
+				   29025
+
+13 rows selected.
+
+# grouping()函数获取该行记录哪些列参与了group by，0代表参与；1代表没有参与
+SQL> select deptno, job, sum(sal), grouping(deptno), grouping(job) from emp group by rollup(deptno, job);
+
+    DEPTNO JOB			SUM(SAL) GROUPING(DEPTNO) GROUPING(JOB)
+---------- ------------------ ---------- ---------------- -------------
+	10 CLERK		    1300		0	      0
+	10 MANAGER		    2450		0	      0
+	10 PRESIDENT		    5000		0	      0
+	10			    8750		0	      1
+	20 CLERK		    1900		0	      0
+	20 ANALYST		    6000		0	      0
+	20 MANAGER		    2975		0	      0
+	20			   10875		0	      1
+	30 CLERK		     950		0	      0
+	30 MANAGER		    2850		0	      0
+	30 SALESMAN		    5600		0	      0
+	30			    9400		0	      1
+				   29025		1	      1
+				   
+# 获取每个部门的小计和总计
+SQL> select deptno, sal from (select deptno, job, sum(sal) sal, grouping(deptno) g_d, grouping(job) g_j from emp group by rollup(deptno, job)) t1 
+  2  where g_j = 1 or g_d =1 ;
+
+    DEPTNO	  SAL
+---------- ----------
+	10	 8750
+	20	10875
+	30	 9400
+		29025
 ```
 
 ### 高级子查询
