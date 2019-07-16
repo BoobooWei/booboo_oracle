@@ -299,7 +299,7 @@ TO_NUMBER(TO_CHAR(SYSDATE,'YY'))
 ```
 
 * from_tz()函数实现与时间戳的转换
-* tz_offset()函数实现
+* tz_offset()函数将时区别名转换为以UTC为标准的OFFSET
 * to_timestamp() 转化为时间戳
 * to_timestamp_tz(） 返回带时区的时间戳
 * to_yminterval() 返回时间段（年月）
