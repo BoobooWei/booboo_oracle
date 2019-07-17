@@ -452,6 +452,26 @@ SQL> select deptno, sal from (select deptno, job, sum(sal) sal, grouping(deptno)
 
 ### 高级子查询
 
+练习
+
+1.哪些部门的总工资高于所有部门的平均总工资。
+
+```sql
+with
+dept_costs as (
+select d.department_name, sum(e.salary) as dept_total
+from employees e, departments d
+where e.department_id = d.department_id
+group by d.department_name
+),
+avg_cost as (
+select sum(dept_total)/count(*) as dept_avg
+from dept_costs
+)
+select * from  dept_costs
+where dept_total > (select dept_avg from avg_cost)
+order by department_name;
+```
 
 #### 分级查询（爬树）
 
