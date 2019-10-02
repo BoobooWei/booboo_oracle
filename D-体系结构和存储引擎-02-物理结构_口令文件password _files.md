@@ -109,3 +109,4 @@ Connected.
 orapwdbtest: data
 ```
 
+*口令文件会被覆盖，因此可以不执行rm操作。*
