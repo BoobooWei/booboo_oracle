@@ -1,3 +1,5 @@
+
+```bash
 管理表空间和数据文件:
 Database files 	Maximum per database 	65533 
 Database files 	Maximum per tablespace 	Operating system dependent; usually 1022
@@ -199,4 +201,4 @@ commit之后老镜像仍然会保留一段时间！可以实现闪回误操作�
 select * from emp as of timestamp(sysdate-10/1440);
 alter table emp enable row movement;
 flashback table emp to timestamp(sysdate-10/1440);
-
+```

@@ -1,3 +1,5 @@
+
+```bash
 管理控制文件：
 记录数据库的物理信息的核心文件，二进制文件，
 数据库正常工作至少需要1个控制文件，最多同时可以使用8个控制文件，
@@ -115,3 +117,4 @@ export ORACLE_SID=cctv
 mv $ORACLE_HOME/dbs/orapwqq $ORACLE_HOME/dbs/orapwcctv
 mv $ORACLE_HOME/dbs/spfileqq.ora $ORACLE_HOME/dbs/spfilecctv.ora
 startup
+```

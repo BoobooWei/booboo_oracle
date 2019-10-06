@@ -1,3 +1,5 @@
+
+```bash
 管理日志文件:
 记录所有数据块的变化
 用来做恢复
@@ -61,3 +63,4 @@ mkdir -p /home/oracle/arc_cctv_dest1/
 alter system set log_archive_dest_1='location=/home/oracle/arc_cctv_dest1/';
 alter system switch logfile;
 select sequence#,name from v$archived_log;
+```

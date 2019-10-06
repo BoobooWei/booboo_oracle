@@ -1,3 +1,4 @@
+```
 手工创建数据库：db01
 
 1.修改系统环境变量
@@ -44,3 +45,4 @@ group 2 '/home/oracle/db01/redo02.log' size 50m;
 7.构造数据字典和PL/SQL运行环境
 @?/rdbms/admin/catalog
 @?/rdbms/admin/catproc
+```

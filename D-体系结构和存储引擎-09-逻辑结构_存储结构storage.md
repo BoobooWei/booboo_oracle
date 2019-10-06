@@ -1,3 +1,5 @@
+
+```bash
 存储结构：
    逻辑结构          物理结构
   database
@@ -97,9 +99,9 @@ SQL> select blocks,count(*) from dba_extents where segment_name='T07' group by b
     BLOCKS   COUNT(*)
 ---------- ----------
 	 8	   16
-       128	   63
-      1024        120
-      8192        ...
+	   128	   63
+	  1024        120
+	  8192        ...
 
 UNIFORM:同一分配（extent的尺寸不变）
 create tablespace tbs06 datafile '/testdata/tbs06.dbf' size 100m uniform size 10m;
@@ -154,3 +156,6 @@ alter system dump datafile 4 block min 388 block max 389;
 update scott.t09 set y=rpad('A',20,'A') where x<6;
 commit;
 alter system checkpoint;
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
