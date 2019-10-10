@@ -1,6 +1,14 @@
-```
-手工创建数据库：db01
+# 手工创建数据库
 
+> 2019.10.08 BoobooWei
+
+[TOC]
+
+[创建和配置Oracle数据库](https://docs.oracle.com/cd/B28359_01/server.111/b28310/create.htm#i1017640)
+
+## 实践——手工创建数据库db01
+
+```
 1.修改系统环境变量
 export ORACLE_SID=db01
 
@@ -46,3 +54,4 @@ group 2 '/home/oracle/db01/redo02.log' size 50m;
 @?/rdbms/admin/catalog
 @?/rdbms/admin/catproc
 ```
+
