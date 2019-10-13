@@ -1007,7 +1007,7 @@ ERROR at line 1:
 ORA-01722: invalid number
 ```
 
-必须指定相同位数，否则会报错。
+第二参数指定的数字位数不能小于第一个参数的位数，否则会报错。
 
 4. char to_date
 
