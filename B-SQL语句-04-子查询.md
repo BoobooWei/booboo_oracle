@@ -1,11 +1,17 @@
 ### 子查询
 
-[toc]
+[TOC]
 
 #### 类型、语法和准则
 
+| 序列                                        | 举例      |
+| ------------------------------------------- | --------- |
+| `rownum()`                                  | 1 2 3 4 5 |
+| `rank() over (partition by order by)`       | 1 2 2 4 5 |
+| `dense_rank() over (partition by order by)` | 1 2 2 3 4 |
+
 ```shell
-select rank () over (partition by deptno order by sal desc) ord from emp;
+select rank() over (partition by deptno order by sal desc) ord from emp;
 # partition by 给结果集分组
 # order by 给结果集排序
 # rank() 在每个分组内部进行排名
