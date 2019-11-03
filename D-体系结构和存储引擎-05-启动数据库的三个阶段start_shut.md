@@ -180,3 +180,20 @@ startup force nomount = shutdown abort + startup nomount
 startup force mount = shutdown abort + startup mount
 ```
 
+## 查看当前数据库实例状态
+
+```sql
+select status from v$instance;
+
+--从v$fixed_table视图中获取和instance有关的视图
+SQL> col name format a30
+SQL> select * from v$fixed_table where name like '%INSTANCE';
+
+NAME				OBJECT_ID TYPE	 TABLE_NUM     CON_ID
+------------------------------ ---------- ----- ---------- ----------
+GV$TEMPFILE_INFO_INSTANCE      4294955937 VIEW	     65537	    0
+V$TEMPFILE_INFO_INSTANCE       4294955938 VIEW	     65537	    0
+GV$INSTANCE		       4294951325 VIEW	     65537	    0
+V$INSTANCE		       4294951066 VIEW	     65537	    0
+```
+
