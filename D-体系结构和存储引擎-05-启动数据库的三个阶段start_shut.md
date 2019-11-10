@@ -82,11 +82,23 @@ MOUNTED
 ### 我们能做什么？
 
 * 备份、还原、恢复数据库
+
 * 对数据文件进行offline
+
 * 移动文件（联机日志、数据文件、临时文件、块跟踪文件）
+
 * 打开和关闭归档模式
+
 * 打开和关闭闪回数据库的功能
+
 * 删除数据库
+
+  ```sql
+  startup restrict exclusive force mount;
+  drop database;
+  ```
+
+  
 
 ## 第三个阶段：open
 
