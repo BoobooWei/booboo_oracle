@@ -1,0 +1,137 @@
+恢复管理器(recover manager)
+能够备份、还原、恢复
+能够记录备份信息
+
+启动rman连接目标库(要进行备份的数据库)
+rman target /
+
+查看当前数据库的物理信息
+RMAN> report schema;
+###########################################################################
+使用rman对控制文件做镜像备份
+RMAN> copy current controlfile to '/home/oracle/rmanbk/control01.ctl';
+
+查看控制文件的镜像备份
+RMAN> list copy of controlfile;
+
+使用rman还原控制文件
+RMAN> restore controlfile from '/home/oracle/rmanbk/control01.ctl';
+
+使用rman装载数据库
+RMAN> alter database mount;
+
+使用rman恢复数据库
+RMAN> recover database;
+
+使用rman打开数据库
+RMAN> alter database open resetlogs;
+###########################################################################
+使用rman对数据文件做镜像备份
+RMAN> copy datafile 5 to '/home/oracle/rmanbk/tbs01.dbf';
+
+查看数据文件的镜像备份
+RMAN> list copy of datafile 5;
+
+切换日志：
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+
+模拟数据变化
+select owner,table_name from dba_tables where tablespace_name='TBS1';
+
+切换日志：
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+
+模拟5号文件丢失
+rm -f /u01/app/oracle/oradata/db01/tbs01.dbf
+
+重新启动数据库
+startup force
+
+ORA-01157: cannot identify/lock data file 5 - see DBWR trace file
+ORA-01110: data file 5: '/u01/app/oracle/oradata/db01/tbs01.dbf'
+
+将5号数据文件offline将数据库打开
+alter database datafile 5 offline;
+alter database open;
+
+SQL> select count(*) from scott.t01;
+select count(*) from scott.t01
+                           *
+ERROR at line 1:
+ORA-00376: file 5 cannot be read at this time
+ORA-01110: data file 5: '/u01/app/oracle/oradata/db01/tbs01.dbf'
+
+启动rman还原和恢复5号文件
+run{
+restore datafile 5;
+recover datafile 5;
+sql 'alter database datafile 5 online';
+}
+###########################################################################
+使用rman的特有备份格式：备份集-->备份片
+
+使用备份集备份spfile:
+RMAN> backup spfile format '/home/oracle/rmanbk/spfile.bkp';
+
+查看包含spfile的备份集
+RMAN> list backup of spfile;
+
+模拟spfile丢失
+SQL> show parameter spfile
+
+NAME				     TYPE	 VALUE
+------------------------------------ ----------- ------------------------------
+spfile				     string	 /u01/app/oracle/product/11.2.0
+						 /db_1/dbs/spfiledb01.ora
+SQL> !rm -f /u01/app/oracle/product/11.2.0/db_1/dbs/spfiledb01.ora
+
+重新启动数据库
+startup force
+
+使用rman启动伪实例
+RMAN> startup nomount
+
+还原参数文件
+RMAN> restore spfile from '/home/oracle/rmanbk/spfile.bkp';
+
+停止伪实例启动真实例
+startup force
+###########################################################################
+修改rman备份片的保存位置：
+RMAN> configure channel device type disk format '/home/oracle/rmanbk/%d_%I_%s_%p_%T.bkp';
+
+%d --> 数据库名字
+%I --> 数据库的ID号
+%s --> 备份集的编号
+%p --> 备份片的编号
+%T --> 格里高利格式的时间
+###########################################################################
+使用备份集备份数据文件：
+RMAN> backup datafile 5;
+查看包含数据文件的备份集：
+RMAN> list backup of datafile 5;
+切换日志：
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+还原和恢复数据文件：
+run{
+restore datafile 5;
+recover datafile 5;
+alter database open;
+}
+
+run{
+allocate channel c1 type disk format '/home/oracle/rmanbk1/%d_%I_%s_%p_%c_%T.bkp';
+allocate channel c2 type disk format '/home/oracle/rmanbk2/%d_%I_%s_%p_%c_%T.bkp';
+backup
+(datafile 4 channel c1)
+(datafile 4 channel c2);
+}

@@ -1,0 +1,90 @@
+###########################################################################
+使用压缩备份集：
+RMAN> backup datafile 2;
+RMAN> backup as compressed backupset datafile 2;
+###########################################################################
+使用rman备份1号文件 : 备份成功后rman会自动启动controlfile + spfile的备份
+RMAN> backup as compressed backupset datafile 1;
+
+###########################################################################
+使用备份集备份表空间
+RMAN> backup tablespace users;
+###########################################################################
+查看归档日志
+RMAN> list archivelog all;、
+使用备份集备份归档日志：目的是清理存档终点
+RMAN> backup as compressed backupset archivelog all delete input;
+
+###########################################################################
+使用备份集备份全库
+RMAN> backup as compressed backupset database plus archivelog;
+
+###########################################################################
+使用rman的备份片在新的节点还原恢复数据库：
+将备份片拷贝到远程
+scp DB01_1555978772_{16..19}_1_20161011.bkp oracle@172.25.5.11:/home/oracle/zjz/
+
+修改环境变量：
+export ORACLE_SID=db01
+启动实例到nomount
+rman target /
+RMAN> startup nomount
+还原参数文件
+strings DB01_1555978772_18_1_20161011.bkp | grep db_name
+RMAN> restore spfile from '/home/oracle/zjz/DB01_1555978772_18_1_20161011.bkp';
+使用正确的spfile重新启动实例
+RMAN> shutdown abort
+RMAN> startup nomount
+还原控制文件
+RMAN> restore controlfile from '/home/oracle/zjz/DB01_1555978772_18_1_20161011.bkp';
+装载数据库
+RMAN> alter database mount;
+重新注册备份片 : after oracle 10g
+RMAN> catalog start with '/home/oracle/zjz/';
+还原数据库
+RMAN> restore database;
+恢复数据库
+RMAN> recover database;
+打开数据库
+RMAN> alter database open resetlogs;
+###########################################################################
+使用rman将数据文件恢复到新的位置:
+run{
+set newname for datafile 5 to '/u01/app/oracle/oradata/db01/tbs01.dbf';
+restore datafile 5;
+switch datafile 5;
+recover datafile 5;
+}
+
+run{
+set newname for datafile 1 to '/u01/app/oracle/oradata/db01/system01.dbf';
+set newname for datafile 5 to '/u01/app/oracle/oradata/db01/tbs01.dbf';
+set newname for tempfile 1 to '/u01/app/oracle/oradata/db01/temp01.dbf';
+restore datafile 1;
+restore datafile 5;
+switch datafile all;
+switch tempfile all;
+recover database;
+}
+
+使用种子备份
+cd $ORACLE_HOME/assistants/dbca/templates/
+Seed_Database.ctl --> 控制文件镜像备份
+Seed_Database.dfb --> rman全库备份片
+
+还原数据库：db02
+###########################################################################
+使用存储过程还原数据文件：
+declare
+  devtype varchar2(256);
+  done boolean;
+begin
+  devtype :=dbms_backup_restore.deviceallocate(type=>'',ident=>'c1');
+  dbms_backup_restore.restoresetdatafile;
+  dbms_backup_restore.restoredatafileto(dfnumber=>5,toname=>'/home/oracle/example01.dbf');
+  dbms_backup_restore.restorebackuppiece(done=>done,handle=>'/u01/app/oracle/product/11.2.0/db_1/assistants/dbca/templates/example01.dfb');
+  dbms_backup_restore.devicedeallocate;
+end;
+/
+###########################################################################
+

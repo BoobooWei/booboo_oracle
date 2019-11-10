@@ -1,0 +1,85 @@
+SQL> !cp /u01/app/oracle/oradata/db01/users01.dbf /home/oracle/hotbk/
+
+SQL> select tablespace_name from dba_data_files where file_id=4;
+
+TABLESPACE_NAME
+------------------------------
+USERS
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> create table scott.e01 tablespace users as select * from scott.emp;
+
+Table created.
+
+Elapsed: 00:00:00.39
+SQL> !mv /u01/app/oracle/oradata/db01/users01.dbf /u01/app/oracle/oradata/db01/users01.dbf.old
+
+SQL> startup force
+ORACLE instance started.
+
+Total System Global Area  839282688 bytes
+Fixed Size		    2257880 bytes
+Variable Size		  541068328 bytes
+Database Buffers	  289406976 bytes
+Redo Buffers		    6549504 bytes
+Database mounted.
+ORA-01157: cannot identify/lock data file 4 - see DBWR trace file
+ORA-01110: data file 4: '/u01/app/oracle/oradata/db01/users01.dbf'
+
+[oracle@oracle0 hotbk]$ cp users01.dbf /u01/app/oracle/oradata/db01/users01.dbf
+
+SQL> alter database open;
+
+Database altered.
+
+Elapsed: 00:00:15.74
+SQL> 
+SQL> select count(*) from scott.e01;
+select count(*) from scott.e01
+                           *
+ERROR at line 1:
+ORA-08103: object no longer exists
+
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> select table_name from dba_tables where owner='SCOTT';
+
+TABLE_NAME
+------------------------------
+DEPT
+EMP
+SALGRADE
+E01
+BONUS
+
+SQL> conn scott/tiger
+Connected.
+SQL> desc e01
+ Name								   Null?    Type
+ ----------------------------------------------------------------- -------- --------------------------------------------
+ EMPNO									    NUMBER(4)
+ ENAME									    VARCHAR2(10)
+ JOB									    VARCHAR2(9)
+ MGR									    NUMBER(4)
+ HIREDATE								    DATE
+ SAL									    NUMBER(7,2)
+ COMM									    NUMBER(7,2)
+ DEPTNO 								    NUMBER(2)
+
+SQL> 
+SQL> select * from e01;
+select * from e01
+              *
+ERROR at line 1:
+ORA-08103: object no longer exists
+###########################################################################################
+alter system set events '8103 trace name errorstack level 1';
+
+生成挖掘队列：告诉oracle要对哪些日志进行挖掘
+exec dbms_logmnr.add_logfile('/u01/app/oracle/oradata/db01/redo02.log',dbms_logmnr.new);
+开始挖掘
+exec dbms_logmnr.start_logmnr(options=>dbms_logmnr.dict_from_online_catalog);
+查看挖掘结果
+select sql_redo from v$logmnr_contents where seg_name='E01' and seg_owner='SCOTT';

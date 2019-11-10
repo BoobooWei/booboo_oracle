@@ -1,0 +1,567 @@
+#################################################################################
+DataGuard:
+primary : 172.25.0.10; db_name=orcl; db_unique_name=orcl
+standby : 172.25.0.11; db_name=orcl; db_unique_name=aux1
+---------------------------------------------------------------------------------
+在主库执行的操作：
+1.主库要运行在归档模式
+archive log list
+shutdown immediate
+startup mount
+alter database archivelog;
+alter database open;
+archive log list
+
+2.主库要打开force logging
+select force_logging from v$database;
+NO/YES
+alter database force logging;
+
+3.主库要打开dataguard开关
+alter system set log_archive_config='dg_config=(主库的唯一名，从库的唯一名)';
+alter system set log_archive_config='dg_config=(orcl,aux1)';
+
+4.修改主库本地归档参数
+mkdir -p /home/oracle/arc_orcl_dest1/
+alter system set log_archive_dest_1='location=/home/oracle/arc_orcl_dest1/ valid_for=(日志类型,数据库角色) db_unique_name=orcl';
+alter system set log_archive_dest_1='location=/home/oracle/arc_orcl_dest1/ valid_for=(online_logfiles,primary_role) db_unique_name=orcl';
+
+5.主库启用远程归档参数
+alter system set log_archive_dest_2='service=连接从库的服务命名 valid_for=(日志类型,数据库角色) db_unique_name=aux1';
+alter system set log_archive_dest_2='service=aux1srv valid_for=(online_logfiles,primary_role) db_unique_name=aux1';
+
+6.在主库为从库拷贝口令文件
+scp $ORACLE_HOME/dbs/orapw$ORACLE_SID oracle@172.25.0.11:$ORACLE_HOME/dbs/orapwaux1
+
+7.为从库准备参数文件：使用主库的参数文件修改
+SQL> create pfile from spfile;
+scp $ORACLE_HOME/dbs/init$ORACLE_SID.ora oracle@172.25.0.11:$ORACLE_HOME/dbs/initaux1.ora
+-----------------------------------------------------------------------------------------
+*.audit_file_dest='/u01/app/oracle/admin/aux1/adump'
+*.audit_trail='db'
+*.compatible='11.2.0.4.0'
+*.control_files='/u01/app/oracle/oradata/aux1/control01.ctl'
+*.db_block_size=8192
+*.db_domain='example.com'
+*.db_name='orcl'
+*.db_recovery_file_dest='/u01/app/oracle/fast_recovery_area'
+*.db_recovery_file_dest_size=4385144832
+*.diagnostic_dest='/u01/app/oracle'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=orclXDB)'
+*.log_archive_config='dg_config=(orcl,aux1)'
+*.memory_target=843055104
+*.open_cursors=300
+*.processes=150
+*.remote_login_passwordfile='EXCLUSIVE'
+*.undo_tablespace='UNDOTBS1'
+db_unique_name='aux1'
+log_archive_dest_3='location=/home/oracle/arc_aux1_dest3/ valid_for=(standby_logfiles,standby_role) db_unique_name=aux1'
+standby_file_management=auto
+db_file_name_convert='/u01/app/oracle/oradata/orcl/','/u01/app/oracle/oradata/aux1/'
+log_file_name_convert='/u01/app/oracle/oradata/orcl/','/u01/app/oracle/oradata/aux1/'
+-----------------------------------------------------------------------------------------
+
+8.为从库准备相关目录
+mkdir -p /u01/app/oracle/admin/aux1/adump
+mkdir -p /u01/app/oracle/oradata/aux1/
+mkdir -p /u01/app/oracle/fast_recovery_area
+mkdir -p /home/oracle/arc_aux1_dest3/
+
+9.修改从库环境变量，创建spfile，启动实例到nomount
+export ORACLE_SID=aux1
+sqlplus / as sysdba
+create spfile from pfile;
+startup nomount
+
+10.在从库配置并启动监听程序
+vi /u01/app/oracle/product/11.2.0/db_1/network/admin/listener.ora
+-----------------------------------------------------------------------------------------
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = aux1.example.com)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1)
+      (SID_NAME = aux1)
+    )
+  )
+
+LISTENER =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.11)(PORT = 1521))
+    )
+  )
+
+-----------------------------------------------------------------------------------------
+lsnrctl stop
+lsnrctl start
+
+11.在主库配置服务命名
+vi /u01/app/oracle/product/11.2.0/db_1/network/admin/tnsnames.ora
+-----------------------------------------------------------------------------------------
+aux1srv =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.11)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = aux1.example.com)
+    )
+  )
+-----------------------------------------------------------------------------------------
+
+12.在主库使用网络连接从库
+sqlplus sys/uplooking@aux1srv as sysdba
+
+13.在主库启动rman复制从库
+rman target / auxiliary sys/uplooking@aux1srv
+RMAN> duplicate target database for standby from active database;
+
+14.在从库增加standby log(和主库的online log必须一样大小)
+select bytes from v$log;
+alter database add standby logfile '/u01/app/oracle/oradata/aux1/redo04.log' size 52428800;
+alter database add standby logfile '/u01/app/oracle/oradata/aux1/redo05.log' size 52428800;
+alter database add standby logfile '/u01/app/oracle/oradata/aux1/redo06.log' size 52428800;
+alter database add standby logfile '/u01/app/oracle/oradata/aux1/redo07.log' size 52428800;
+alter database add standby logfile '/u01/app/oracle/oradata/aux1/redo08.log' size 52428800;
+select * from v$standby_log;
+
+15.打开从库
+SQL> alter database open;
+
+16.在从库启用日志应用
+alter database recover managed standby database using current logfile disconnect from session;
+
+17.在主库切换日志
+select GROUP#,THREAD#,SEQUENCE#,STATUS from v$log;
+SQL> alter system switch logfile;
+
+18.在从库查看日志应用情况
+SQL> select sequence#,applied from v$archived_log;
+
+19.在主库做数据修改，提交之后在从库看数据变化
+SQL> update scott.emp set sal=sal+1;
+SQL> commit;
+
+查看从库写入standby log的最后一条redo：
+SQL> select last_change# from v$standby_log;
+
+20.在从库停止日志应用
+alter database recover managed standby database cancel;
+
+21.在从库中启用不完全恢复:解决主库的误操作
+在主库确定灾难产生时间：log miner
+exec dbms_logmnr.add_logfile('/u01/app/oracle/oradata/orcl/redo03.log',dbms_logmnr.new);
+exec dbms_logmnr.start_logmnr(options=>dbms_logmnr.dict_from_online_catalog);
+col SQL_REDO for a40
+select scn,sql_redo from v$logmnr_contents where lower(sql_redo) like 'drop%'
+and seg_name='EMP'
+and seg_owner='SCOTT';
+
+    SCN SQL_REDO
+------- ---------------------------
+1053766 drop table scott.emp purge;
+
+将从库恢复到灾难产生时间
+alter database recover managed standby database disconnect from session until change 1053766;
+在从库将对象数据导出
+exp \'/ as sysdba\' tables=scott.emp file=emp.dmp
+将dmp文件拷贝到主库
+scp emp.dmp oracle@172.25.0.10:/home/oracle
+在主库将dmp数据导入
+imp \'/ as sysdba\' file=emp.dmp full=y
+
+22.在从库中启用延迟恢复
+alter database recover managed standby database disconnect from session delay 1;
+
+23.查看主库的日志传输风格
+select async_blocks,affirm from v$archive_dest where dest_id=2;
+
+24.修改主库的远程日志传输风格
+alter system set log_archive_dest_2='service=aux1srv sync affirm valid_for=(online_logfiles,primary_role) db_unique_name=aux1';
+
+25.修改主库的保护模式：
+select database_role,protection_mode,protection_level from v$database;
+alter database set standby database to maximize {AVAILABILITY | PERFORMANCE | PROTECTION};
+alter database set standby database to maximize PERFORMANCE;
+alter database set standby database to maximize AVAILABILITY;
+alter database set standby database to maximize PROTECTION;
+
+SQL> alter system switch logfile;
+SQL> select database_role,protection_mode,protection_level from v$database;
+
+主库日志写盘需要几个从库的写盘成功的返回值：
+log_archive_min_succeed_dest=1
+##########################################################################################
+建立第二从库：
+26.主库的dg开关中要增加第二从库的唯一名
+alter system set log_archive_config='dg_config=(orcl,aux1,aux2)';
+
+27.在主库要为aux2启用远程归档：
+alter system set log_archive_dest_4='service=aux2srv sync affirm valid_for=(online_logfiles,primary_role) db_unique_name=aux2';
+
+28.在主库为aux2准备口令文件
+scp $ORACLE_HOME/dbs/orapw$ORACLE_SID oracle@172.25.0.12:$ORACLE_HOME/dbs/orapwaux2
+
+29.为aux2准备参数文件
+vi $ORACLE_HOME/dbs/initaux2.ora
+--------------------------------------------------------------------------------------
+*.audit_file_dest='/u01/app/oracle/admin/aux2/adump'
+*.audit_trail='db'
+*.compatible='11.2.0.4.0'
+*.control_files='/u01/app/oracle/oradata/aux2/control01.ctl'
+*.db_block_size=8192
+*.db_domain='example.com'
+*.db_name='orcl'
+*.db_recovery_file_dest='/u01/app/oracle/fast_recovery_area'
+*.db_recovery_file_dest_size=4385144832
+*.diagnostic_dest='/u01/app/oracle'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=orclXDB)'
+*.log_archive_config='dg_config=(orcl,aux2)'
+*.memory_target=843055104
+*.open_cursors=300
+*.processes=150
+*.remote_login_passwordfile='EXCLUSIVE'
+*.undo_tablespace='UNDOTBS1'
+db_unique_name='aux2'
+log_archive_dest_3='location=/home/oracle/arc_aux2_dest3/ valid_for=(standby_logfiles,standby_role) db_unique_name=aux2'
+standby_file_management=auto
+db_file_name_convert='/u01/app/oracle/oradata/orcl/','/u01/app/oracle/oradata/aux2/'
+log_file_name_convert='/u01/app/oracle/oradata/orcl/','/u01/app/oracle/oradata/aux2/'
+--------------------------------------------------------------------------------------
+
+30.为aux2准备相关目录
+mkdir -p /u01/app/oracle/admin/aux2/adump
+mkdir -p /u01/app/oracle/oradata/aux2/
+mkdir -p /u01/app/oracle/fast_recovery_area
+mkdir -p /home/oracle/arc_aux2_dest3/
+
+31.修改aux2的环境变量，创建spfile，启动实例到nomount
+export ORACLE_SID=aux2
+sqlplus / as sysdba
+create spfile from pfile;
+startup nomount
+
+32.在aux2节点配置监听
+vi /u01/app/oracle/product/11.2.0/db_1/network/admin/listener.ora
+-----------------------------------------------------------------------
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = aux2.example.com)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1)
+      (SID_NAME = aux2)
+    )
+  )
+
+
+LISTENER =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.12)(PORT = 1521))
+    )
+  )
+-----------------------------------------------------------------------
+lsnrctl stop
+lsnrctl start
+33.在主库增加连接aux2的服务命名
+vi /u01/app/oracle/product/11.2.0/db_1/network/admin/tnsnames.ora
+-----------------------------------------------------------------------
+aux1srv =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.11)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = aux1.example.com)
+    )
+  )
+
+aux2srv =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.12)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = aux2.example.com)
+    )
+  )
+-----------------------------------------------------------------------
+
+33.在主库使用网络连接从库
+sqlplus sys/uplooking@aux2srv as sysdba
+
+34.在主库启动rman复制从库
+rman target / auxiliary sys/uplooking@aux2srv
+RMAN> duplicate target database for standby from active database;
+
+35.在从库aux2增加standby log(和主库的online log必须一样大小)
+select bytes from v$log;
+alter database add standby logfile '/u01/app/oracle/oradata/aux2/redo04.log' size 52428800;
+alter database add standby logfile '/u01/app/oracle/oradata/aux2/redo05.log' size 52428800;
+alter database add standby logfile '/u01/app/oracle/oradata/aux2/redo06.log' size 52428800;
+alter database add standby logfile '/u01/app/oracle/oradata/aux2/redo07.log' size 52428800;
+alter database add standby logfile '/u01/app/oracle/oradata/aux2/redo08.log' size 52428800;
+select * from v$standby_log;
+
+36.打开aux2
+SYS> alter database open;
+alter database open
+*
+ERROR at line 1:
+ORA-10458: standby database requires recovery
+ORA-01152: file 1 was not restored from a sufficiently old backup
+ORA-01110: data file 1: '/u01/app/oracle/oradata/aux2/system01.dbf'
+
+38.如果数据字典中的报错消息有延迟：
+SQL> select error from v$archive_dest where dest_id=4;
+
+ERROR
+-----------------------------------------------------------------
+ORA-16058: standby database instance is not mounted
+
+激活远程归档，刷新报错信息
+SQL> alter system set log_archive_dest_state_4='enable';
+
+39.在从库启用日志应用
+alter database recover managed standby database using current logfile disconnect from session;
+##########################################################################################
+角色转换 switchover : 一定是主库先变成从库，从库再激活成主库！
+
+主库如果想要变成从库，需要准备什么？
+需要standby log:
+alter database add standby logfile '/u01/app/oracle/oradata/orcl/redo04.log' size 52428800;
+alter database add standby logfile '/u01/app/oracle/oradata/orcl/redo05.log' size 52428800;
+alter database add standby logfile '/u01/app/oracle/oradata/orcl/redo06.log' size 52428800;
+增加为standby log保存归档的参数：
+mkdir -p /home/oracle/arc_orcl_dest3
+alter system set log_archive_dest_3='location=/home/oracle/arc_orcl_dest3/ valid_for=(standby_logfiles,standby_role) db_unique_name=orcl';
+
+修改从库文件的管理风格
+alter system set standby_file_management=auto scope=spfile;
+
+增加数据文件和日志文件的路径转换参数:
+alter system set db_file_name_convert='/u01/app/oracle/oradata/aux1/','/u01/app/oracle/oradata/orcl/' scope=spfile;
+
+alter system set log_file_name_convert='/u01/app/oracle/oradata/aux1/','/u01/app/oracle/oradata/orcl/' scope=spfile;
+
+查看主库的角色转换状态:
+select switchover_status from v$database;
+
+开始角色转换:
+alter database commit to switchover to physical standby with session shutdown;
+
+查看老的主库orcl的状态：
+SQL> select status from v$instance;
+select status from v$instance
+*
+ERROR at line 1:
+ORA-01034: ORACLE not available
+Process ID: 3993
+Session ID: 125 Serial number: 5
+
+打开老的主库orcl，查看角色是否变成从库：
+SQL> startup
+select name,database_role from v$database;
+
+NAME	  DATABASE_ROLE
+--------- ----------------
+ORCL	  PHYSICAL STANDBY -->主变从已经成功！
+
+配置监听程序：
+vi /u01/app/oracle/product/11.2.0/db_1/network/admin/listener.ora
+--------------------------------------------------------------------
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = orcl.example.com)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1)
+      (SID_NAME = orcl)
+    )
+  )
+
+LISTENER =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.10)(PORT = 1521))
+    )
+  )
+--------------------------------------------------------------------
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+将aux1激活成主库需要准备什么？
+配置服务命名：
+orclsrv =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.10)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = orcl.example.com)
+    )
+  )
+
+需要准备online log的归档参数：
+mkdir -p /home/oracle/arc_aux1_dest1/
+alter system set log_archive_dest_1='location=/home/oracle/arc_aux1_dest1/ valid_for=(online_logfiles,primary_role) db_unique_name=aux1';
+
+需要启用为从库传输日志的远程归档参数（service）
+alter system set log_archive_dest_2='service=orclsrv sync affirm valid_for=(online_logfiles,primary_role) db_unique_name=orcl';
+
+查看aux1的角色转换状态:
+select switchover_status from v$database;
+SWITCHOVER_STATUS
+--------------------
+NOT ALLOWED -->如果是不允许，那么区查看从库的日志应用情况
+
+SQL> select sequence#,applied from v$archived_log;
+ SEQUENCE# APPLIED
+---------- ---------
+	 9 YES
+	10 YES
+         .   .
+	30 YES
+	31 NO
+	32 NO
+要保证老的主库传输过来的所有日志都被应用，从库才会知道主库已经发生角色转换，从库才会得到切换标记！
+SQL> alter database recover managed standby database disconnect from session;
+
+SQL> select switchover_status from v$database;
+SWITCHOVER_STATUS
+--------------------
+TO PRIMARY
+
+如果TO PRIMARY是可以将从库激活成主库：
+alter database commit to switchover to primary;
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+将第二从库aux2再加入到DataGuard：
+将所有节点的dg开关参数值修改成一样的
+alter system set log_archive_config='dg_config=(orcl,aux1,aux2)';
+
+在aux1节点增加连接aux2的网络服务名
+aux2srv =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.12)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = aux2.example.com)
+    )
+  )
+
+在aux1节点增加向aux2传输日志的归档参数：
+alter system set log_archive_dest_4='service=aux2srv sync affirm valid_for=(online_logfiles,primary_role) db_unique_name=aux2';
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+##########################################################################################
+使用broker实现快速故障转移:
+前提条件:
+主库和从库都要使用spfile
+
+主库和从库都要配置连接自身和远程的服务命名
+orclsrv =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.10)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = orcl.example.com)
+    )
+  )
+
+aux1srv =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.11)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = aux1.example.com)
+    )
+  ) 
+
+aux2srv =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.12)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = aux2.example.com)
+    )
+  )
+
+主从数据库都要配置local_listener参数
+172.25.0.11:
+alter system set local_listener='(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=172.25.0.11)(PORT=1521)))';
+
+172.25.0.10:
+alter system set local_listener='(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=172.25.0.10)(PORT=1521)))';
+
+主库和从库都要打开闪回功能
+SQL> select flashback_on from v$database;
+
+FLASHBACK_ON
+------------------
+YES
+
+主库要运行在最高可用的保护模式
+SQL> alter database set standby database to maximize AVAILABILITY;
+
+主库和从库都要打开broker开关
+172.25.0.11:
+SQL> alter system set dg_broker_start=true;
+172.25.0.10:
+SQL> alter system set dg_broker_start=true;
+
+在从库启动broker连接主库
+dgmgrl
+DGMGRL> connect sys/uplooking@aux1srv
+创建代理配置：
+DGMGRL> create configuration 'testdg' as primary database is 'aux1' connect identifier is aux1srv;
+将从库加入到代理配置
+DGMGRL> add database 'orcl' as connect identifier is orclsrv maintained as physical;
+查看broker配置
+DGMGRL> show configuration verbose;
+查看主从数据库配置
+DGMGRL> show database verbose aux1;
+DGMGRL> show database verbose orcl;
+启用broker代理配置
+DGMGRL> enable configuration;
+修改快速故障转移延迟时间
+DGMGRL> edit configuration set property FastStartFailoverThreshold=10;
+启动快速故障转移
+DGMGRL> enable fast_start failover;
+在从库启动监视器
+dgmgrl
+DGMGRL> connect sys/uplooking@aux1srv
+DGMGRL> start observer;
+在新的broker窗口查看broker配置
+dgmgrl
+DGMGRL> connect sys/uplooking@aux1srv
+DGMGRL> show configuration verbose;
+
+在新的主库修改归档路径状态将RESET变为enable
+SQL> alter system set log_archive_dest_state_2='enable';
+##########################################################################################
+备用数据库获取日志使用级联：
+主库orcl发送日志到aux1,aux1发送日志到aux2
+Primary Database
+-----------------------
+DB_UNIQUE_NAME=orcl
+*.FAL_SERVER=aux1srv
+LOG_ARCHIVE_CONFIG='DG_CONFIG=(orcl,aux1,aux2)'
+LOG_ARCHIVE_DEST_1='LOCATION=USE_DB_RECOVERY_FILE_DEST
+VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=orcl'
+LOG_ARCHIVE_DEST_2='SERVICE=aux1srv SYNC AFFIRM
+VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=aux1'
+
+Cascading Physical Standby Database
+-----------------------------------
+DB_UNIQUE_NAME=aux1
+*.FAL_SERVER=orclsrv
+LOG_ARCHIVE_CONFIG= 'DG_CONFIG=(orcl,aux1,aux2)'
+LOG_ARCHIVE_DEST_1='LOCATION=USE_DB_RECOVERY_FILE_DEST
+VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=aux1'
+LOG_ARCHIVE_DEST_2= 'SERVICE=aux2srv SYNC AFFIRM
+VALID_FOR=(STANDBY_LOGFILES,STANDBY_ROLE) DB_UNIQUE_NAME=aux2'
+
+Cascaded Physical Standby Database
+----------------------------------
+DB_UNIQUE_NAME=aux2
+*.FAL_SERVER=aux1srv
+LOG_ARCHIVE_CONFIG='DG_CONFIG=(orcl,aux1,aux2)'
+LOG_ARCHIVE_DEST_1='LOCATION= USE_DB_RECOVERY_FILE_DEST
+VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=aux2'
+##########################################################################################
+
+

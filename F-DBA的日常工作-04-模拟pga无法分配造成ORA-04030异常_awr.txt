@@ -1,0 +1,101 @@
+导出快照
+SQL> @?/rdbms/admin/awrextr.sql
+
+导入快照
+SQL> @?/rdbms/admin/awrload.sql
+
+生成报告
+SQL> @?/rdbms/admin/awrrpti.sql
+SQL> @?/rdbms/admin/awrrpt.sql
+
+Current Instance
+~~~~~~~~~~~~~~~~
+
+   DB Id    DB Name	 Inst Num Instance
+----------- ------------ -------- ------------
+ 1555978772 DB01		1 db01
+
+Elapsed: 00:00:00.01
+Elapsed: 00:00:00.00
+
+Specify the Report Type
+~~~~~~~~~~~~~~~~~~~~~~~
+Would you like an HTML report, or a plain text report?
+Enter 'html' for an HTML report, or 'text' for plain text
+Defaults to 'html'
+Enter value for report_type: 
+
+Type Specified:  html
+Elapsed: 00:00:00.00
+
+
+Instances in this Workload Repository schema
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   DB Id     Inst Num DB Name	   Instance	Host
+------------ -------- ------------ ------------ ------------
+* 1555978772	    1 DB01	   db01 	oracle0.exam
+						ple.com
+  1555978772	    1 DB01	   aux1 	install0.exa
+						mple.com
+
+Using 1555978772 for database Id
+Using	       1 for instance number
+
+
+Specify the number of days of snapshots to choose from
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Entering the number of days (n) will result in the most recent
+(n) days of snapshots being listed.  Pressing <return> without
+specifying a number lists all completed snapshots.
+
+
+Enter value for num_days: 2
+
+Listing the last 2 days of Completed Snapshots
+
+							Snap
+Instance     DB Name	    Snap Id    Snap Started    Level
+------------ ------------ --------- ------------------ -----
+db01	     DB01		 76 18 Oct 2016 11:38	   1
+				 77 18 Oct 2016 13:00	   1
+
+				 78 18 Oct 2016 14:04	   1
+				 79 18 Oct 2016 15:00	   1
+				 80 18 Oct 2016 16:00	   1
+				 81 18 Oct 2016 17:00	   1
+				 82 18 Oct 2016 18:00	   1
+
+				 83 19 Oct 2016 10:12	   1
+
+				 84 19 Oct 2016 11:00	   1
+				 85 19 Oct 2016 12:00	   1
+				 86 19 Oct 2016 13:00	   1
+				 87 19 Oct 2016 14:00	   1
+				 88 19 Oct 2016 15:00	   1
+
+
+
+Specify the Begin and End Snapshot Ids
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Enter value for begin_snap: 84
+Begin Snapshot Id specified: 84
+
+Enter value for end_snap: 85
+End   Snapshot Id specified: 85
+
+
+
+Specify the Report Name
+~~~~~~~~~~~~~~~~~~~~~~~
+The default report file name is awrrpt_1_84_85.html.  To use this name,
+press <return> to continue, otherwise enter an alternative.
+
+Enter value for report_name: 
+
+Using the report name awrrpt_1_84_85.html
+
+
+
+
+SQL> @?/rdbms/admin/awrddrpi.sql

@@ -1,0 +1,13 @@
+控制文件的备份还原和恢复：
+
+alter database backup controlfile to '/home/oracle/hotbk/control01.ctl';
+
+切换日志：
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+
+SQL> recover database using backup controlfile;
+
+SQL> alter database open resetlogs;

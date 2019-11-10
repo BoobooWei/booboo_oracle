@@ -1,0 +1,144 @@
+主库要运行在归档模式下
+SQL> archive log list
+
+主库要打开force logging（主库要禁止nologging）
+SQL> select force_logging from v$database;
+alter database force logging;
+
+修改主库的归档参数
+SQL> select database_role from v$database;
+SQL> show parameter db_unique_name
+alter system set log_archive_dest_1='location=/home/oracle/arc_db01_dest1/ valid_for=(online_logfiles,primary_role) db_unique_name=db01';
+
+打开主库的远程归档
+alter system set log_archive_dest_2='service=连接从库的服务命名 valid_for=(online_logfiles,primary_role) db_unique_name=aux1';
+
+alter system set log_archive_dest_2='service=aux1srv valid_for=(online_logfiles,primary_role) db_unique_name=aux1';
+
+打开主库的dataguard开关
+alter system set log_archive_config='dg_config=(主库的唯一名,从库的唯一名,从库的唯一名...)';
+alter system set log_archive_config='dg_config=(db01,aux1)';
+
+主库要配置服务命名，连接从库
+vi $ORACLE_HOME/network/admin/tnsnames.ora
+------------------------------------------------------------------
+aux1srv =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.11)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = aux1)
+    )
+  )
+------------------------------------------------------------------
+
+在主库为从库拷贝口令文件：从库sys的口令必须和主库一样
+scp $ORACLE_HOME/dbs/orapwdb01 oracle@172.25.0.11:$ORACLE_HOME/dbs/orapwaux1
+
+为从库准备参数文件：用主库的参数文件修改
+SQL> create pfile='/home/oracle/1.ora' from spfile;
+
+修改注意事项：db_name必须一样，db_unique_name必须不一样
+
+vi /home/oracle/1.ora
+--------------------------------------------------------------------------------
+*.audit_file_dest='/u01/app/oracle/admin/aux1/adump'
+*.compatible='11.2.0.4.0'
+*.control_files='/u01/app/oracle/oradata/aux1/control01.ctl'
+*.db_block_size=8192
+*.db_domain=''
+*.db_name='db01'
+*.db_recovery_file_dest='/u01/app/oracle/fast_recovery_area'
+*.db_recovery_file_dest_size=4385144832
+*.diagnostic_dest='/u01/app/oracle'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=db01XDB)'
+*.log_archive_config='dg_config=(db01,aux1)'
+*.log_archive_dest_1='location=/home/oracle/arc_aux1_dest1/ valid_for=(online_logfiles,primary_role) db_unique_name=aux1'
+*.log_archive_dest_2='service=db01srv valid_for=(online_logfiles,primary_role) db_unique_name=db01'
+*.memory_target=842006528
+*.open_cursors=300
+*.processes=150
+*.remote_login_passwordfile='EXCLUSIVE'
+*.undo_tablespace='UNDOTBS1'
+db_unique_name=aux1
+standby_file_management=auto
+log_archive_dest_3='location=/home/oracle/arc_aux1_dest3/ valid_for=(standby_logfiles,standby_role) db_unique_name=aux1'
+db_file_name_convert='/u01/app/oracle/oradata/db01/','/u01/app/oracle/oradata/aux1/'
+log_file_name_convert='/u01/app/oracle/oradata/db01/','/u01/app/oracle/oradata/aux1/'
+--------------------------------------------------------------------------------
+
+创建相关目录
+mkdir -p /u01/app/oracle/admin/aux1/adump
+mkdir -p /u01/app/oracle/oradata/aux1/
+mkdir -p /u01/app/oracle/fast_recovery_area
+mkdir -p /home/oracle/arc_aux1_dest1/
+mkdir -p /home/oracle/arc_aux1_dest3/
+
+创建spfile，启动实例到nomount
+export ORACLE_SID=aux1
+sqlplus / as sysdba
+create spfile from pfile;
+startup nomount
+
+在从库配置监听程序
+vi $ORACLE_HOME/network/admin/listener.ora
+--------------------------------------------------------------------------------
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = aux1)
+      (ORACLE_HOME = /u01/app/oracle/product/11.2.0/db_1)
+      (SID_NAME = aux1)
+    )
+  )
+
+LISTENER =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.11)(PORT = 1521))
+    )
+  )
+--------------------------------------------------------------------------------
+
+在主库测试，使用网络连接从库
+sqlplus sys/oracle@aux1srv as sysdba
+
+在主库启动rman,复制从库
+rman target / auxiliary sys/oracle@aux1srv
+RMAN> duplicate target database for standby from active database;
+
+为从库增加standby log：standby log和主库的online log必须一样到小
+SQL> alter database add standby logfile '/u01/app/oracle/oradata/aux1/redo04.log' size 52428800;
+SQL> alter database add standby logfile '/u01/app/oracle/oradata/aux1/redo05.log' size 52428800;
+SQL> alter database add standby logfile '/u01/app/oracle/oradata/aux1/redo06.log' size 52428800;
+
+打开从库
+SQL> alter database open;
+
+恢复从库：
+SQL> alter database recover managed standby database disconnect from session;
+
+停止恢复进程：
+SQL> alter database recover managed standby database cancel;
+
+再打开从库
+SQL> alter database open;
+
+测试数据同步：
+在主库切换日志
+select * from v$log;
+alter system switch logfile;
+
+在从库查看最新的日志是否被归档
+show parameter dest_3
+ls -l /home/oracle/arc_aux1_dest3/
+
+在从库启动实时恢复进程
+SQL> alter database recover managed standby database using current logfile disconnect from session;
+
+在主库做数据修改，commit之后到从库看数据状态
+update scott.emp set sal=sal+1;
+commit;
+SQL> select sal from scott.emp;
+

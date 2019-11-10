@@ -1,0 +1,97 @@
+创建保存备份的目录：
+mkdir /home/oracle/expbk
+
+逻辑导出：对数据库做select
+跨用户传输数据
+跨数据库传输数据
+数据库版本升级
+为测试库保留历史数据
+
+打印逻辑导出的帮助
+exp help=y
+
+查询:语言_地域.字符集
+SQL> select userenv('language') from dual;
+
+导出单张表：
+exp scott/tiger tables=ob1 file=/home/oracle/expbk/ob1.dmp buffer=10000000 log=/home/oracle/expbk/expob1.log
+
+导出单张表时过滤行：
+exp scott/tiger tables=ob1 file=/home/oracle/expbk/ob1_table.dmp buffer=10000000 log=/home/oracle/expbk/expob1.log query=\'where object_type=\'\'TABLE\'\'\'
+
+导出多张表：将多张表捆绑为一个读一致性CONSISTENT
+exp scott/tiger tables=ob1,ob2 file=/home/oracle/expbk/ob.dmp buffer=10000000 log=/home/oracle/expbk/expob.log CONSISTENT=y
+
+闪回导出：必须使用system用户，导出的是undo中的老镜像
+exp system/uplooking tables=scott.emp file=/home/oracle/expbk/emp_1040.dmp buffer=1000000 flashback_time=\"to_timestamp\(\'2016-10-08 10:00:00\',\'yyyy-mm-dd hh24:mi:ss\'\)\" log=/home/oracle/expbk/emp_1040.log
+
+只导出元数据： rows=n compress=n
+exp scott/tiger tables=ob1 file=/home/oracle/expbk/ob1_metadata.dmp buffer=10000000 log=/home/oracle/expbk/expob1.log rows=n compress=n
+
+导出用户模式:并没有导出创建用户的命令
+exp scott/tiger owner=scott file=/home/oracle/expbk/scott.dmp buffer=10000000 log=/home/oracle/expbk/scott.log
+
+drop user scott cascade;
+grant connect,resource,create view to scott identified by tiger;
+还原用户数据：
+imp scott/tiger file=/home/oracle/expbk/scott.dmp full=y 
+跨用户导入数据：
+imp system/uplooking file=/home/oracle/expbk/scott.dmp fromuser=scott touser=u01 tables=DEPT,EMP,SALGRADE log=impu01.log
+
+导出表空间模式：需要管理员权限
+exp system/uplooking tablespaces=tbs010 file=/home/oracle/expbk/tbs010.dmp buffer=10000000 log=/home/oracle/expbk/tbs010.log
+
+drop tablespace tbs010 including contents and datafiles;
+create tablespace tbs010 datafile '/home/oracle/coldbk/tbs010.dbf' size 10m;
+
+imp system/uplooking full=y file=/home/oracle/expbk/tbs010.dmp
+
+传输表空间模式：
+select userenv('language') from dual;
+USERENV('LANGUAGE')
+----------------------------------------------------
+AMERICAN_AMERICA.WE8MSWIN1252
+
+将表空间只读
+alter tablespace tbs010 read only;
+导出表空间元数据
+exp \'/ as sysdba\' tablespaces=tbs010 transport_tablespace=y file=/home/oracle/expbk/tbs010.dmp log=/home/oracle/expbk/tbs010.log
+将数据文件拷贝到远程节点：
+scp /home/oracle/coldbk/tbs010.dbf oracle@172.25.11.10:/home/oracle
+
+使用网络将元数据导入到远程节点
+1110 =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.11.10)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = orcl.example.com)
+    )
+  )
+
+在远程节点创建用户
+grant connect,resource to blake identified by balke;
+
+imp \'sys/oracle@1110 as sysdba\' tablespaces=tbs010 transport_tablespace=y file=/home/oracle/expbk/tbs010.dmp datafiles=\'/home/oracle/tbs010.dbf\' log=/home/oracle/expbk/tbs010.log
+
+alter tablespace TBS010 read write;
+alter tablespace TBS010 read write;
+
+导出全库模式：
+exp system/uplooking full=y file=/home/oracle/expbk/full.dmp buffer=100000000 log=/home/oracle/expbk/full.log
+
+vi /home/oracle/expbk/exp.sh
+-------------------------------------------------------------------
+export ORACLE_HOME=/u01/app/oracle/product/11.2.0/db_1
+export ORACLE_SID=orcl
+export LANG=zh_CN.utf8
+export NLS_LANG=AMERICAN_AMERICA.WE8MSWIN1252
+name=`date '+%Y%m%d_%H%M%S'`
+`$ORACLE_HOME/bin/exp userid=scott/tiger tables=ob1 file=/home/oracle/expbk/ob1\_$name.dmp buffer=1048576 feedback=10000 log=/home/oracle/expbk/ob1\_$name.log`
+-------------------------------------------------------------------
+chmod +x /home/oracle/expbk/exp.sh
+
+使用主机管道压缩备份文件：
+mknod /home/oracle/expbk/exp_pipe p
+exp userid=scott/tiger tables=ob1 log=/home/oracle/expbk/ob1.log file=/home/oracle/expbk/exp_pipe & gzip </home/oracle/expbk/exp_pipe> ob1_compress.dmp.gz
+

@@ -1,0 +1,272 @@
+################
+#A库数据同步到B库#
+################
+A库（172.25.0.10）--> B库（172.25.12.11）:
+～～～～～～～～～～～
+A库与B库都要归档模式:
+～～～～～～～～～～～
+shut immediate
+startup mount
+alter database archivelog;
+alter database open;
+
+～～～～～～～～～～～～～～～～～
+A库与B库都要打开追加日志数据模式:
+～～～～～～～～～～～～～～～～～
+alter database add supplemental log data;
+
+SQL> select SUPPLEMENTAL_LOG_DATA_MIN from v$database;
+
+SUPPLEME
+--------
+YES
+
+～～～～～～～～～～～～～～～～
+A库与B库都要打开force logging:
+～～～～～～～～～～～～～～～～
+禁止数据源一方使用nologging加速insert
+alter database force logging;
+
+SQL> select force_logging from v$database;
+
+FOR
+---
+YES
+
+～～～～～～～～～～～～～～～
+A库与B库都要创建ogg的管理用户:
+～～～～～～～～～～～～～～～
+grant 
+connect,
+resource,
+unlimited tablespace,
+select any dictionary,
+select any table,
+insert any table,
+update any table,
+delete any table,
+alter any table,
+flashback any table
+to ggs
+identified by ggs;
+
+grant  execute on dbms_flashback to ggs;
+grant execute on utl_file to ggs;
+
+～～～～～～～～～～～～～～～～～
+A库与B库都要安装对应版本的ogg软件:
+～～～～～～～～～～～～～～～～～
+scp ogg112101_fbo_ggs_Linux_x64_ora11g_64bit.zip oracle@172.25.0.10:/home/oracle/
+
+mkdir -p /home/oracle/insogg/
+unzip /home/oracle/ogg112101_fbo_ggs_Linux_x64_ora11g_64bit.zip -d /home/oracle/insogg/
+
+mkdir -p /home/oracle/ogg/
+tar -xvf /home/oracle/insogg/fbo_ggs_Linux_x64_ora11g_64bit.tar -C /home/oracle/ogg
+
+～～～～～～～～～～～
+在环境变标量中增加ogg:
+～～～～～～～～～～～
+export PATH=$ORACLE_HOME/bin:/home/oracle/ogg:$PATH
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/home/oracle/ogg:$LD_LIBRARY_PATH
+
+##########################################
+A库与B库，进入ogg安装目录，创建ogg需要的子目录：
+##########################################
+cd /home/oracle/ogg
+ggsci
+GGSCI (install0.example.com) 1> create subdirs
+
+Creating subdirectories under current directory /home/oracle/ogg
+
+Parameter files                /home/oracle/ogg/dirprm: already exists
+Report files                   /home/oracle/ogg/dirrpt: created
+Checkpoint files               /home/oracle/ogg/dirchk: created
+Process status files           /home/oracle/ogg/dirpcs: created
+SQL script files               /home/oracle/ogg/dirsql: created
+Database definitions files     /home/oracle/ogg/dirdef: created
+Extract data files             /home/oracle/ogg/dirdat: created
+Temporary files                /home/oracle/ogg/dirtmp: created
+Stdout files                   /home/oracle/ogg/dirout: created
+#########################################################################
+在A库准备测试用的表：
+create table scott.e01 as select * from scott.emp;
+alter table scott.e01 add constraint pk_e01_empno primary key (empno);
+
+将A库的表导入到B库：
+exp scott/tiger tables=e01 file=e01.dmp
+scp e01.dmp oracle@172.25.0.11:/home/oracle
+imp scott/tiger file=e01.dmp full=y
+
+授予scott用户dba角色:
+grant dba to scott;
+
+在A库ogg中添加需要同步的表：
+GGSCI (oracle0.example.com) 1> dblogin userid ggs,password ggs
+GGSCI (oracle0.example.com) 2> add trandata scott.e01
+GGSCI (oracle0.example.com) 3> info trandata scott.e01
+#################################################################
+A库与B库都要配置ogg的核心管理进程（manager）
+vi /home/oracle/ogg/dirprm/mgr.prm
+---------------------------------------------
+port 7788
+userid ggs,password ggs
+autorestart extract *,waitminutes 2,retries 5
+---------------------------------------------
+#################################################################
+在源和目标都要端添加checkpoint表:
+配置全局参数文件
+vi /home/oracle/ogg/GLOBALS
+--------------------------------
+checkpointtable ggs.checkpoint
+--------------------------------
+
+GGSCI (oracle0.example.com) 1> dblogin userid ggs, password ggs
+GGSCI (oracle0.example.com) 2> add checkpointtable ggs.checkpoint
+#################################################################
+在A库配置抽取进程：
+编辑配置文件
+vi /home/oracle/ogg/dirprm/ext1.prm
+----------------------------------------------
+extract ext1
+userid ggs,password ggs
+rmthost 172.25.0.10,mgrport 7788
+exttrail /home/oracle/ogg/dirdat/ea
+tranlogoptions excludeuser ggs
+setenv(ORACLE_SID=orcl)
+setenv(NLS_LANG=AMERICAN_AMERICA.WE8MSWIN1252)
+dynamicresolution
+table scott.e01;
+----------------------------------------------
+添加抽取进程
+GGSCI (oracle0.example.com) 2> add extract ext1, tranlog, begin now
+添加抽取进程的生成文件
+GGSCI (oracle0.example.com) 3> add exttrail /home/oracle/ogg/dirdat/ea,extract ext1
+
+在A库配置投递进程：
+vi /home/oracle/ogg/dirprm/pump1.prm
+----------------------------------------------
+EXTRACT pump1
+USERID scott, PASSWORD tiger
+RMTHOST 172.25.0.11, MGRPORT 7788
+RMTTRAIL /home/oracle/ogg/dirdat/pa
+TABLE scott.e01;
+----------------------------------------------
+在源端增加投递进程
+GGSCI (oracle0.example.com) 4> add extract pump1,exttrailsource /home/oracle/ogg/dirdat/ea , begin now
+增加投递到远程的文件
+GGSCI (oracle0.example.com) 5> add rmttrail /home/oracle/ogg/dirdat/pa ,extract pump1
+
+在B库配置复制进程：
+配置目标端的复制进程:
+vi /home/oracle/ogg/dirprm/rep1.prm
+----------------------------------------------------
+replicat rep1
+userid ggs,password ggs
+assumetargetdefs
+discardfile /home/oracle/ogg/dirdat/rep1.dsc,append
+MAP scott.e01, TARGET scott.e01;
+----------------------------------------------------
+增加复制进程
+GGSCI (install0.example.com) 2> add replicat rep1,exttrail /home/oracle/ogg/dirdat/pa , nodbcheckpoint
+############################################
+所有需要的参数文件都配置完成，按照顺序启动各个进程:
+1.启动A库的管理进程
+start mgr
+2.启动B库的管理进程
+start mgr
+3.启动B库的复制进程
+start rep1
+4.启动A库的抽取进程
+start ext1
+5.启动A库的投递进程
+start pump1
+########################################################################################
+总结:A库和B库都需要管理进程，都需要检查点表
+A库:抽取进程【ext1】--> 抽取文件（源节点）【ea】--> 投递进程【pump1】-->投递文件（目标节点）【pa】
+B库:复制进程【rep1】--> 源投递过来的文件【pa】
+########################################################################################
+增加DDL支持:
+需要禁止recyclebin：
+alter system set recyclebin=off scope=spfile;
+startup force
+purge dba_recyclebin;
+A库进入ogg目录再启动sqlplus：
+cd /home/oracle/ogg
+sqlplus / as sysdba
+
+A库运行脚本1：SQL> @marker_setup.sql
+A库运行脚本2：SQL> @ddl_setup.sql
+
+11.2.0.4 bug:
+alter trigger sys.ggs_ddl_trigger_before disable;
+grant create table,create sequence to ggs;
+alter trigger sys.ggs_ddl_trigger_before enable;
+
+A库运行脚本3：SQL> @role_setup.sql
+A库运行脚本4：SQL> grant GGS_GGSUSER_ROLE TO ggs;
+A库运行脚本5：SQL> @ddl_enable.sql
+
+修改A库抽取进程的配置文件
+vi /home/oracle/ogg/dirprm/ext1.prm
+----------------------------------------------
+extract ext1
+userid ggs,password ggs
+rmthost 172.25.0.10,mgrport 7788
+exttrail /home/oracle/ogg/dirdat/ea
+tranlogoptions excludeuser ggs
+setenv(ORACLE_SID=orcl)
+setenv(NLS_LANG=AMERICAN_AMERICA.WE8MSWIN1252)
+dynamicresolution
+ddl include all
+ddloptions addtrandata
+table scott.*;
+----------------------------------------------
+
+修改A库投递进程配置文件：
+vi /home/oracle/ogg/dirprm/pump1.prm
+----------------------------------------------
+EXTRACT pump1
+USERID scott, PASSWORD tiger
+RMTHOST 172.25.0.11, MGRPORT 7788
+RMTTRAIL /home/oracle/ogg/dirdat/pa
+TABLE scott.*;
+----------------------------------------------
+
+修改B库复制进程的配置文件
+vi /home/oracle/ogg/dirprm/rep1.prm
+----------------------------------------------------
+replicat rep1
+userid ggs,password ggs
+assumetargetdefs
+discardfile /home/oracle/ogg/dirdat/rep1.dsc,append
+ddl include mapped
+ddlerror default ignore retryop
+MAP scott.*, TARGET scott.*;
+----------------------------------------------------
+
+停止A库抽取进程和复制进程
+停止B库复制进程
+启动A库抽取进程和复制进程
+启动B库复制进程
+########################################################################################
+双向复制:
+B库:抽取进程【ext2】--> 抽取文件（源节点）【eb】--> 投递进程【pump2】-->投递文件（目标节点）【pb】
+A库:复制进程【rep2】-->源投递过来的文件【pb】
+########################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

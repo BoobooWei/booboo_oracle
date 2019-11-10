@@ -1,0 +1,231 @@
+数据源 : 172.25.0.10 db01 AMERICAN_AMERICA.WE8MSWIN1252 
+目标库 : 172.25.0.11 orcl AMERICAN_AMERICA.WE8MSWIN1252 
+########################################################################################
+数据源和目标数据库都要运行在归档模式！
+shut immediate
+startup mount
+alter database archivelog;
+alter database open;
+########################################################################################
+在数据源(172.25.0.10)和目标数据库(172.25.0.11)都要安装OGG软件
+mkdir -p /home/oracle/insogg/
+unzip /home/oracle/ogg112101_fbo_ggs_Linux_x64_ora11g_64bit.zip -d /home/oracle/insogg/
+
+在源和目标创建安装ogg的目录：
+mkdir -p /home/oracle/ogg/
+在源和目标安装ogg：
+tar -xvf /home/oracle/insogg/fbo_ggs_Linux_x64_ora11g_64bit.tar -C /home/oracle/ogg
+########################################################################################
+在源和目标配置ogg环境变量:
+在.bashrc或.bash_profile中加入ogg的环境变量：
+export PATH=$ORACLE_HOME/bin:/home/oracle/ogg:$PATH
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/home/oracle/ogg:$LD_LIBRARY_PATH
+########################################################################################
+在源和目标都要创建ogg所需要额子目录：
+操作ogg最好进入产品目录
+cd /home/oracle/ogg
+启动ogg接口程序
+ggsci
+使用ogg创建子目录：将来存放抽取文件和投递文件
+GGSCI (oracle0.example.com) 1> create subdirs
+
+Creating subdirectories under current directory /home/oracle/ogg
+
+Parameter files                /home/oracle/ogg/dirprm: already exists
+Report files                   /home/oracle/ogg/dirrpt: created
+Checkpoint files               /home/oracle/ogg/dirchk: created
+Process status files           /home/oracle/ogg/dirpcs: created
+SQL script files               /home/oracle/ogg/dirsql: created
+Database definitions files     /home/oracle/ogg/dirdef: created
+Extract data files             /home/oracle/ogg/dirdat: created
+Temporary files                /home/oracle/ogg/dirtmp: created
+Stdout files                   /home/oracle/ogg/dirout: created
+########################################################################################
+创建管理ogg需要的数据库用户:(源端和目标端都要创建)
+grant 
+connect,
+resource,
+unlimited tablespace,
+select any dictionary,
+select any table,
+insert any table,
+update any table,
+delete any table,
+alter any table,
+flashback any table
+to ggs
+identified by ggs;
+
+grant  execute on dbms_flashback to ggs;
+grant execute on utl_file to ggs;
+########################################################################################
+在源和目标都要打开追加日志数据模式: after oracle 10g
+alter database add supplemental log data;
+SQL> select SUPPLEMENTAL_LOG_DATA_MIN from v$database;
+
+SUPPLEME
+--------
+YES
+########################################################################################
+准备测试用的表
+create table scott.e01 as select * from scott.emp;
+alter table scott.e01 add constraint pk_e01_empno primary key (empno);
+
+将源表的数据导入到目标库
+172.25.0.10:
+exp scott/tiger tables=e01 file=e01.dmp
+scp e01.dmp oracle@172.25.5.10:/home/oracle
+172.25.0.11:
+imp scott/tiger tables=e01 file=e01.dmp
+########################################################################################
+在源端配置ogg：
+在ogg中添加需要同步的表：
+
+*使用哪个用户做数据同步，哪个用户就要拥有查看数据字典的权力！！
+在源端授予scott用户查看字典的权利
+SQL> grant select any dictionary to scott;
+
+在数据源节点登录ogg:172.25.0.10
+添加需要数据同步的表scott.e01
+GGSCI (oracle0.example.com) 1> dblogin userid ggs, password ggs
+Successfully logged into database.
+
+GGSCI (oracle0.example.com) 2> add trandata scott.e01
+
+Logging of supplemental redo data enabled for table SCOTT.E01.
+
+GGSCI (oracle0.example.com) 3> info trandata scott.e01
+
+Logging of supplemental redo log data is enabled for table SCOTT.E01.
+
+Columns supplementally logged for table SCOTT.E01: EMPNO.
+########################################################################################
+在源和目标都要端添加checkpoint表:
+配置全局参数文件
+GGSCI (oracle0.example.com) 1> dblogin userid ggs, password ggs
+Successfully logged into database.
+
+GGSCI (oracle0.example.com) 2> edit params /home/oracle/ogg/GLOBALS
+--在弹出的vi编辑器中加入新行然后将vi保存退出
+checkpointtable ggs.checkpoint
+
+GGSCI (oracle0.example.com) 3> add checkpointtable ggs.checkpoint
+
+Successfully created checkpoint table ggs.checkpoint.
+########################################################################################
+在源和目标都要配置管理进程的参数文件：
+GGSCI (oracle0.example.com) 5> edit params mgr
+-- --在弹出的编辑器中加入新行
+port 7788
+userid ggs,password ggs
+autorestart extract *,waitminutes 2,retries 5
+
+查看mgr的参数文件
+GGSCI (oracle0.example.com) 6> view params mgr
+
+port 7788
+userid ggs,password ggs
+autorestart extract *,waitminutes 2,retries 5
+
+在目标端配置管理进程的参数文件：
+GGSCI (oracle0.example.com) 6> view params mgr
+
+port 7788
+userid ggs,password ggs
+autorestart extract *,waitminutes 2,retries 5
+########################################################################################
+在源端配置抽取进程的参数文件:
+查询数据库的sid:
+echo $ORACLE_SID
+db01
+查询数据库的字符集
+SQL> select userenv('language') from dual;
+
+USERENV('LANGUAGE')
+----------------------------------------------------
+AMERICAN_AMERICA.WE8MSWIN1252
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+GGSCI (oracle0.example.com) 9> edit params ext1
+--在弹出的编辑器中加入新行
+extract ext1
+userid ggs,password ggs
+rmthost 172.25.0.10,mgrport 7788
+exttrail /home/oracle/ogg/dirdat/ea
+tranlogoptions excludeuser ggs
+setenv(ORACLE_SID=db01)
+setenv(NLS_LANG=AMERICAN_AMERICA.WE8MSWIN1252)
+dynamicresolution
+table scott.e01;
+
+添加抽取进程:
+GGSCI (oracle0.example.com) 10> add extract ext1, tranlog, begin now
+EXTRACT added.
+
+添加抽取进程需要的文件:
+GGSCI (ora10g64) 11> ADD EXTTRAIL /home/oracle/ogg/dirdat/ea,extract ext1
+########################################################################################
+在源端配置投递进程参数文件：
+GGSCI (oracle0.example.com) 15> edit params pump1
+
+EXTRACT pump1
+USERID scott, PASSWORD tiger
+RMTHOST 172.25.0.11, MGRPORT 7788
+RMTTRAIL /home/oracle/ogg/dirdat/pa
+TABLE scott.e01;
+
+在源端增加投递进程
+GGSCI (oracle0.example.com) 16> add extract pump1,exttrailsource /home/oracle/ogg/dirdat/ea , begin now
+
+增加投递到远程的文件
+GGSCI (oracle0.example.com) 17> add rmttrail /home/oracle/ogg/dirdat/pa ,extract pump1
+########################################################################################
+配置目标端的复制进程:
+GGSCI (install0.example.com) 7> edit params rep1
+--在弹出的编辑器中加入新行
+replicat rep1
+userid ggs,password ggs
+assumetargetdefs
+discardfile /home/oracle/ogg/dirdat/rep1.dsc,append
+MAP scott.e01, TARGET scott.e01;
+
+增加复制进程
+GGSCI (install0.example.com) 8> add replicat rep1,exttrail /home/oracle/ogg/dirdat/pa , nodbcheckpoint
+########################################################################################
+所有需要的参数文件都配置完成，按照顺序启动各个进程:
+1.启动源端的管理进程
+start mgr
+2.启动目标端的管理进程
+start mgr
+3.启动目标端的复制进程
+start rep1
+4.启动源端的抽取进程
+start ext1
+5.启动源端的投递进程
+start pump1
+########################################################################################
+在源端查看进程状态
+GGSCI (oracle0.example.com) 18> info all
+
+Program     Status      Group       Lag at Chkpt  Time Since Chkpt
+
+MANAGER     RUNNING                                           
+EXTRACT     RUNNING     EXT1        00:00:00      00:00:09    
+EXTRACT     RUNNING     PUMP1       00:00:00      00:00:02
+
+在目标端查看进程状态
+GGSCI (install0.example.com) 9> info all
+
+Program     Status      Group       Lag at Chkpt  Time Since Chkpt
+
+MANAGER     RUNNING                                           
+REPLICAT    RUNNING     REP1        00:00:00      00:00:04
+########################################################################################
+总结:源和目标都需要管理进程，都需要检查点表
+源10:抽取进程【ext1】--> 抽取文件（源节点）【ea】--> 投递进程【pump1】-->投递文件（目标节点）【pa】
+目标11:复制进程【rep1】-->源投递过来的文件【pa】
+########################################################################################
+双向复制:
+目标11:抽取进程【ext2】--> 抽取文件（源节点）【eb】--> 投递进程【pump2】-->投递文件（目标节点）【pb】
+源10:复制进程【rep2】-->源投递过来的文件【pb】
+########################################################################################
+

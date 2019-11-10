@@ -1,0 +1,49 @@
+冷备份：（offline backup） 需要停库，一停二拷三启动
+
+mkdir /home/oracle/coldbk
+
+vi /home/oracle/coldbk/shut.txt
+-------------------------------
+conn / as sysdba
+shutdown immediate
+exit
+-------------------------------
+
+vi /home/oracle/coldbk/start.txt
+-------------------------------
+conn / as sysdba
+startup
+exit
+-------------------------------
+
+select 'cp -v '||name||' /home/oracle/coldbk/'
+from
+(select name from v$controlfile
+union all
+select name from v$datafile
+union all
+select member from v$logfile);
+
+vi /home/oracle/coldbk/bk.sh
+-----------------------------------------------------------------------
+sqlplus /nolog @/home/oracle/coldbk/shut.txt
+cp -v $ORACLE_HOME/dbs/orapw$ORACLE_SID /home/oracle/coldbk/
+cp -v $ORACLE_HOME/dbs/spfile$ORACLE_SID.ora /home/oracle/coldbk/
+cp -v $ORACLE_HOME/dbs/init$ORACLE_SID.ora /home/oracle/coldbk/
+cp -v /home/oracle/coldbk/control01.ctl /home/oracle/coldbk/
+cp -v /home/oracle/coldbk/control02.ctl /home/oracle/coldbk/
+cp -v /home/oracle/coldbk/system01.dbf /home/oracle/coldbk/
+cp -v /home/oracle/coldbk/sysaux01.dbf /home/oracle/coldbk/
+cp -v /home/oracle/coldbk/undotbs01.dbf /home/oracle/coldbk/
+cp -v /home/oracle/coldbk/users01.dbf /home/oracle/coldbk/
+cp -v /home/oracle/coldbk/example01.dbf /home/oracle/coldbk/
+cp -v /home/oracle/coldbk/tbs010.dbf /home/oracle/coldbk/
+cp -v /home/oracle/coldbk/redo03.log /home/oracle/coldbk/
+cp -v /home/oracle/coldbk/redo02.log /home/oracle/coldbk/
+cp -v /home/oracle/coldbk/redo01.log /home/oracle/coldbk/
+sqlplus /nolog @/home/oracle/coldbk/start.txt
+-----------------------------------------------------------------------
+chmod +x /home/oracle/coldbk/bk.sh
+
+一致性全冷备份的异地还原！
+

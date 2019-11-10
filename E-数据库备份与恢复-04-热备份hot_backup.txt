@@ -1,0 +1,191 @@
+热备份：(online backup)在数据库open状态下进行的备份，需要数据库运行在归档模式下！！！
+
+archive log list
+shut immediate
+startup mount
+alter database archivelog;
+alter database open;
+
+修改存档位置：
+mkdir /home/oracle/arc_db01_dest1
+alter system set log_archive_dest_1='location=/home/oracle/arc_db01_dest1/';
+
+如何热备份用户表空间
+alter tablespace users begin backup;
+!cp -v /u01/app/oracle/oradata/db01/users01.dbf /home/oracle/hotbk/
+alter tablespace users end backup;
+
+切换日志：
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+
+模拟数据改变：
+insert into scott.e01 select * from scott.e01;
+commit;
+
+切换日志：
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+
+模拟数据文件丢失：
+!rm -f /u01/app/oracle/oradata/db01/users01.dbf
+
+模拟数据改变：
+insert into scott.e01 select * from scott.e01;
+commit;
+
+切换日志：
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+
+重新启动数据库
+startup force
+
+将普通文件offline，打开数据库(offline状态的数据文件open时不会被校验)
+SQL> alter database datafile 4 offline;
+SQL> alter database open;
+查看哪些文件需要恢复
+SQL> select * from v$recover_file;
+
+还原数据文件：将备份的文件拷贝回数据库中
+cp -v /home/oracle/hotbk/users01.dbf /u01/app/oracle/oradata/db01/users01.dbf
+
+恢复数据文件
+SQL> recover datafile 4;
+
+Specify log: {<RET>=suggested | filename | AUTO | CANCEL}
+AUTO
+
+恢复成功后将数据文件online，然后校验数据：
+SQL> alter database datafile 4 online;
+
+Database altered.
+
+Elapsed: 00:00:00.15
+SQL> select count(*) from scott.e01;
+
+  COUNT(*)
+----------
+     57344
+#################################################################################
+无备份的还原和恢复: 
+1.数据库要归档模式
+2.数据文件创建于归档之后
+
+创建实验用的表空间
+create tablespace tbs1 datafile '/home/oracle/tbs01.dbf' size 10m;
+
+在新的表空间中创建表，将表空间写满数据
+create table scott.t01 tablespace tbs1 as select * from scott.emp;
+
+切换日志：
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+
+模拟数据增长
+insert into scott.t01 select * from scott.t01;
+commit;
+
+切换日志：
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+
+模拟数据文件丢失
+!rm -f /home/oracle/tbs01.dbf
+
+重新启动数据库,发现文件丢失
+startup force
+
+ORA-01157: cannot identify/lock data file 5 - see DBWR trace file
+ORA-01110: data file 5: '/home/oracle/tbs01.dbf'
+
+将5号文件offline打开数据库
+SQL> alter database datafile 5 offline;
+SQL> alter database open;
+
+根据控制创建崭新的数据文件
+alter database create datafile 5 as '/u01/app/oracle/oradata/db01/tbs01.dbf';
+
+使用日志恢复数据文件
+SQL> recover datafile 5;
+
+将数据文件online
+SQL> alter database datafile 5 online;
+
+校验数据：
+select count(*) from scott.t01;
+#################################################################################
+热备份全库：
+select 'alter tablespace '||tablespace_name||' begin backup;'||chr(10)||
+       '!cp -v '||file_name||' /home/oracle/hotbk/'||chr(10)||
+       'alter tablespace '||tablespace_name||' end backup;'
+from dba_data_files;
+
+切换日志：
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+#################################################################################
+不完全恢复：
+
+1.要有全备
+2.要确定灾难产生时间点(log miner)
+生成挖掘队列：告诉oracle要对哪些日志进行挖掘
+exec dbms_logmnr.add_logfile('/home/oracle/arc_db01_dest1/1_39_924710753.dbf',dbms_logmnr.new);
+开始挖掘
+exec dbms_logmnr.start_logmnr(options=>dbms_logmnr.dict_from_online_catalog);
+查看挖掘结果
+select scn,sql_redo from v$logmnr_contents where seg_name='E01' and seg_owner='SCOTT';
+
+       SCN
+----------
+SQL_REDO
+---------------------------
+--------------------
+   1032938
+drop table scott.e01 purge;
+
+3.在备用节点还原数据文件
+
+4.创建控制文件
+create controlfile reuse database db01 resetlogs archivelog
+datafile
+'/home/oracle/test/system01.dbf',
+'/home/oracle/test/sysaux01.dbf',
+'/home/oracle/test/tbs01.dbf',
+'/home/oracle/test/undotbs01.dbf',
+'/home/oracle/test/users01.dbf'
+logfile
+group 1 '/home/oracle/test/redo01.log' size 50m,
+group 2 '/home/oracle/test/redo02.log' size 50m; 
+
+5.恢复数据库到灾难产生时间点
+recover database using backup controlfile until change 1032938;
+
+6.拷贝需要的归档日志
+scp /home/oracle/arc_db01_dest1/1_{27..35}_924710753.dbf oracle@172.25.5.11:/home/oracle/arc_db01_dest1/
+
+7.使用resetlogs方式打开数据库
+Log applied.
+Media recovery complete.
+SQL> alter database open resetlogs;
+
+Database altered.
+
+SQL> select count(*) from scott.e01;
+
+  COUNT(*)
+----------
+     50000
+

@@ -1,0 +1,36 @@
+数据泵：oracle 10g 之后的版本可用，只有在服务端可用,使用PL/sql查询数据写备份文件
+
+1.创建逻辑目录，使用逻辑目录保存数据泵的备份文件
+conn / as sysdba
+select * from dba_directories;
+create or replace directory expbk as '/home/oracle/expbk';
+授予scott读写逻辑目录的权限
+grant read,write on directory expbk to scott;
+
+expdp userid=scott/tiger JOB_NAME=exp_ob1 tables=ob1 directory=expbk dumpfile=expob1.dmp logfile=expob1.log content=METADATA_ONLY
+
+expdp userid=scott/tiger JOB_NAME=exp_ob1 tables=ob1 directory=expbk dumpfile=expob1.dmp logfile=expob1_data.log content=DATA_ONLY
+
+expdp userid=scott/tiger JOB_NAME=exp_ob1 tables=ob1 directory=expbk dumpfile=expob1.dmp logfile=expob1.log content=all
+
+可以在导出多张表时带有限制条件
+expdp userid=scott/tiger job_name=test_job directory=expbk tables=dept,emp query=dept:\"where deptno\<\>40\",emp:\"where deptno=10\" dumpfile=test.dmp logfile=test.log
+
+导出用户模式
+expdp userid=scott/tiger job_name=scott_job directory=expbk dumpfile=scott.dmp parallel=8 logfile=scott.log
+
+导出表空间模式：
+expdp userid=system/uplooking job_name=tbs010_job directory=expbk dumpfile=tbs010.dmp tablespaces=tbs010 parallel=8 logfile=tbs010log
+
+导出全库模式：
+expdp userid=system/uplooking job_name=full_job directory=expbk dumpfile=full.dmp full=y logfile=full.log
+
+impdp userid=scott/tiger directory=expbk dumpfile=expob1.dmp
+
+expdp userid=scott/tiger job_name=test_job directory=expbk include=view dumpfile=view.dmp
+
+expdp userid=scott/tiger job_name=test_job directory=expbk include=table:\"like \'E%\'\" dumpfile=e.dmp 
+
+expdp userid=scott/tiger job_name=pemp_job directory=expbk dumpfile=pemp.dmp include=table:\"in \(select table_name\|\|\':\'\|\|partition_name from user_tab_partitions where table_name=\'P_EMP\' and partition_name like \'P1\%\'\)\" logfile=pemp.log
+
+expdp userid=scott/tiger job_name=test_job directory=expbk exclude=table:\"like \'E%\'\" dumpfile=expdata.dmp

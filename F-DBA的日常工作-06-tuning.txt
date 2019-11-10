@@ -1,0 +1,267 @@
+优化全表扫面：
+1.查看表的碎片情况
+set serverout on
+declare
+  V_UNFORMATTED_BLOCKS NUMBER;
+  V_UNFORMATTED_BYTES NUMBER;	
+  V_FS1_BLOCKS NUMBER;		
+  V_FS1_BYTES NUMBER;		
+  V_FS2_BLOCKS NUMBER;		
+  V_FS2_BYTES NUMBER;		
+  V_FS3_BLOCKS NUMBER;		
+  V_FS3_BYTES NUMBER;		
+  V_FS4_BLOCKS NUMBER;		
+  V_FS4_BYTES NUMBER;		
+  V_FULL_BLOCKS NUMBER;		
+  V_FULL_BYTES NUMBER;		
+begin
+dbms_space.SPACE_USAGE(
+'SCOTT',
+'OB1',
+'TABLE',
+V_UNFORMATTED_BLOCKS,
+V_UNFORMATTED_BYTES,
+V_FS1_BLOCKS,
+V_FS1_BYTES,
+V_FS2_BLOCKS,
+V_FS2_BYTES,		
+V_FS3_BLOCKS,		
+V_FS3_BYTES,		
+V_FS4_BLOCKS,		
+V_FS4_BYTES,		
+V_FULL_BLOCKS,		
+V_FULL_BYTES
+);
+  DBMS_OUTPUT.PUT_LINE('UNFORMATTED_BLOCKS: '||V_UNFORMATTED_BLOCKS);
+  DBMS_OUTPUT.PUT_LINE('FULL_BLOCKS: '||V_FULL_BLOCKS);
+  DBMS_OUTPUT.PUT_LINE('0 to 25% free space: '||V_FS1_BLOCKS);
+  DBMS_OUTPUT.PUT_LINE('25 to 50% free space: '||V_FS2_BLOCKS);
+  DBMS_OUTPUT.PUT_LINE('50 to 75% free space: '||V_FS3_BLOCKS);
+  DBMS_OUTPUT.PUT_LINE('75 to 100% free space: '||V_FS4_BLOCKS);
+end;
+/
+
+消除碎片的两种方式
+SQL> alter table ob1 move; 
+
+shrink操作会使用pctfree里面的空间，迁移的可能性更大
+alter table t05 enable row movement;
+alter table t05 shrink space; 
+
+2.增加IO吞吐量
+oracle 10g 之前控制IO吞吐量的参数：db_file_multiblock_read_count 
+
+从oracle 11g之后控制IO吞吐量的参数：_db_file_optimizer_read_count
+SQL> set autot trace exp
+SQL> select * from v$parameter;
+
+Execution Plan
+--------------------------------------
+Plan hash value: 1128103955
+
+--------------------------------------
+| Id  | Operation	  | Name     |
+--------------------------------------
+|   0 | SELECT STATEMENT  |	     |
+|*  1 |  HASH JOIN	  |	     |
+|*  2 |   FIXED TABLE FULL| X$KSPPI  |
+|   3 |   FIXED TABLE FULL| X$KSPPCV |
+
+SQL> select indx,ksppinm,KSPPDESC from x$ksppi where ksppinm like '%db_file%';
+
+INDX KSPPINM
+---- ------------------------------------
+ 272 _db_file_direct_io_count
+ 817 db_file_name_convert
+1153 db_files
+1154 db_file_multiblock_read_count
+1155 _db_file_exec_read_count
+1156 _db_file_optimizer_read_count
+1157 _db_file_noncontig_mblock_read_count
+1178 _db_file_format_io_buffers
+
+SQL> select KSPPSTDVL from X$KSPPCV where indx=1156;
+SQL> alter session set "_db_file_optimizer_read_count"=128;
+
+3.使用并性查询：同时霸占多颗cpu完成一个查询
+select /*+parallel(ob1 8) sdkjfhkljsdklsdfjg*/ * from ob1;
+############################################################
+分散IO：
+1.将表中数据分散到表空间下的不同数据文件
+2.使用分区表
+
+范围分区：
+create table t01 
+(id int,
+name varchar2(20),
+hire_date date)
+partition by range (hire_date)
+(partition p01 values less than (to_date('2016-02-01','yyyy-mm-dd')) tablespace tbs1,
+partition p02 values less than (to_date('2016-03-01','yyyy-mm-dd')) tablespace tbs2
+);
+
+select partition_name,tablespace_name from user_tab_partitions where table_name='T01';
+
+insert into t01 values (1,'Tom',to_date('2016-01-05','yyyy-mm-dd'));
+insert into t01 values (2,'Jerry',to_date('2016-02-03','yyyy-mm-dd'));
+
+将记事本中的数据装载到数据库：
+1.准备装载数据需要的控制文件
+vi /home/oracle/1.ctl
+-----------------------------------------------------------------------------
+LOAD DATA
+INFILE '/home/oracle/1.txt'
+APPEND INTO TABLE t01
+FIELDS TERMINATED BY ',' 
+OPTIONALLY ENCLOSED BY '"'
+(id,name,hire_date date 'yyyy-mm-dd')
+-----------------------------------------------------------------------------
+
+2.准备包含数据的记事本文件
+vi /home/oracle/1.txt
+--------------------------
+3,ALvin,2016-01-12
+4,Stella,2016-02-15
+5,SMITH,2016-02-17
+6,ALLEN,2016-02-20
+7,WARD,2016-02-22
+8,JONES,1981-04-02
+9,MARTIN,1981-09-28
+10,BLAKE,1981-05-01
+11,CLARK,1981-06-09
+12,SCOTT,1987-04-19
+13,KING,1981-11-17
+14,TURNER,1981-09-08
+15,ADAMS,1987-05-23
+16,JAMES,1981-12-03
+17,FORD,1981-12-03
+18,MILLER,2016-01-23
+--------------------------
+
+3.调用sql loader进行数据装载
+sqlldr scott/tiger control=/home/oracle/1.ctl bad=/home/oracle/bad.txt log=/home/oracle/sqlldr.log
+
+增加表分区：
+insert into t01 values (19,'alice',to_date('2016-03-05','yyyy-mm-dd'));
+alter table t01 add partition p03 values less than (to_date('2016-04-01','yyyy-mm-dd'));
+
+移动表分区：
+SQL> alter table t01 move partition p03 tablespace tbs3;
+
+跨分区update数据：
+SQL> update t01 set HIRE_DATE=to_date('2016-03-15','yyyy-mm-dd') where id=8;
+SQL> alter table t01 enable row movement;
+
+分区表与索引：
+本地分区索引：存储子句继承表分区的存储子句
+create index i_t01_date on t01 (hire_date) local;
+select partition_name,tablespace_name from user_ind_partitions where index_name='I_T01_DATE';
+
+在分区表建立全局索引：
+create index i_t01_name on t01 (name);
+
+在分区表建立全局索引：
+create index i_t01_id on t01 (id) global partition by range (id)
+(partition i01 values less than (11),
+partition i02 values less than (21),
+partition idef values less than (maxvalue));
+
+符合列范围分区:
+create table t02 
+(id int,
+name varchar2(20),
+hire_date date)
+partition by range (id,hire_date)
+(partition p01 values less than (1000,to_date('2016-02-01','yyyy-mm-dd')) tablespace tbs1,
+partition p02 values less than (2000,to_date('2016-03-01','yyyy-mm-dd')) tablespace tbs2
+);
+
+insert into t02 values (900,'alice',to_date('2016-02-08','yyyy-mm-dd'));
+insert into t02 values (1000,'alice',to_date('2016-01-05','yyyy-mm-dd'));
+insert into t02 values (1000,'alice',to_date('2016-02-05','yyyy-mm-dd'));
+insert into t02 values (1500,'alice',to_date('2016-01-09','yyyy-mm-dd'));
+
+列表分区：
+create table t03
+(code varchar2(4),
+city varchar2(20),
+region varchar2(20))
+partition by list (code)
+(partition p010 values ('010') tablespace tbs1,
+partition p021 values ('021') tablespace tbs2);
+
+散列分区：PARTITIONS的数量最好是2的n次幂
+CREATE TABLE hash01 PARTITION BY HASH (empno) PARTITIONS 4 
+STORE IN (tbs1, tbs2, tbs3, tbs4)
+as select * from e01;
+
+select partition_name from user_tab_partitions where table_name='HASH01';
+select count(*) from hash01 partition (SYS_P61);
+
+复合分区：
+create table p05 (deptno number,ename varchar2(10),grade varchar2(2))
+partition by range (deptno) 
+subpartition by hash (ename)
+subpartitions 8 store in (tbs1,tbs3,tbs5,tbs7)
+(partition p1 values less than (1000),
+partition p2 values less than (2000) store in (tbs2,tbs4,tbs6,tbs8),
+partition p3 values less than (3000)
+(subpartition p3_1 tablespace users,
+subpartition p3_2 tablespace system));
+
+select partition_name,tablespace_name from user_tab_subpartitions where table_name='P05';
+
+联机重定义：
+创建中间表
+create table tmp 
+(empno number(4),
+ename varchar2(10),
+job varchar2(10),
+mgr number(4),
+hiredate date,
+sal number(7,2),
+comm number(7,2),
+deptno number(2))
+partition by range (deptno)
+(partition p10 values less than (20) tablespace tbs1,
+partition p20 values less than (30) tablespace tbs2,
+partition p30 values less than (40) tablespace tbs3
+);
+
+conn / as sysdba
+begin
+DBMS_REDEFINITION.START_REDEF_TABLE (
+'SCOTT','EMP','TMP',
+'empno empno,
+ename ename,
+job job,
+MGR MGR,
+hiredate hiredate,
+sal sal,
+comm comm,
+deptno deptno');
+end;
+/
+
+begin
+DBMS_REDEFINITION.SYNC_INTERIM_TABLE ('SCOTT','EMP','TMP');
+end;
+/
+
+begin
+DBMS_REDEFINITION.FINISH_REDEF_TABLE ('SCOTT','EMP','TMP');
+end;
+/
+
+
+
+
+
+
+
+
+
+
+
+
+

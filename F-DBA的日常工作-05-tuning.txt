@@ -1,0 +1,58 @@
+优化IO：
+1.减少
+2.分散
+
+如何减少IO：合理使用索引；降低高水位。
+
+合理使用索引：索引是表中的目录，通过rowid减少无关的块的访问！
+
+SQL> alter session set events '10053 trace name context forever , level 1';
+
+Session altered.
+
+SQL> select count(*) from scott.t01;
+
+  COUNT(*)
+----------
+    200000
+
+SQL> alter session set events '10053 trace name context off';
+
+select * from aux_stats$
+----------------------------------------
+CPUSPEEDNW		      3074.07407
+IOSEEKTIM			      10
+IOTFRSPEED			    4096
+
+create table t02 (id char);
+insert into t02 values (1);
+create index i_t02_id on t02(id);
+select * from t02 where id=1;
+select * from t02 where id='1';
+
+select * from t02 where empno<40450;
+
+select * from t01 where empno<342;
+
+select dbms_rowid.rowid_block_number(rowid),count(*) 
+from t01 where empno<42686 
+group by dbms_rowid.rowid_block_number(rowid) order by 1;
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+select * from t01 where empno<5000; 符合条件的行分布在多少个块呢？
+
+select dbms_rowid.rowid_block_number(rowid),count(*) 
+from t01 where empno<5000
+group by dbms_rowid.rowid_block_number(rowid);
+
+1151
+
+select * from t02 where empno<5000; 符合条件的行分布在多少个块呢？
+
+select dbms_rowid.rowid_block_number(rowid),count(*) 
+from t02 where empno<5000
+group by dbms_rowid.rowid_block_number(rowid);
+
+30
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+

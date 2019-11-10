@@ -1,0 +1,92 @@
+Failover:
+alter database set standby database to maximize availability;
+1.主从数据库都要使用spfile
+show parameter spfile
+
+2.主从数据库都要指定local_listener参数
+lsnrctl status
+alter system set local_listener='(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=172.25.0.11)(PORT=1521)))';
+
+lsnrctl status
+alter system set local_listener='(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=172.25.0.10)(PORT=1521)))';
+
+3.主从数据库都要打开闪回数据库功能
+select flashback_on from v$database;
+shutdown immediate
+startup mount
+alter database flashback on;
+alter database open;
+
+4.主从数据库都要启用broker
+alter system set dg_broker_start=true;
+
+主从数据库都要配置连接自身和远程的服务命名！！！！！！！！！
+aux1srv =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.11)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = aux1)
+    )
+  )
+
+db01srv =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 172.25.0.10)(PORT = 7788))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = db01)
+    )
+  )
+
+*主从节点的tnsnames.ora内容完全相同！！！
+
+5.在从库启动broker连接主库
+dgmgrl
+DGMGRL> connect sys/oracle@aux1srv
+
+6.创建中介配置
+DGMGRL> create configuration 'testdg' as primary database is 'aux1' connect identifier is aux1srv;
+
+7.在中介配置中添加从库
+DGMGRL> add database 'db01' as connect identifier is db01srv maintained as physical;
+
+8.查看broker配置
+DGMGRL> show configuration verbose;
+
+9.查看主从数据库配置
+DGMGRL> show database verbose aux1;
+DGMGRL> show database verbose db01;
+
+10.启用broker配置
+DGMGRL> enable configuration;
+
+11.修改快速故障转移延迟时间
+DGMGRL> edit configuration set property FastStartFailoverThreshold=10;
+
+12.启动快速故障转移
+DGMGRL> enable fast_start failover;
+
+13.在从库启动监视器
+dgmgrl
+DGMGRL> connect sys/uplooking@aux1srv
+DGMGRL> start observer;
+
+14.在新的broker窗口查看broker配置
+dgmgrl
+DGMGRL> connect sys/uplooking@aux1srv
+DGMGRL> show configuration verbose;
+
+15.主库abort，到从库节点的broker窗口看切换状态
+
+SYS> select STANDBY_BECAME_PRIMARY_SCN from v$database;
+
+STANDBY_BECAME_PRIMARY_SCN
+--------------------------
+		1386443
+
+FLASHBACK DATABASE TO SCN 1386443;
+alter database convert to physical standby;
+
+SQL> alter system set log_archive_dest_state_2='enable';
+

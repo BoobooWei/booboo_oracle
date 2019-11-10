@@ -1,0 +1,38 @@
+物理备用库转换为逻辑备用库：
+逻辑备用库是以可读写模式打开，所以逻辑备用库会同时使用两种联机日志
+
+停止从库的恢复进程
+alter database recover managed standby database cancel;
+在主库中创建逻辑备用库需要的数据字典
+SQL> exec dbms_logstdby.build;
+SQL> alter system switch logfile;
+
+在从库启动恢复进程同时将数据库转换为逻辑备用库
+shut immediate
+startup mount
+alter database recover to logical standby 数据库的名字;
+shut immediate
+startup mount
+
+alter system set log_archive_dest_1='location=/home/oracle/arc_aux1_dest1/ valid_for=(online_logfiles,standby_role) db_unique_name=aux1';
+
+alter system set log_archive_dest_3='location=/home/oracle/arc_aux1_dest3/ valid_for=(standby_logfiles,standby_role) db_unique_name=aux1';
+
+alter database open resetlogs;
+
+在从库启动sql应用：
+alter database start logical standby apply;
+停止sql应用：
+alter database stop logical standby apply;
+在从库启动sql实时应用：
+alter database start logical standby apply immediate;
+
+SQL> select database_role,protection_mode,protection_level from v$database;
+
+DATABASE_ROLE	 PROTECTION_MODE      PROTECTION_LEVEL
+---------------- -------------------- --------------------
+LOGICAL STANDBY  MAXIMUM AVAILABILITY MAXIMUM AVAILABILITY
+
+关掉逻辑备用库的数据保护状态：
+SQL> alter database guard none;
+
