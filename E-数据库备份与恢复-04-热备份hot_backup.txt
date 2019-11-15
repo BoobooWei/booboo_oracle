@@ -1,3 +1,6 @@
+# 热备份
+
+```bash
 热备份：(online backup)在数据库open状态下进行的备份，需要数据库运行在归档模式下！！！
 
 archive log list
@@ -188,4 +191,4 @@ SQL> select count(*) from scott.e01;
   COUNT(*)
 ----------
      50000
-
+```

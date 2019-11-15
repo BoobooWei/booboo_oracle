@@ -1,3 +1,7 @@
+## 冷备份
+
+
+```bash
 冷备份：（offline backup） 需要停库，一停二拷三启动
 
 mkdir /home/oracle/coldbk
@@ -46,4 +50,4 @@ sqlplus /nolog @/home/oracle/coldbk/start.txt
 chmod +x /home/oracle/coldbk/bk.sh
 
 一致性全冷备份的异地还原！
-
+```

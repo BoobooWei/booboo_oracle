@@ -1,3 +1,7 @@
+# 待整理
+
+```bash
+
 SQL> !cp /u01/app/oracle/oradata/db01/users01.dbf /home/oracle/hotbk/
 
 SQL> select tablespace_name from dba_data_files where file_id=4;
@@ -58,7 +62,7 @@ SQL> conn scott/tiger
 Connected.
 SQL> desc e01
  Name								   Null?    Type
- ----------------------------------------------------------------- -------- --------------------------------------------
+----------------------------------------------------------------- -------- --------------------------------------------
  EMPNO									    NUMBER(4)
  ENAME									    VARCHAR2(10)
  JOB									    VARCHAR2(9)
@@ -83,3 +87,4 @@ exec dbms_logmnr.add_logfile('/u01/app/oracle/oradata/db01/redo02.log',dbms_logm
 exec dbms_logmnr.start_logmnr(options=>dbms_logmnr.dict_from_online_catalog);
 查看挖掘结果
 select sql_redo from v$logmnr_contents where seg_name='E01' and seg_owner='SCOTT';
+```
