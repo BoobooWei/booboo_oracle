@@ -217,29 +217,29 @@ OPS$BOOBOO		       EMP			      SCOTT			     SELECT				      YES NO
 
 ### 创建和管理用户总结
 
-| 功能               | 命令                                       |
-| :--------------- | :--------------------------------------- |
-| 创建用户的基本命令        | create user smith identified by smith;   |
-| 授予权限             | grant create session to smith;           |
-| 连接到指定用户下         | conn smith/smith                         |
-| 查看当前用户是谁         | show user                                |
-| 查看当前版本下所有的系统权限   | select distinct privilege from dba_sys_privs; |
-| 查看与table有关的权限    | select distinct privilege from dba_sys_privs where privilege like '%TABLE%'; |
-| 回收权限             | revoke CREATE ANY TABLE from SMITH;      |
-| 查看用户拥有的权限        | select * from session_privs;             |
-| 使用角色管理权限         | create role r_clerk;grant create session,create table,create synonym to r_clerk;grant r_clerk to smith; |
-| 角色的嵌套            | create user jones identified by jones password expire;create role r_manager;grant r_clerk,create view to r_manager;grant r_manager to jones; |
-| 使用sql语句修改用户口令    | alter user jones identified by oracle;   |
-| 使用sql语句解锁用户      | alter user scott identified by tiger account unlock; |
-| 使用sqlplus命令修改口令  | password                                 |
-| 对象权限             | SQL> grant select on scott.e01 to smith;SQL> grant update (comm) on scott.e01 to smith;SQL> grant delete on scott.e01 to smith;SQL> grant insert on scott.e01 to smith; |
-| 查看用户被授予的系统权限     | SQL> select privilege from dba_sys_privs where GRANTEE='TOM'; |
-| 查看用户被授予的对象权限     | col GRANTEE for a15；col PRIVILEGE for a20；col owner for a15；SQL> SELECT GRANTEE,PRIVILEGE,OWNER,TABLE_NAME FROM DBA_TAB_PRIVS WHERE GRANTEE='TOM'; |
+| 功能                             | 命令                                                         |
+| :------------------------------- | :----------------------------------------------------------- |
+| 创建用户的基本命令               | create user smith identified by smith;                       |
+| 授予权限                         | grant create session to smith;                               |
+| 连接到指定用户下                 | conn smith/smith                                             |
+| 查看当前用户是谁                 | show user                                                    |
+| 查看当前版本下所有的系统权限     | select distinct privilege from dba_sys_privs;                |
+| 查看与table有关的权限            | select distinct privilege from dba_sys_privs where privilege like '%TABLE%'; |
+| 回收权限                         | revoke CREATE ANY TABLE from SMITH;                          |
+| 查看用户拥有的权限               | select * from session_privs;                                 |
+| 使用角色管理权限                 | create role r_clerk;grant create session,create table,create synonym to r_clerk;grant r_clerk to smith; |
+| 角色的嵌套                       | create user jones identified by jones password expire;create role r_manager;grant r_clerk,create view to r_manager;grant r_manager to jones; |
+| 使用sql语句修改用户口令          | alter user jones identified by oracle;                       |
+| 使用sql语句解锁用户              | alter user scott identified by tiger account unlock;         |
+| 使用sqlplus命令修改口令          | password                                                     |
+| 对象权限                         | SQL> grant select on scott.e01 to smith;SQL> grant update (comm) on scott.e01 to smith;SQL> grant delete on scott.e01 to smith;SQL> grant insert on scott.e01 to smith; |
+| 查看用户被授予的系统权限         | SQL> select privilege from dba_sys_privs where GRANTEE='TOM'; |
+| 查看用户被授予的对象权限         | col GRANTEE for a15；col PRIVILEGE for a20；col owner for a15；SQL> SELECT GRANTEE,PRIVILEGE,OWNER,TABLE_NAME FROM DBA_TAB_PRIVS WHERE GRANTEE='TOM'； |
 | 查看用户被授予的列级别的对象权限 | SQL> SELECT OWNER,TABLE_NAME,COLUMN_NAME,PRIVILEGE FROM DBA_COL_PRIVS where GRANTEE='TOM'; |
-| 用户被授予的角色         | SELECT * FROM DBA_ROLE_PRIVS WHERE GRANTEE='TOM'; |
-| 角色被授予的角色         | SELECT * FROM ROLE_ROLE_PRIVS WHERE ROLE='R1'; |
-| 角色被授予的系统权限       | select * from ROLE_SYS_PRIVS WHERE ROLE='R1'; |
-| 角色被授予的对象权限       | select * from ROLE_TAB_PRIVS WHERE ROLE='R1'; |
+| 用户被授予的角色                 | SELECT * FROM DBA_ROLE_PRIVS WHERE GRANTEE='TOM';            |
+| 角色被授予的角色                 | SELECT * FROM ROLE_ROLE_PRIVS WHERE ROLE='R1';               |
+| 角色被授予的系统权限             | select * from ROLE_SYS_PRIVS WHERE ROLE='R1';                |
+| 角色被授予的对象权限             | select * from ROLE_TAB_PRIVS WHERE ROLE='R1';                |
 
 ```shell
 # sysdba创建一个用户blake

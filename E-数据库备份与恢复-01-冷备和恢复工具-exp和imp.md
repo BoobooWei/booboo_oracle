@@ -1,4 +1,4 @@
-# 01-逻辑备份和恢复_exp和imp
+# 冷备和恢复工具-exp和imp
 
 *逻辑备份和恢复*
 
@@ -6,9 +6,9 @@
 
 [toc]
 
-## `exp`备份和`imp`恢复总结
+## `exp`和`imp`简介
 
-[MySQL备份的概念](https://github.com/BoobooWei/booboo_mysql/blob/master/03-MySQL备份与恢复.md) 
+冷备（俗称的备份）中，`exp`属于逻辑备份工具。
 
 我的理解：
 
@@ -28,12 +28,77 @@
 
 8. Oracle `exp`重点掌握以下功能：`单表导出、单表过滤行导出、多表导出、元数据导出、全库导出、属于某个用户的表导出、表空间导出`
 
-## `exp`注意事项
+### `exp`注意事项
 
 1. `exp`程序需在目录中发现同名文件会直接覆盖，不提示；
 2. `exp`无法备份无段的空表，`版本 < Oracle11.2`
 3.  一定要注意字符集，可以在备份之前`测试中文`
 4. 若`字符集不一致`，导入后数据直接`丢失`
+
+## 逻辑备份恢复的一般步骤
+
+### `exp`逻辑备份的一般步骤
+
+1. 检查字符集一致性
+2. 创建备份目录
+3. 开始备份
+4. 检查备份
+
+### `imp`逻辑恢复的一般步骤
+
+1. 检查字符集一致性
+2. 清数据
+3. 导入数据
+4. 检查数据
+
+## 检查字符集一致性
+
+### 1 检查Oracle实例字符集的SQL命令
+
+```sql
+column parameter format a35
+column value format a30
+select * from nls_database_parameters;
+select userenv('language') from dual;
+```
+
+### 2 检查Oracle实例字符集的Bash命令
+
+```bash
+echo $NLS_LANG
+```
+
+### 3 修改Oracle实例字符集的Bash命令
+
+```bash
+NLS_LANG="AMERICAN_AMERICA.ZHS16GBK"
+```
+
+### 4 修改Oracle实例字符集的SQL命令
+
+```sql
+shutdown immediate;
+startup mount;
+alter system enable restricted session;
+alter system set job_queue_processes=0;
+alter system set aq_tm_processes=0;
+alter database open;
+ALTER DATABASE character set INTERNAL_USE ZHS16GBK;
+shutdown immediate;
+startup;
+```
+
+### 5 检查Oracle实例字符集的SQL命令
+
+```sql
+column parameter format a35
+column value format a30
+select * from nls_database_parameters;
+select userenv('language') from dual;
+```
+
+
+
 
 ##  课堂实践
 
@@ -91,49 +156,7 @@ AMERICAN_AMERICA.ZHS16GBK
 AMERICAN_AMERICA.AL32UTF8
 ```
 
-### 实践2-备份`scott`用户下的`t02`表并恢复
-
-备份的步骤
-
-```bash
---t02表中插入一行包含中文的记录
-SQL> select * from t02 where x=800;
-
-	 X Y
----------- ----------
-       800 中国
-       
---开始备份
---1.准备备份目录
-mkdir /home/oracle/expbk
-
---2.备份t02表
-exp userid=scott/tiger tables=t02 file=/home/oracle/expbk/t02.dmp buffer=100000 log=/home/oracle/expbk/t02.exp.log
-
---3.查看t02备份文件
-strings t02.dmp | head
-```
-
-恢复的步骤
-
-```bash
---1.清数据
-SQL> drop table t02 purge;
-
---2.导入备份
-exp userid=soctt/tiger tables=t02 file=/home/oracle/expbk/t02.dmp buffer=100000 log=/home/oracle/expbk/t02.exp.log
-
---3.检查数据
-SQL> select *from t02 where y='中国';
-
-no rows selected
-
---4.没有导入中文的行记录，该记录丢失了，原因是数据库服务器使用的字符集不支持中文
-```
-
-
-
-### 实践3-修改服务器字符集为`AMERICAN_AMERICA.ZHS16GBK`
+### 实践2-修改服务器字符集为`AMERICAN_AMERICA.ZHS16GBK`
 
 ```bash
 --1.修改操作系统变量$NLS_LANG
@@ -156,59 +179,148 @@ shutdown immediate;
 startup;
 ```
 
+### 实践3-备份`scott`用户的`t02`表并恢复到当前实例
 
+> 应用场景：误操作恢复到全量备份的状态，不在乎新写入的数据，生产中不实用
 
-### 实践4-再次备份含有中文的表
+#### 要求
+
+1. 通过`exp`工具备份`scott`用户下的`t02`表 
+2. 模拟人为误操作将`t02`表`drop`
+3. 通过`imp`工具将`t02`表还原
+
+#### Step1：备份
 
 ```bash
---1.准备数据
-SQL> conn scott/tiger;
-Connected.
-SQL> select *from tab;
-
-TNAME			       TABTYPE	CLUSTERID
------------------------------- ------- ----------
-BONUS			       TABLE
-DEPT			       TABLE
-EMP			       TABLE
-SALGRADE		       TABLE
-
-SQL> create table t02 (x int primary key,y varchar(20));
-
-Table created.
-
-SQL> insert into t02 values (1,'中国');
-
-1 row created.
-
+--查看备份前t02表中的数据
+SQL> show user;
+USER is "SCOTT"
 SQL> select * from t02;
 
 	 X Y
 ---------- --------------------
          1 中国
-         
---2.备份单表    
-[oracle@oratest expbk]$ exp userid=scott/tiger tables=t02 file=/home/oracle/expbk/t02.dmp buffer=10000 log=/home/oracle/t02.exp.log
+	 2 巴西
 
---3.清数据还原
-SQL> select * from tab;
+--创建备份目录	 
+[oracle@oratest ~]$ mkdir oracle_exp_backup
+[oracle@oratest ~]$ ll oracle_exp_backup/ -d
+drwxr-xr-x 2 oracle oinstall 4096 Nov 16 19:51 oracle_exp_backup/
 
-TNAME			       TABTYPE	CLUSTERID
------------------------------- ------- ----------
-BONUS			       TABLE
-DEPT			       TABLE
-EMP			       TABLE
-SALGRADE		       TABLE
-T02			       TABLE
+--开始备份
+[oracle@oratest ~]$ exp scott/tiger tables=t02 file=/home/oracle/oracle_exp_backup/t02.dmp buffer=10000 log=/home/oracle/oracle_exp_backup/backup_t02.log
 
+Export: Release 11.2.0.4.0 - Production on Sat Nov 16 19:56:14 2019
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+
+Connected to: Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+Export done in ZHS16GBK character set and AL16UTF16 NCHAR character set
+
+About to export specified tables via Conventional Path ...
+. . exporting table                            T02          2 rows exported
+Export terminated successfully without warnings.
+
+--查看备份文件
+[oracle@oratest ~]$ ll oracle_exp_backup/
+total 20
+-rw-r--r-- 1 oracle oinstall   427 Nov 16 19:56 backup_t02.log
+-rw-r--r-- 1 oracle oinstall 16384 Nov 16 19:56 t02.dmp
+
+[oracle@oratest ~]$ cd oracle_exp_backup/
+[oracle@oratest oracle_exp_backup]$ strings t02.dmp | head
+TEXPORT:V11.02.00
+USCOTT
+RTABLES
+8192
+                                      Sat Nov 16 19:56:15 2019/home/oracle/oracle_exp_backup/t02.dmp
+#G#G
+#G#G
+-08:00
+BYTE
+UNUSED
+```
+
+#### Step2：模拟误操作
+
+```sql
+SQL> conn scott/tiger
+Connected.
+SQL> show user;
+USER is "SCOTT"
 SQL> drop table t02 purge;
 
 Table dropped.
+SQL> select * from t02;
+select * from t02
+              *
+ERROR at line 1:
+ORA-00942: table or view does not exist
+```
 
-SQL> exit
+#### Step3：恢复数据
 
-[oracle@oratest expbk]$ imp userid=scott/tiger tables=t02 file=/home/oracle/expbk/t02.dmp buffer=10000 log=/home/oracle/t02.exp.log
+```bash
+[oracle@oratest oracle_exp_backup]$ pwd
+/home/oracle/oracle_exp_backup
+[oracle@oratest oracle_exp_backup]$ ll
+total 20
+-rw-r--r-- 1 oracle oinstall   427 Nov 16 19:56 backup_t02.log
+-rw-r--r-- 1 oracle oinstall 16384 Nov 16 19:56 t02.dmp
+[oracle@oratest oracle_exp_backup]$ strings t02.dmp | head -n 10
+TEXPORT:V11.02.00
+USCOTT
+RTABLES
+8192
+                                      Sat Nov 16 19:56:15 2019/home/oracle/oracle_exp_backup/t02.dmp
+#G#G
+#G#G
+-08:00
+BYTE
+UNUSED
+[oracle@oratest oracle_exp_backup]$ imp scott/tiger tables=t02 file=/home/oracle/oracle_exp_backup/t02.dmp buffer=10000 log=/home/oracle/oracle_exp_backup/imp_t02.log
 
+Import: Release 11.2.0.4.0 - Production on Sat Nov 16 20:30:24 2019
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+
+Connected to: Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+
+Export file created by EXPORT:V11.02.00 via conventional path
+import done in ZHS16GBK character set and AL16UTF16 NCHAR character set
+. importing SCOTT's objects into SCOTT
+. importing SCOTT's objects into SCOTT
+. . importing table                          "T02"          2 rows imported
+Import terminated successfully without warnings.
+
+SQL> select * from t02;
+
+	 X Y
+---------- --------------------
+         1 中国
+	 2 巴西
+
+```
+
+### 实践4-备份`scott`用户的所有表并导入到其他实例
+
+> 应用场景：11g之前做数据迁移，数据量不大的情况下
+
+#### 要求
+
+1. 通过`exp`工具备份`scott`用户下的所有表 
+2. 通过`imp`工具将`t02`表导入到其他实例
+
+#### Step1：备份
+
+```bash
+--查看备份前t02表中的数据
+SQL> show user;
+USER is "SCOTT"
 SQL> select * from tab;
 
 TNAME			       TABTYPE	CLUSTERID
@@ -219,16 +331,86 @@ EMP			       TABLE
 SALGRADE		       TABLE
 T02			       TABLE
 
-SQL> select * from t02;
+--创建备份目录	 
+[oracle@oratest ~]$ mkdir oracle_exp_backup
+[oracle@oratest ~]$ ll oracle_exp_backup/ -d
+drwxr-xr-x 2 oracle oinstall 4096 Nov 16 19:51 oracle_exp_backup/
 
-	 X Y
----------- --------------------
-         1 中国
+--开始备份
+[oracle@oratest ~]$ exp scott/tiger owner=scott file=/home/oracle/oracle_exp_backup/scott.dmp buffer=100000 log=/home/oracle/oracle_exp_backup/exp_scott.log
+
+Export: Release 11.2.0.4.0 - Production on Sat Nov 16 20:57:50 2019
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+
+Connected to: Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+Export done in ZHS16GBK character set and AL16UTF16 NCHAR character set
+. exporting pre-schema procedural objects and actions
+. exporting foreign function library names for user SCOTT 
+. exporting PUBLIC type synonyms
+. exporting private type synonyms
+. exporting object type definitions for user SCOTT 
+About to export SCOTT's objects ...
+. exporting database links
+. exporting sequence numbers
+. exporting cluster definitions
+. about to export SCOTT's tables via Conventional Path ...
+. . exporting table                          BONUS          0 rows exported
+. . exporting table                           DEPT          4 rows exported
+. . exporting table                            EMP         14 rows exported
+. . exporting table                       SALGRADE          5 rows exported
+. . exporting table                            T02          2 rows exported
+. exporting synonyms
+. exporting views
+. exporting stored procedures
+. exporting operators
+. exporting referential integrity constraints
+. exporting triggers
+. exporting indextypes
+. exporting bitmap, functional and extensible indexes
+. exporting posttables actions
+. exporting materialized views
+. exporting snapshot logs
+. exporting job queues
+. exporting refresh groups and children
+. exporting dimensions
+. exporting post-schema procedural objects and actions
+. exporting statistics
+Export terminated successfully without warnings.
+
+
+--查看备份文件
+[oracle@oratest ~]$ ll oracle_exp_backup/
+total 44
+-rw-r--r-- 1 oracle oinstall   427 Nov 16 19:56 backup_t02.log
+-rw-r--r-- 1 oracle oinstall  1573 Nov 16 20:57 exp_scott.log
+-rw-r--r-- 1 oracle oinstall   508 Nov 16 20:30 imp_t02.log
+-rw-r--r-- 1 oracle oinstall 16384 Nov 16 20:57 scott.dmp
+-rw-r--r-- 1 oracle oinstall 16384 Nov 16 19:56 t02.dmp
+[oracle@oratest ~]$ cd oracle_exp_backup/
+[oracle@oratest oracle_exp_backup]$ strings scott.dmp | head 
+TEXPORT:V11.02.00
+USCOTT
+RUSERS
+8192
+                                       Sat Nov 16 20:57:50 2019/home/oracle/oracle_exp_backup/scott.dmp
+#G#G
+#G#G
+-08:00
+BYTE
+UNUSED
+
 ```
 
-到此成功进行恢复。
+#### Step2：导入
 
-**记住备份的目的是恢复！要保证备份数据的可用性。**
+```bash
+
+```
+
+
 
 ### 实践5-单表带过滤条件的备份和恢复
 

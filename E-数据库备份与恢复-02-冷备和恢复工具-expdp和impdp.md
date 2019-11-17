@@ -1,4 +1,4 @@
-# 02-逻辑备份恢复_EXPDP和IMPDP数据泵
+# 冷备和恢复工具-expdp和impdp
 
 *逻辑备份和恢复*
 
@@ -193,12 +193,16 @@ impdp A/passwd tables=table1,table2 dumpfile=expdp.dmp logfile=impdp.log;
 impdp B/passwd tables=A.table1,A.table2 remap_schema=A:B directory=data_dir dumpfile=expdp.dmp logfile=impdp.log;
 ```
 
-#### 第五种：追加数据；
+#### 第五种：追加数据
+
+`--table_exists_action`:导入对象已存在时执行的操作。有效关键字:`SKIP,APPEND,REPLACE和TRUNCATE`
 
 ```bash
 impdp sys/passwd directory=data_dir dumpfile=expdp.dmp schemas=system table_exists_action=replace logfile=impdp.log; 
---table_exists_action:导入对象已存在时执行的操作。有效关键字:SKIP,APPEND,REPLACE和TRUNCATE
+
 ```
+
+## 课堂实践
 
 ### 实践1-创建逻辑目录用于存放逻辑备份
 
