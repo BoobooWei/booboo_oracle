@@ -34,6 +34,7 @@
 2. `exp`无法备份无段的空表，`版本 < Oracle11.2`
 3.  一定要注意字符集，可以在备份之前`测试中文`
 4. 若`字符集不一致`，导入后数据直接`丢失`
+5. 该工具已过时，建议逻辑备份使用`expdp`
 
 ## 逻辑备份恢复的一般步骤
 
@@ -313,101 +314,19 @@ SQL> select * from t02;
 #### 要求
 
 1. 通过`exp`工具备份`scott`用户下的所有表 
-2. 通过`imp`工具将`t02`表导入到其他实例
+2. 通过`imp`工具将`scott`用户下的所有表导入到其他实例
 
 #### Step1：备份
 
 ```bash
---查看备份前t02表中的数据
-SQL> show user;
-USER is "SCOTT"
-SQL> select * from tab;
-
-TNAME			       TABTYPE	CLUSTERID
------------------------------- ------- ----------
-BONUS			       TABLE
-DEPT			       TABLE
-EMP			       TABLE
-SALGRADE		       TABLE
-T02			       TABLE
-
---创建备份目录	 
-[oracle@oratest ~]$ mkdir oracle_exp_backup
-[oracle@oratest ~]$ ll oracle_exp_backup/ -d
-drwxr-xr-x 2 oracle oinstall 4096 Nov 16 19:51 oracle_exp_backup/
-
---开始备份
-[oracle@oratest ~]$ exp scott/tiger owner=scott file=/home/oracle/oracle_exp_backup/scott.dmp buffer=100000 log=/home/oracle/oracle_exp_backup/exp_scott.log
-
-Export: Release 11.2.0.4.0 - Production on Sat Nov 16 20:57:50 2019
-
-Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
-
-
-Connected to: Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
-With the Partitioning, OLAP, Data Mining and Real Application Testing options
-Export done in ZHS16GBK character set and AL16UTF16 NCHAR character set
-. exporting pre-schema procedural objects and actions
-. exporting foreign function library names for user SCOTT 
-. exporting PUBLIC type synonyms
-. exporting private type synonyms
-. exporting object type definitions for user SCOTT 
-About to export SCOTT's objects ...
-. exporting database links
-. exporting sequence numbers
-. exporting cluster definitions
-. about to export SCOTT's tables via Conventional Path ...
-. . exporting table                          BONUS          0 rows exported
-. . exporting table                           DEPT          4 rows exported
-. . exporting table                            EMP         14 rows exported
-. . exporting table                       SALGRADE          5 rows exported
-. . exporting table                            T02          2 rows exported
-. exporting synonyms
-. exporting views
-. exporting stored procedures
-. exporting operators
-. exporting referential integrity constraints
-. exporting triggers
-. exporting indextypes
-. exporting bitmap, functional and extensible indexes
-. exporting posttables actions
-. exporting materialized views
-. exporting snapshot logs
-. exporting job queues
-. exporting refresh groups and children
-. exporting dimensions
-. exporting post-schema procedural objects and actions
-. exporting statistics
-Export terminated successfully without warnings.
-
-
---查看备份文件
-[oracle@oratest ~]$ ll oracle_exp_backup/
-total 44
--rw-r--r-- 1 oracle oinstall   427 Nov 16 19:56 backup_t02.log
--rw-r--r-- 1 oracle oinstall  1573 Nov 16 20:57 exp_scott.log
--rw-r--r-- 1 oracle oinstall   508 Nov 16 20:30 imp_t02.log
--rw-r--r-- 1 oracle oinstall 16384 Nov 16 20:57 scott.dmp
--rw-r--r-- 1 oracle oinstall 16384 Nov 16 19:56 t02.dmp
-[oracle@oratest ~]$ cd oracle_exp_backup/
-[oracle@oratest oracle_exp_backup]$ strings scott.dmp | head 
-TEXPORT:V11.02.00
-USCOTT
-RUSERS
-8192
-                                       Sat Nov 16 20:57:50 2019/home/oracle/oracle_exp_backup/scott.dmp
-#G#G
-#G#G
--08:00
-BYTE
-UNUSED
-
+exp scott/tiger owner=scott file=/home/oracle/oracle_exp_backup/scott.dmp buffer=10000000 log=/home/oracle/oracle_exp_backup/scott.log
 ```
 
 #### Step2：导入
 
 ```bash
-
+grant connect,resource,create view to scott identified by tiger;
+imp scott/tiger file=/home/oracle/oracle_exp_backup/scott.dmp full=y
 ```
 
 
