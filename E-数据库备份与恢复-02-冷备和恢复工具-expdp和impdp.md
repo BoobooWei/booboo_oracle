@@ -129,7 +129,7 @@ expdp user/passwd@orcl schemas=user dumpfile=expdp.dmp directory=data_dir logfil
 #### 第三种：`tablespace`按表空间导出
 
 ```bash
-expdp sys/passwd@orcl tablespace=tbs1,tbs2 dumpfile=expdp.dmp directory=data_dir logfile=expdp.log;
+expdp sys/passwd@orcl tablespaces=tbs1,tbs2 dumpfile=expdp.dmp directory=data_dir logfile=expdp.log;
 ```
 
 #### 第四种：`tables`导出表
@@ -146,7 +146,7 @@ expdp user/passwd@orcl tables=table1 query='where number=1234' dumpfile=expdp.dm
 
 ### 3 `impdp`导入步骤
 
-（1）如果不是同一台服务器，需要先将上面的dmp文件下载到目标服务器上，具体命令参照：http://www.cnblogs.com/promise-x/p/7452972.html
+（1）如果不是同一台服务器，需要先将上面的dmp文件下载到目标服务器上；
 
 （2）参照“expdp导出步骤”里的前三步，建立逻辑目录；
 
@@ -200,6 +200,19 @@ impdp B/passwd tables=A.table1,A.table2 remap_schema=A:B directory=data_dir dump
 ```bash
 impdp sys/passwd directory=data_dir dumpfile=expdp.dmp schemas=system table_exists_action=replace logfile=impdp.log; 
 
+```
+
+| table_exists_action | 含义                                             |
+| ------------------- | ------------------------------------------------ |
+| APPEND              | 已存在表，追加数据，（若存在主键冲突则导入失败） |
+| REPLACE             | 已存在表，先drop，再导入                         |
+| SKIP                | 已存在表，则跳过并处理下一个对象                 |
+| TRUNCATE            | 已存在表，先truncate，再导入                     |
+
+```
+TABLE_EXISTS_ACTION
+Action to take if imported object already exists.
+Valid keywords are: APPEND, REPLACE, [SKIP] and TRUNCATE.
 ```
 
 ## 课堂实践
@@ -492,6 +505,6 @@ HF((0
 1. 与`exp`工具一样，`expdp`工具也属于逻辑备份，数据一致性为：备份开始的时间点；
 2. 有三种使用方式：1）命令行；2）参数文件；3）交互式
 3. 数据泵的导出模式：1）`full` 完全模式；2）`schema` 库模式；3）`tables` 表模式；4） `tablespace`表空间模式；5） `transport_tablespaces`可传输表空间模式
-4. 从11g开始使用该工具做逻辑备份
-5. 备份文件为二进制文件
+4. 从`11g`开始使用该工具做逻辑备份
+5. 备份文件为`二进制文件`
 
