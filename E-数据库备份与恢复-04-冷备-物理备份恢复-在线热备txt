@@ -1,4 +1,90 @@
-# 热备份
+# 冷备-物理备份-在线热备
+
+> 2019-11-23 BoobooWei
+
+[toc]
+
+##  物理备份-在线热备
+
+上一节课学习了物理备份-离线冷备，在数据库shutdown的情况下，手动复制物理文件到备份目录：
+
+* 口令文件
+* 参数文件
+* 控制文件
+* 数据文件
+* 日志文件
+
+今天学习的是在数据库正常提供服务的情况线下，进行的备份。
+
+物理备份-在线热备份：`online backup`在数据库`open`状态下进行的备份，需要数据库运行在`归档模式下`。
+
+## 操作实践
+
+### 实践01-检查数据库归档模式
+
+[Managing Archived Redo Log Files](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-5EE4AC49-E1B2-41A2-BEE7-AA951EAAB2F3)
+
+```bash
+SQL> select open_mode from v$database;
+
+OPEN_MODE
+--------------------
+READ WRITE
+
+SQL> select open_mode from v$database;
+
+OPEN_MODE
+--------------------
+READ WRITE
+
+SQL> archive log list;
+Database log mode	       No Archive Mode
+Automatic archival	       Disabled
+Archive destination	       /u01/app/oracle/product/11.2.0.4/dbs/arch
+Oldest online log sequence     7
+Current log sequence	       9
+```
+
+> 思考：初始化配置数据库归档模式的方式是什么？即如何设置初始数据库归档模式？
+
+* 可以在`CREATE DATABASE`语句中将初始归档模式设置为数据库创建的一部分。
+
+* 建议创建数据库时，使用`NOARCHIVELOG`也是默认的模式，在创建数据库后，再决定是否更改初始归档模式。
+
+* 如果创建数据库时，指定`ARCHIVELOG`模式，则必须设置初始化参数，这些参数指定已归档的重做日志文件的目标位置（请参见“ [为归档目标设置初始化参数](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-9D577C54-A0BF-43E9-BB56-24A9BFCF4F26) ”）。
+
+### 实践02-开启数据库归档模式
+
+**语法：**更改数据库的归档模式，请使用`ALTER DATABASE`带有`ARCHIVELOG`or `NOARCHIVELOG`子句的语句。
+
+**权限：**必须以管理员权限（`AS SYSDBA`）连接到数据库。
+
+**步骤：** 
+
+1. 关闭数据库实例
+2.  备份数据库 
+3.  编辑初始化参数文件 
+4.  启动实例到`nomount`模式
+5.  更改数据库的归档模式 
+6. 更改数据库为`open`模式
+7.  关闭数据库实例
+8.  备份数据库 
+
+> 更改数据库归档模式将更新控制文件。更改数据库归档模式后，必须备份所有数据库文件和控制文件。以前的任何备份均已在`NOARCHIVELOG`模式下使用，因此不再可用。 
+
+
+
+```bash
+SQL> shutdown immediate;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+```
+
+
+
+## 老师笔记
 
 ```bash
 热备份：(online backup)在数据库open状态下进行的备份，需要数据库运行在归档模式下！！！

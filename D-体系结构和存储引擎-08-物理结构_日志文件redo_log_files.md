@@ -6,11 +6,15 @@
 
 ### 联机重做日志文件
 
+[Managing the Redo Log](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-the-redo-log.html#GUID-BC1F1762-0BB1-4218-B7AF-6160C395AAE4)
+
 每个Oracle数据库都有一组两个或多个联机**重做日志文件**。这些联机重做日志文件，以及重做日志文件的存档副本，统称为数据库的重做日志。一个[**重做日志**](https://docs.oracle.com/cd/B28359_01/server.111/b28318/glossary.htm#CHDIHFBC)由重做条目（也称为**重做记录**），其记录的所有数据更改作出。如果发生故障导致修改后的数据无法永久写入数据文件，则可以从重做日志中获取更改，因此永远不会丢失工作。
 
 为了防止涉及重做日志本身的故障，Oracle数据库允许您创建**多路复用的重做日志，**以便可以在不同的磁盘上维护两个或**多个重做日志**副本。
 
 ### 存档的重做日志文件
+
+[Managing Archived Redo Log Files](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-5EE4AC49-E1B2-41A2-BEE7-AA951EAAB2F3)
 
 归档的重做日志文件是数据库生成的在线重做日志文件的脱机副本。当数据库处于`ARCHIVELOG`模式时，Oracle数据库会自动归档重做日志文件。Oracle建议您启用联机重做日志的自动存档。
 
@@ -36,6 +40,54 @@
 | 修改存档位置                                                 | mkdir -p /home/oracle/arc_cctv_dest1/<br/>alter system set log_archive_dest_1='location=/home/oracle/arc_cctv_dest1/';<br/>alter system switch logfile;<br/>select sequence#,name from v$archived_log; |
 
 
+
+练习
+
+```sql
+SQL> column member format a30
+SQL> select * from v$logfile;
+
+    GROUP# STATUS  TYPE    MEMBER			  IS_	  CON_ID
+---------- ------- ------- ------------------------------ --- ----------
+	 3	   ONLINE  /u01/app/oracle/oradata/booboo NO	       0
+			   /redo03.log
+
+	 2	   ONLINE  /u01/app/oracle/oradata/booboo NO	       0
+			   /redo02.log
+
+	 1	   ONLINE  /u01/app/oracle/oradata/booboo NO	       0
+			   /redo01.log
+
+
+SQL> show parameter DB_RECOVERY_FILE_DEST;
+
+NAME				     TYPE	 VALUE
+------------------------------------ ----------- ------------------------------
+db_recovery_file_dest		     string
+db_recovery_file_dest_size	     big integer 0
+
+SQL> archive log list;
+Database log mode	       No Archive Mode
+Automatic archival	       Disabled
+Archive destination	       /u01/app/oracle/product/12.2.0/db_1/dbs/arch
+Oldest online log sequence     4
+Current log sequence	       6
+
+```
+
+您必须在以`NOARCHIVELOG`或`ARCHIVELOG`模式运行数据库之间进行选择。
+
+是否启用已归档的重做日志文件组的归档取决于数据库上运行的应用程序的可用性和可靠性要求。如果在发生磁盘故障时无法承受丢失数据库中任何数据的风险，请使用`ARCHIVELOG`模式。填充的重做日志文件的存档可能需要您执行额外的管理操作。
+
+- [在NOARCHIVELOG模式下](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-21A9A3AC-1D90-4848-B3BB-3A9E797547F8)
+  运行数据库在`NOARCHIVELOG`模式下运行数据库时，将禁用重做日志的归档。
+- [在ARCHIVELOG模式下](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-36F3335E-A28B-47BA-82C2-E17B4C8A453A)
+  运行数据库在`ARCHIVELOG`模式下运行数据库时，将启用重做日志的归档。
+
+- [Running a Database in NOARCHIVELOG Mode](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-21A9A3AC-1D90-4848-B3BB-3A9E797547F8)
+  When you run your database in `NOARCHIVELOG` mode, you disable the archiving of the redo log.
+- [Running a Database in ARCHIVELOG Mode](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-36F3335E-A28B-47BA-82C2-E17B4C8A453A)
+  When you run a database in `ARCHIVELOG` mode, you enable the archiving of the redo log.
 
 ## 笔记
 
