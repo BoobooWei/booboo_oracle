@@ -376,3 +376,38 @@ SQL> update booboo set sal=1 where empno=9
 出现 dengda
 
 ```
+
+
+
+##  SCN
+
+```sql
+set linesize 200
+column name format a50
+select file#,name,checkpoint_change#,to_char(scn_to_timestamp(checkpoint_change#),'YYYY-mm-dd HH:MM:SS') hm from v$datafile;
+select group#,first_change#,to_char(scn_to_timestamp(first_change#),'YYYY-mm-dd HH:MM:SS') hm from v$log;
+select name,current_scn,to_char(scn_to_timestamp(current_scn),'YYYY-mm-dd HH:MM:SS') hm from v$database;
+```
+
+
+
+```ssql
+
+SQL> select group#,first_change#,to_char(scn_to_timestamp(first_change#),'YYYY-mm-dd HH:MM:SS') hm from v$log;
+
+    GROUP# FIRST_CHANGE# HM
+---------- ------------- -------------------
+	 1	  276076 2019-11-24 03:11:09
+	 2	  197609 2019-11-10 03:11:09
+	 3	  224760 2019-11-10 04:11:15
+
+SQL> select name,current_scn,to_char(scn_to_timestamp(current_scn),'YYYY-mm-dd HH:MM:SS') hm from v$database;
+
+NAME	  CURRENT_SCN HM
+--------- ----------- -------------------
+BOOBOO	       276342 2019-11-24 03:11:39
+
+```
+
+
+
