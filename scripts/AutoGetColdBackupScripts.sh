@@ -72,7 +72,7 @@ cat > ${coldbk}/bk.sh << ENDF
 sqlplus /nolog @${coldbk}/shut.txt
 cp -v $ORACLE_HOME/dbs/orapw$ORACLE_SID ${coldbk}/${dir_name}
 cp -v $ORACLE_HOME/dbs/spfile$ORACLE_SID.ora ${coldbk}/${dir_name}
-cp -v $ORACLE_HOME/dbs/init$ORACLE_SID.ora ${coldbk}/${dir_name}
+cp -v $ORACLE_HOME/dbs/init.ora ${coldbk}/${dir_name}
 ENDF
 
 grep -v '^$' ${coldbk}/${dir_name}/tmp_cmd.lst >> ${coldbk}/bk.sh
