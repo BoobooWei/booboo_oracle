@@ -53,7 +53,7 @@ set heading off
 set pagesize 1000
 set linesize 100
 spool ${coldbk}/${dir_name}/tmp_cmd
-select 'cp -v '||name||' ${coldbk}/${dir_name}'
+select 'cp -v '||name||' ${coldbk}/${dir_name}/'
 from
 (select name from v\$controlfile
 union all
@@ -70,9 +70,9 @@ sqlplus /nolog @${coldbk}/get_cmd.txt $> /dev/null
 
 cat > ${coldbk}/bk.sh << ENDF
 sqlplus /nolog @${coldbk}/shut.txt
-cp -v $ORACLE_HOME/dbs/orapw$ORACLE_SID ${coldbk}/${dir_name}
-cp -v $ORACLE_HOME/dbs/spfile$ORACLE_SID.ora ${coldbk}/${dir_name}
-cp -v $ORACLE_HOME/dbs/init.ora ${coldbk}/${dir_name}
+cp -v $ORACLE_HOME/dbs/orapw$ORACLE_SID ${coldbk}/${dir_name}/
+cp -v $ORACLE_HOME/dbs/spfile$ORACLE_SID.ora ${coldbk}/${dir_name}/
+cp -v $ORACLE_HOME/dbs/init.ora ${coldbk}/${dir_name}/
 ENDF
 
 grep -v '^$' ${coldbk}/${dir_name}/tmp_cmd.lst >> ${coldbk}/bk.sh
