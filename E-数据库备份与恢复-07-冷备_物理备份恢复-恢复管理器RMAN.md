@@ -1,7 +1,7 @@
 
 # 恢复管理器Recover Manager
 
-
+> 2019.12.07 BoobooWei
 
 [toc]
 
@@ -117,22 +117,12 @@ startup force
 ORA-01157: cannot identify/lock data file 5 - see DBWR trace file
 ORA-01110: data file 5: '/u01/app/oracle/oradata/db01/tbs01.dbf'
 
-将5号数据文件offline将数据库打开
-alter database datafile 5 offline;
-alter database open;
-
-SQL> select count(*) from scott.t01;
-select count(*) from scott.t01
-                           *
-ERROR at line 1:
-ORA-00376: file 5 cannot be read at this time
-ORA-01110: data file 5: '/u01/app/oracle/oradata/db01/tbs01.dbf'
 
 启动rman还原和恢复5号文件
 run{
 restore datafile 5;
 recover datafile 5;
-sql 'alter database datafile 5 online';
+alter database open;
 }
 ```
 
@@ -180,7 +170,7 @@ RMAN> configure channel device type disk format '/home/oracle/rmanbk/%d_%I_%s_%p
 %T --> 格里高利格式的时间
 ```
 
-## 实践6-使用备份集备份数据文件
+### 实践6-使用备份集备份数据文件
 
 ```sql
 使用备份集备份数据文件：
@@ -199,6 +189,11 @@ recover datafile 5;
 alter database open;
 }
 
+创建2个备份目录
+mkdir rmanbk1
+mkdir rmanbk2
+
+RMAN中设置两个channal，运行两个备份
 run{
 allocate channel c1 type disk format '/home/oracle/rmanbk1/%d_%I_%s_%p_%c_%T.bkp';
 allocate channel c2 type disk format '/home/oracle/rmanbk2/%d_%I_%s_%p_%c_%T.bkp';
@@ -207,3 +202,4 @@ backup
 (datafile 4 channel c2);
 }
 ```
+
