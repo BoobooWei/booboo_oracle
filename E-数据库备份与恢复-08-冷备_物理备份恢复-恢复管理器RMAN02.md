@@ -2,7 +2,7 @@
 
 > 2019.12.07 BoobooWei
 
-[toc]
+[TOC]
 
 ## 操作实践
 
@@ -193,7 +193,7 @@ BS Key  Size       Device Type Elapsed Time Completion Time
   ---- ------- ---------- --------- ---------- ---------
   1    19      450036     07-DEC-19 450049     07-DEC-19
 
-```  
+```
 
 ### 实践4-使用rman的备份片在新的节点还原恢复数据库
 
@@ -508,8 +508,9 @@ end;
 
 ## 总结
 
-1. `copy` 和 `backup` 的区别：前者是快照包含空闲块，后者是备份不包含空闲块，前者恢复速度更快，相当于手动热备，后者可压缩和增量备份。
+1. `copy` 和 `backup` 的区别：前者是快照包含空闲块，后者是备份不包含空闲块，前者恢复速度更快，相当于手动在线的热备，后者可压缩和增量备份。
 2. `backup datafile 1;` 和 `backup as compressed backupset datafile 1;` 的区别：前者只备份指定的数据文件，后者会同时备份`spfile`和`controlfile`且做压缩
 3. 备份全库`backup as compressed backupset database plus archivelog;` 重点掌握
 4. RMAN备份恢复脚本:[rman_recover_full_database.sh](scripts/rman_recover_full_database.sh)
+5. 学到此处会发现RMAN的功能非常强大，知识点非常多，我的建议是，首先了解RMAN能做什么；其次掌握工作中需要RMAN做什么（A. 通过RMAN做生产数据备份计划；B. 通过RMAN搭建DG；）下节课我们会开始学习冷备计划的制定和实施
 
