@@ -197,6 +197,8 @@ BS Key  Size       Device Type Elapsed Time Completion Time
 
 ### 实践4-使用rman的备份片在新的节点还原恢复数据库
 
+> 2019.12.15 
+
 ```sql
 使用rman的备份片在新的节点还原恢复数据库：
 将备份片拷贝到远程
@@ -227,6 +229,232 @@ RMAN> recover database;
 RMAN> alter database open resetlogs;
 ```
 
+
+#### 清空数据库
+
+```SQL
+shutdown immediate;
+startup restrict exclusive force mount;
+drop database;
+```
+
+#### rman恢复脚本
+
+```bash
+#!/bin/bash
+# auth:booboowei
+# date:20191215
+# script_name:rman_recover_full_database.sh
+
+# 指定全备份路径
+rmanbk=/home/oracle/rmanbk/
+# 指定SID的bash启动参数文件
+sid_file=/home/oracle/.bash_profile
+
+get_variables(){
+# 通过RMAN恢复
+echo "Get SID and RMAN backup file of spfile and controlfile."
+cd $rmanbk
+for i in `ls`;do db_name=`strings $i | grep db_name`; if [[ $db_name != '' ]];then file=$i;sid=`echo $db_name | awk -F '=' '{print $2}' |awk -F "'" '{print $2}'`;fi;done
+echo "SID       :"$sid
+echo "RMAN FILE :"$file
+echo 
+}
+
+
+clean_database(){
+echo "Set SID and Clean up database."
+# 设置SID
+sed -i "s/.*ORACLE_SID.*/export ORACLE_SID=${sid}/" ${sid_file}
+source ${sid_file}
+# 清空数据库
+
+echo -e "shutdown immediate;\nstartup restrict exclusive force mount;\ndrop database;\nexit;" > /tmp/clean_database.sql 
+sqlplus / as sysdba @/tmp/clean_database.sql
+}
+
+
+recover_database(){
+cat > /tmp/rman_recover_database.sql << ENDF
+run{
+startup nomount;
+restore spfile from "${rmanbk}/${file}";
+startup force nomount;
+restore controlfile from "${rmanbk}/${file}";
+alter database mount;
+catalog start with "${rmanbk}";
+restore database;
+recover database;
+alter database open resetlogs;
+}
+ENDF
+
+rman target / @/tmp/rman_recover_database.sql
+echo "alter database open resetlogs;" | sqlplus / as sysdba
+}
+
+get_variables
+clean_database
+recover_database
+```
+
+操作记录
+```SQL
+SQL> shutdown immediate;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+SQL> startup restrict exclusive force mount;
+ORACLE instance started.
+
+Total System Global Area  229683200 bytes
+Fixed Size		    2251936 bytes
+Variable Size		  171967328 bytes
+Database Buffers	   50331648 bytes
+Redo Buffers		    5132288 bytes
+Database mounted.
+SQL> drop database;
+
+Database dropped.
+
+Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+```
+
+
+通过rman全备份恢复操作记录
+
+```SQL
+[oracle@oratest rmanbk]$ pwd
+/home/oracle/rmanbk
+[oracle@oratest rmanbk]$ ll
+total 57648
+-rw-r----- 1 oracle oinstall    18432 Dec 15 09:35 BOOBOO_3420951115_28_1_20191215.bkp
+-rw-r----- 1 oracle oinstall 57892864 Dec 15 09:35 BOOBOO_3420951115_29_1_20191215.bkp
+-rw-r----- 1 oracle oinstall  1114112 Dec 15 09:35 BOOBOO_3420951115_30_1_20191215.bkp
+-rw-r----- 1 oracle oinstall     3072 Dec 15 09:35 BOOBOO_3420951115_31_1_20191215.bkp
+[oracle@oratest rmanbk]$ for i in `ls`;do db_name=`strings $i | grep db_name`; if [[ $db_name != '' ]];then echo $i;echo $db_name;fi;done
+BOOBOO_3420951115_30_1_20191215.bkp
+*.db_name='BOOBOO'
+
+[oracle@oratest rmanbk]$ rman target /
+
+Recovery Manager: Release 11.2.0.4.0 - Production on Sun Dec 15 10:18:03 2019
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database (not started)
+
+run{
+startup nomount;
+restore spfile from "/home/oracle/rmanbk/BOOBOO_3420951115_30_1_20191215.bkp";
+startup force nomount;
+restore controlfile from "/home/oracle/rmanbk/BOOBOO_3420951115_30_1_20191215.bkp";
+alter database mount;
+catalog start with '/home/oracle/rmanbk/';
+restore database;
+recover database;
+alter database open resetlogs;
+11> };
+
+startup failed: ORA-01078: failure in processing system parameters
+LRM-00109: could not open parameter file '/u01/app/oracle/product/11.2.0.4/dbs/initBOOBOO.ora'
+
+starting Oracle instance without parameter file for retrieval of spfile
+Oracle instance started
+
+Total System Global Area    1068937216 bytes
+
+Fixed Size                     2260088 bytes
+Variable Size                281019272 bytes
+Database Buffers             780140544 bytes
+Redo Buffers                   5517312 bytes
+
+Starting restore at 15-DEC-19
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=170 device type=DISK
+
+channel ORA_DISK_1: restoring spfile from AUTOBACKUP /home/oracle/rmanbk/BOOBOO_3420951115_30_1_20191215.bkp
+channel ORA_DISK_1: SPFILE restore from AUTOBACKUP complete
+Finished restore at 15-DEC-19
+
+Oracle instance started
+
+Total System Global Area     229683200 bytes
+
+Fixed Size                     2251936 bytes
+Variable Size                171967328 bytes
+Database Buffers              50331648 bytes
+Redo Buffers                   5132288 bytes
+
+Starting restore at 15-DEC-19
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=170 device type=DISK
+
+channel ORA_DISK_1: restoring control file
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+output file name=/u01/app/oracle/product/11.2.0.4/dbs/cntrlBOOBOO.dbf
+Finished restore at 15-DEC-19
+
+database mounted
+released channel: ORA_DISK_1
+
+searching for all files that match the pattern /home/oracle/rmanbk/
+
+List of Files Unknown to the Database
+=====================================
+File Name: /home/oracle/rmanbk/BOOBOO_3420951115_30_1_20191215.bkp
+File Name: /home/oracle/rmanbk/BOOBOO_3420951115_31_1_20191215.bkp
+
+Do you really want to catalog the above files (enter YES or NO)? yes
+cataloging files...
+cataloging done
+
+List of Cataloged Files
+=======================
+File Name: /home/oracle/rmanbk/BOOBOO_3420951115_30_1_20191215.bkp
+File Name: /home/oracle/rmanbk/BOOBOO_3420951115_31_1_20191215.bkp
+
+Starting restore at 15-DEC-19
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=170 device type=DISK
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00001 to /u01/app/oracle/oradata/BOOBOO/system01.dbf
+channel ORA_DISK_1: restoring datafile 00002 to /u01/app/oracle/oradata/BOOBOO/sysaux01.dbf
+channel ORA_DISK_1: restoring datafile 00003 to /u01/app/oracle/oradata/BOOBOO/undotbs01.dbf
+channel ORA_DISK_1: restoring datafile 00004 to /u01/app/oracle/oradata/BOOBOO/users01.dbf
+channel ORA_DISK_1: reading from backup piece /home/oracle/rmanbk/BOOBOO_3420951115_29_1_20191215.bkp
+channel ORA_DISK_1: piece handle=/home/oracle/rmanbk/BOOBOO_3420951115_29_1_20191215.bkp tag=TAG20191215T093531
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:15
+Finished restore at 15-DEC-19
+
+Starting recover at 15-DEC-19
+using channel ORA_DISK_1
+
+starting media recovery
+
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=27
+channel ORA_DISK_1: reading from backup piece /home/oracle/rmanbk/BOOBOO_3420951115_31_1_20191215.bkp
+channel ORA_DISK_1: piece handle=/home/oracle/rmanbk/BOOBOO_3420951115_31_1_20191215.bkp tag=TAG20191215T093540
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+archived log file name=/home/oracle/arc_booboo_dest1/1_27_1023917451.dbf thread=1 sequence=27
+unable to find archived log
+archived log thread=1 sequence=28
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of recover command at 12/15/2019 10:18:53
+RMAN-06054: media recovery requesting unknown archived log for thread 1 with sequence 28 and starting SCN of 452643
+
+```
 
 ### 实践5-使用rman将数据文件恢复到新的位置
 
@@ -280,6 +508,8 @@ end;
 
 ## 总结
 
-1. `copy` 和 `backup` 的区别：前者是快照，后者是备份
+1. `copy` 和 `backup` 的区别：前者是快照包含空闲块，后者是备份不包含空闲块，前者恢复速度更快，相当于手动热备，后者可压缩和增量备份。
 2. `backup datafile 1;` 和 `backup as compressed backupset datafile 1;` 的区别：前者只备份指定的数据文件，后者会同时备份`spfile`和`controlfile`且做压缩
 3. 备份全库`backup as compressed backupset database plus archivelog;` 重点掌握
+4. RMAN备份恢复脚本:[rman_recover_full_database.sh](scripts/rman_recover_full_database.sh)
+
