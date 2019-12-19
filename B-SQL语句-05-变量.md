@@ -1,8 +1,37 @@
-### 变量
+# SQL语句-查询语句-变量
 
-[toc]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-#### 变量的类型
+- [SQL语句-查询语句-变量](#sql语句-查询语句-变量)
+	- [变量的类型](#变量的类型)
+		- [替代变量](#替代变量)
+			- [实践1-where 字句中包含替代变量](#实践1-where-字句中包含替代变量)
+			- [实践2-select 字句中包含替代变量](#实践2-select-字句中包含替代变量)
+			- [实践3-from 字句中包含替代变量](#实践3-from-字句中包含替代变量)
+			- [实践4-如果替代变量的类型为字符串，需要加单引号](#实践4-如果替代变量的类型为字符串需要加单引号)
+			- [实践5-分页查询:每页5行](#实践5-分页查询每页5行)
+			- [实践6-替代变量的声明调用查看取消](#实践6-替代变量的声明调用查看取消)
+			- [实践7-`&&`的作用](#实践7-的作用)
+		- [SQLPlus环境变量](#sqlplus环境变量)
+			- [实践1- `verify`新老语句的对比开关](#实践1-verify新老语句的对比开关)
+			- [实践2- `echo`控制脚本执行时是否显示命令](#实践2-echo控制脚本执行时是否显示命令)
+			- [实践3- arraysize](#实践3-arraysize)
+			- [实践4-feedback](#实践4-feedback)
+			- [实践5-`heading`决定是否列标题显示在报表中](#实践5-heading决定是否列标题显示在报表中)
+			- [实践6-`long`默认打印出80个字符](#实践6-long默认打印出80个字符)
+		- [SQLPlus报表格式](#sqlplus报表格式)
+			- [实践1-列名换行](#实践1-列名换行)
+			- [实践2-给工资列加美元前缀](#实践2-给工资列加美元前缀)
+			- [实践3-给sal和comm列设置美元前缀，列名居中显示](#实践3-给sal和comm列设置美元前缀列名居中显示)
+			- [实践4-清空格式](#实践4-清空格式)
+			- [实践5-在上一条sql的基础上进行排序，再次调用用`/`](#实践5-在上一条sql的基础上进行排序再次调用用)
+			- [实践6-BREAK 命令将行分成部分并限制重复的值](#实践6-break-命令将行分成部分并限制重复的值)
+			- [实践7-将结果集以报表的形式打印bti](#实践7-将结果集以报表的形式打印bti)
+		- [SQLPlus的spool脱机模式](#sqlplus的spool脱机模式)
+
+<!-- /TOC -->
+
+## 变量的类型
 
 |变量类型|设置|查看|调用|备注|
 |:--|:--|:--|:--|:--|
@@ -10,39 +39,18 @@
 |SQLPlus环境变量|set echo on|show echo||当前会话生效|
 |SQLPlus环境变量|配置文件|show echo||永久生效|
 
+### 替代变量
 
-其中若没有事先define声明一个变量，那么引用的时候：
+若没有事先声明一个变量，那么引用的时候：
+
 1. `&p` 代表一次性声明，从键盘输入变量的值，下次还需要再次输入，define命令不能看到p变量
 2. `&&p` 代表当前会话中的声明，从键盘输入变量的值，下次就不需要再输入，define命令能看到p变量
 
+#### 实践1-where 字句中包含替代变量
 
+查询emp表中部门编号为变量p的值的员工姓名
 
-|SET 变量和值|描述|备注|
-|:--|:--|:--|
-|VERIFY {OFF\|ON}|新老两行的比较是否显示|默认开启|
-|ECHO {OFF\|ON}|执行sql脚本时，是否显示脚本中的sql语句|默认关闭|
-|ARRAY[SIZE] {20\| n}|设置数据库取回数据的大小（行）|默认为15，范围为1～5000|
-|FEED[BACK] {6\|n\|OFF\|ON}| 当查询选择了n行后,显示查询返回记录的数量||
-|HEA[DING] {OFF\|ON}|决定是否列标题显示在报表中|默认开启|
-|LONG {80\|n} |设置显示 LONG 值时的最大宽度|默认80个字符|
-
-
-获取更加可读性的报表,你可以通过使用下面的命令控制报表栏
-
-|命令|描述|
-|:---|:--|
-|COL[UMN][column option]|控制列格式| 
-|TTI[TLE] [text\|OFF\|ON]|指定每页报表顶部显示的标题|
-|BTI[TLE] [text\|OFF\|ON]|指定每页报表底部显示的脚注|
-|BRE[AK] [ON report_element]|限制重复的值和使用连接符将数据行分成几部分|
-
-
-#### 应用实例
-
-1. where 字句中包含替代变量 
-
-```shell
-# 查询emp表中部门编号为变量p的值的员工姓名
+```sql
 SQL> select ename,deptno from emp where deptno=&p;
 Enter value for p: 10
 old   1: select ename,deptno from emp where deptno=&p
@@ -69,10 +77,11 @@ FORD		   20
 
 ```
 
-2. select 字句中包含替代变量
+#### 实践2-select 字句中包含替代变量
 
-```shell
-# 查看雇员姓名和变量c的值
+查看雇员姓名和变量c的值
+
+```sql
 SQL> select ename,&c from emp;
 Enter value for c: deptno
 old   1: select ename,&c from emp
@@ -129,10 +138,11 @@ MILLER		 1300
 ```
 
 
-3. from 字句中包含替代变量
+#### 实践3-from 字句中包含替代变量
 
-```shell
-# 查看变量p所代表的表中的前5行
+查看变量p所代表的表中的前5行
+
+```sql
 SQL> select * from &t where rownum < 6;
 Enter value for t: salgrade
 old   1: select * from &t where rownum < 6
@@ -160,10 +170,11 @@ new   1: select * from dept where rownum < 6
 
 ```
 
-4. 如果替代变量的类型为字符串，需要加单引号
+#### 实践4-如果替代变量的类型为字符串，需要加单引号
 
-```shell
-# 查询emp表中雇员姓名为某个值的
+查询emp表中雇员姓名为某个值的
+
+```sql
 SQL> select * from emp where ename=&e;
 Enter value for e: scott
 old   1: select * from emp where ename=&e
@@ -188,15 +199,19 @@ new   1: select * from emp where ename='SCOTT'
 
 ```
 
-5. 分页查询:每页5行
+#### 实践5-分页查询:每页5行
+
+按照工资高低排序，并分页显示，每页5行
+
+```bash
+1 1 5
+2 6 10
+3 11 15
+n n*5-4   n*5
+```
 
 
-```shell
-#按照工资高低排序，并分页显示，每夜5行
-#1 1 5
-#2 6 10
-#3 11 15
-#n n*5-4   n*5
+```sql
 SQL> select b.* from (select rownum rn,a.* from (select ename,sal from emp order by sal desc ) a ) b where rn between &p*5-4 and &p*5;
 Enter value for p: 1
 Enter value for p: 1
@@ -240,9 +255,9 @@ new   1: select b.* from (select rownum rn,a.* from (select ename,sal from emp o
 
 ```
 
-6. 替代变量的声明，调用，查看，取消
+#### 实践6-替代变量的声明调用查看取消
 
-```shell
+```sql
 SQL> define
 DEFINE _DATE	       = "31-JUL-17" (CHAR)
 DEFINE _CONNECT_IDENTIFIER = "orcl" (CHAR)
@@ -253,9 +268,12 @@ DEFINE _EDITOR	       = "vim" (CHAR)
 DEFINE _O_VERSION      = "Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
 With the Partitioning, OLAP, Data Mining and Real Application Testing options" (CHAR)
 DEFINE _O_RELEASE      = "1102000400" (CHAR)
+```
 
-# 声明一个替代变量
-SQL> define col=sal 
+声明一个替代变量define
+
+```sql
+SQL> define col=sal
 
 SQL> define
 DEFINE _DATE	       = "31-JUL-17" (CHAR)
@@ -294,17 +312,23 @@ FORD		 3000
 MILLER		 1300
 
 14 rows selected.
+```
 
-# 查看变量的值
+查看变量的值
+
+```sql
 SQL> select '&col' from dual;
 old   1: select '&col' from dual
 new   1: select 'sal' from dual
 
-'SA
+SA
 ---
 sal
+```
 
-# 取消变量
+取消变量undefine
+
+```sql
 SQL> undefine col
 SQL> define
 DEFINE _DATE	       = "31-JUL-17" (CHAR)
@@ -321,16 +345,15 @@ Enter value for col: xx
 old   1: select '&col' from dual
 new   1: select 'xx' from dual
 
-'X
+'X'
 --
 xx
-
 ```
 
 
-7. &&的作用
+#### 实践7-`&&`的作用
 
-```shell
+```sql
 SQL> select b.* from (select rownum rn,a.* from (select ename,sal from emp order by sal desc ) a ) b where rn between &&p*5-4 and &p*5;
 Enter value for p: 1
 old   1: select b.* from (select rownum rn,a.* from (select ename,sal from emp order by sal desc ) a ) b where rn between &&p*5-4 and &p*5
@@ -375,15 +398,40 @@ new   1: select b.* from (select rownum rn,a.* from (select ename,sal from emp o
 * 优点是第二个&p不需要手动输入了
 * 缺点在于下一次如果需要修改p的值，还得undefine
 
+### SQLPlus环境变量
 
-8. `verify`新老语句的对比开关
+|SET 变量和值|描述|备注|
+|:--|:--|:--|
+|VERIFY {OFF\|ON}|新老两行的比较是否显示|默认开启|
+|ECHO {OFF\|ON}|执行sql脚本时，是否显示脚本中的sql语句|默认关闭|
+|ARRAY[SIZE] {20\| n}|设置数据库取回数据的大小（行）|默认为15，范围为1～5000|
+|FEED[BACK] {6\|n\|OFF\|ON}| 当查询选择了n行后,显示查询返回记录的数量||
+|HEA[DING] {OFF\|ON}|决定是否列标题显示在报表中|默认开启|
+|LONG {80\|n} |设置显示 LONG 值时的最大宽度|默认80个字符|
 
-```shell
-# show命令查看环境变量verify
+
+获取更加可读性的报表,你可以通过使用下面的命令控制报表栏
+
+|命令|描述|
+|:---|:--|
+|COL[UMN]|控制列格式|
+|TTI[TLE] [text\|OFF\|ON]|指定每页报表顶部显示的标题|
+|BTI[TLE] [text\|OFF\|ON]|指定每页报表底部显示的脚注|
+|BRE[AK] [ON report_element]|限制重复的值和使用连接符将数据行分成几部分|
+
+#### 实践1- `verify`新老语句的对比开关
+
+
+show命令查看环境变量verify
+
+```sql
 SQL> show verify
 verify ON
+```
 
-# 设置该环境变量为off状态
+设置该环境变量为off状态
+
+```sql
 SQL> set verify off
 
 
@@ -403,14 +451,13 @@ KING		 5000
 FORD		 3000
 
 6 rows selected.
-
 ```
 
 
 
-9. `echo`控制脚本执行时是否显示命令
+#### 实践2- `echo`控制脚本执行时是否显示命令
 
-```shell
+```sql
 SQL> show echo
 echo OFF
 SQL> list
@@ -455,19 +502,27 @@ FORD		 3000
 6 rows selected.
 ```
 
-10. 其他sqlplush环境变量
+#### 实践3- arraysize
 
-```shell
-# 数据库取回数据的大小为15行
+数据库取回数据的大小为15行
+
+```sql
 SQL> show arraysize
 arraysize 15
+```
+arraysize最大值为5000
 
-# 最大值为5000
+```sql
 SQL> set arraysize 5000
 SQL> set arraysize 5001
 SP2-0267: arraysize option 5001 out of range (1 through 5000)
+```
 
-# 当查询选择了n行后,显示查询返回记录的数量
+#### 实践4-feedback
+
+当查询选择了n行后,显示查询返回记录的数量
+
+```sql
 SQL> show feedback
 FEEDBACK ON for 6 or more rows
 
@@ -492,9 +547,11 @@ feedback OFF
 SQL> set feedback 6;
 SQL> show feedback;
 FEEDBACK ON for 6 or more rows
+```
 
-# 决定是否列标题显示在报表中
+#### 实践5-`heading`决定是否列标题显示在报表中
 
+```sql
 SQL> show heading
 heading ON
 SQL> select * from salgrade;
@@ -517,12 +574,18 @@ SQL> select * from salgrade;
 	 5	 3001	    9999
 
 SQL> set heading on;
+```
 
-# 默认打印出80个字符
+#### 实践6-`long`默认打印出80个字符
+
+```sql
 SQL> show long
 long 80
+```
 
-## 打印emp表的元数据，发现不全
+打印emp表的元数据，发现不全
+
+```sql
 SQL> select dbms_metadata.get_ddl('TABLE','EMP') from dual;
 
 DBMS_METADATA.GET_DDL('TABLE','EMP')
@@ -531,9 +594,12 @@ DBMS_METADATA.GET_DDL('TABLE','EMP')
   CREATE TABLE "SCOTT"."EMP"
    (	"EMPNO" NUMBER(4,0),
 	"ENAME" VARCHAR2(10),
+```
 
-## 修改long的值
-SQL> set long 50000 
+修改long的值
+
+```sql
+SQL> set long 50000
 
 SQL> select dbms_metadata.get_ddl('TABLE','EMP') from dual;
 
@@ -567,10 +633,11 @@ DBMS_METADATA.GET_DDL('TABLE','EMP')
 
 ```
 
-11. 报表格式
+### SQLPlus报表格式
 
-```shell
-# 列名换行
+#### 实践1-列名换行
+
+```sql
 SQL> col ename heading 'first|name'
 SQL> select ename,sal from emp;
 
@@ -593,9 +660,12 @@ FORD		 3000
 MILLER		 1300
 
 14 rows selected.
+```
 
-# 给工资列加美元前缀
-SQL> col sal for $99,999.99 
+#### 实践2-给工资列加美元前缀
+
+```sql
+SQL> col sal for $99,999.99
 SQL> select ename,sal from emp;
 
 first
@@ -617,9 +687,11 @@ FORD	     $3,000.00
 MILLER	     $1,300.00
 
 14 rows selected.
+```
 
-# 给sal和comm列设置美元前缀，列名居中显示
+#### 实践3-给sal和comm列设置美元前缀，列名居中显示
 
+```sql
 SQL> col sal justify c for $99,999.99
 SQL> col comm justify c for $99,999.99
 
@@ -644,8 +716,12 @@ FORD	     $3,000.00
 MILLER	     $1,300.00
 
 14 rows selected.
+```
 
-# 清空格式
+
+#### 实践4-清空格式
+
+```sql
 SQL> col ename clear
 SQL> col sal clear
 SQL> col comm clear
@@ -669,9 +745,11 @@ FORD		 3000
 MILLER		 1300
 
 14 rows selected.
+```
 
-# 在上一条sql的基础上进行排序，再次调用用/
+#### 实践5-在上一条sql的基础上进行排序，再次调用用`/`
 
+```sql
 SQL> select deptno,ename from emp;
 
     DEPTNO ENAME
@@ -715,8 +793,11 @@ SQL> /
 	30 MARTIN
 
 14 rows selected.
+```
 
-# BREAK 命令将行分成部分并限制重复的值
+#### 实践6-BREAK 命令将行分成部分并限制重复的值
+
+```sql
 SQL> select deptno,ename from emp;
 
     DEPTNO ENAME
@@ -780,12 +861,19 @@ SQL> select deptno,ename from emp order by deptno;
 	   MARTIN
 
 14 rows selected.
+```
 
-# 清除break
+清除break
+
+```sql
 SQL> clear break
 breaks cleared
+```
 
-# 将结果集以报表的形式打印bti
+
+#### 实践7-将结果集以报表的形式打印bti
+
+```sql
 SQL> show tti
 ttitle OFF and is the first few characters of the next SELECT statement
 SQL> show bti
@@ -829,16 +917,14 @@ MILLER		 1300	      10
 
 
 
-12. spool脱机模式
+### SQLPlus的spool脱机模式
 
 * spool 1.txt 开始脱机
 * spool off 结束脱机存盘
 * spool 1.txt append 追加脱机
 * spool off 结束脱机存盘
 
-
-
-```shell
+```sql
 SQL> spool 1.txt
 SQL> select * fro salgrade;
 select * fro salgrade
@@ -871,12 +957,12 @@ SQL> select * from dept;
 SQL> spool off
 
 
-[oracle@oracle0 ~]$ cat 1.txt 
+[oracle@oracle0 ~]$ cat 1.txt
 SQL> select * fro salgrade;
 select * fro salgrade
          *
 ERROR at line 1:
-ORA-00923: FROM keyword not found where expected 
+ORA-00923: FROM keyword not found where expected
 
 
 SQL> select * from salgrade;
@@ -900,15 +986,4 @@ SQL> select * from dept;
         40 OPERATIONS     BOSTON                                                                                        
 
 SQL> spool off
-
 ```
-
-
-
-
-
-
-
-
-
-
