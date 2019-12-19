@@ -1,6 +1,33 @@
-### 子查询
+# SQL语句-查询语句-子查询
 
-[TOC]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [SQL语句-查询语句-子查询](#sql语句-查询语句-子查询)
+		- [子查询](#子查询)
+			- [类型、语法和准则](#类型语法和准则)
+			- [案例](#案例)
+			- [课后练习](#课后练习)
+		- [oracle的pause命令](#oracle的pause命令)
+- [查看当前pause的状态为off](#查看当前pause的状态为off)
+- [将pasue设置为开启状态 on](#将pasue设置为开启状态-on)
+- [查看当前设置的pagesize的大小，即每页显示多少行](#查看当前设置的pagesize的大小即每页显示多少行)
+- [修改pagesize为10，每页显示10行](#修改pagesize为10每页显示10行)
+- [执行查询语句](#执行查询语句)
+- [需要输入enter健](#需要输入enter健)
+- [需要输入enter健](#需要输入enter健)
+		- [oracle的sqlplus执行shell命令](#oracle的sqlplus执行shell命令)
+- [执行shell命令 pwd 打印当前路径](#执行shell命令-pwd-打印当前路径)
+- [执行shell命令 free 查看当前内存使用情况](#执行shell命令-free-查看当前内存使用情况)
+		- [oracle的保存执行的sql语句](#oracle的保存执行的sql语句)
+- [在但前目录下创建booboo.lst文件保存sql](#在但前目录下创建booboolst文件保存sql)
+- [执行sql查询](#执行sql查询)
+- [执行sql查询](#执行sql查询)
+- [关闭spool](#关闭spool)
+- [查看当前目录下的文档](#查看当前目录下的文档)
+- [打印booboo.lst到屏幕上](#打印booboolst到屏幕上)
+
+<!-- /TOC -->
+### 子查询
 
 #### 类型、语法和准则
 
@@ -10,19 +37,25 @@
 | `rank() over (partition by order by)`       | 1 2 2 4 5 |
 | `dense_rank() over (partition by order by)` | 1 2 2 3 4 |
 
-```shell
+```sql
 select rank() over (partition by deptno order by sal desc) ord from emp;
-# partition by 给结果集分组
-# order by 给结果集排序
-# rank() 在每个分组内部进行排名
-
-select ename,sal,deptno from emp order by dbms_random.value();
-# order by 排序
-# dbms_random.value() 随即数
-
-select * from (select rownum rn,a.* from (select * from emp order by sal desc) a) where rn between &p*5-4 and &p*5;
-# &p 为自定义变量
 ```
+
+* partition by 给结果集分组
+* order by 给结果集排序
+* rank() 在每个分组内部进行排名
+
+```sql
+select ename,sal,deptno from emp order by dbms_random.value();
+* order by 排序
+* dbms_random.value() 随机数
+```
+
+```sql
+select * from (select rownum rn,a.* from (select * from emp order by sal desc) a) where rn between &p*5-4 and &p*5;
+```
+
+* &p 为自定义变量
 
 * where 型
 	- 单行 `= 、 != 、 > 、 < 、 <= 、 >=`等
@@ -32,40 +65,40 @@ select * from (select rownum rn,a.* from (select * from emp order by sal desc) a
 
 ```shell
 子查询3种{
-	
+
 	where 型{
-		
+
 		# 把内层查询的结果作为外层查询的比较条件
 		# 查询最大、最贵商品
-		
+
 		查询最新的商品（以id最大为最新，不用order by）:{
 			select goods_id,goods_name from goods where goods_id = (select max(goods_id) from goods);
 		}
 		每个栏目下最新的商品：{
-			select cat_id,goods_id,goods_name from goods where goods_id in (select max(goods_id) from goods group by cat_id);	
+			select cat_id,goods_id,goods_name from goods where goods_id in (select max(goods_id) from goods group by cat_id);
 		}
 		每个栏目下最贵的商品：{
 			select cat_id,goods_id,goods_name,shop_price from goods where shop_price in (select max(shop_price) from goods group by cat_id);
-		}	
-		
+		}
+
 	}
-	
+
 	from 型{
-		
+
 		# 把内层查询的结果作为外层查询的临时表
 		# 查询每个栏目下最新、最贵商品
-		
+
 		每个栏目下最新的商品：{
 			select * from (select cat_id,goods_id,goods_name from goods order by cat_id,goods_id desc) as a group by cat_id;
 		}
-		
+
 	}
-	
+
 	exits 型{
-		
+
 		# 把外层的查询结果，拿到内层，看内存查询是否成立
 		# 查询有商品的栏目
-		
+
 		查有商品的栏目{
 			select cat_id,cat_name from category where cat_id in (select cat_id from goods where cat_id in (select cat_id from category) group by cat_id);
 			select cat_id,cat_name from category where exists (select * from goods where goods.cat_id = category.cat_id);
@@ -147,7 +180,7 @@ FORD		 3000
 5. 工资相同的人？
 
 ```shell
-SQL> select a.ename,b.ename,a.sal from emp a ,emp b where a.sal=b.sal and a.ename!=b.ename; 
+SQL> select a.ename,b.ename,a.sal from emp a ,emp b where a.sal=b.sal and a.ename!=b.ename;
 
 ENAME	   ENAME	     SAL
 ---------- ---------- ----------
@@ -233,7 +266,7 @@ ALLEN		   30	    1600	  2
 ```
 
 
-9. 工资最高的前5行？ 
+9. 工资最高的前5行？
 
 ```shell
 SQL> select * from (select ename,deptno,sal,rank () over (order by sal desc) ord from emp) where ord <=5 ;
@@ -410,7 +443,7 @@ WARD		   500		2
 16. 工资高于本部门平均工资的人？
 
 ```shell
-SQL> select e.deptno,e.ename,e.sal from emp e,(select deptno,avg(sal) asal from emp group by deptno) b where e.deptno=b.deptno and e.sal > b.asal; 
+SQL> select e.deptno,e.ename,e.sal from emp e,(select deptno,avg(sal) asal from emp group by deptno) b where e.deptno=b.deptno and e.sal > b.asal;
 
     DEPTNO ENAME	     SAL
 ---------- ---------- ----------
@@ -430,12 +463,12 @@ SQL> select e.deptno,e.ename,e.sal from emp e,(select deptno,avg(sal) asal from 
 
 ```shell
 
-select deptno,ename, sal 
+select deptno,ename, sal
 from emp
 where sal in (select max(sal) from emp group by deptno) or
-sal in (select max(sal) 
-       from (select sal,deptno 
-             from emp where sal not in 
+sal in (select max(sal)
+       from (select sal,deptno
+             from emp where sal not in
                       (select max(sal) from emp group by deptno)) group by deptno)
 order by 1;
 
@@ -452,21 +485,21 @@ select * from (select rownum rn,a.* from (select ename,sal from emp order by sal
 select * from (select * from emp order by dbms_random.value()) where rownum<=3;
 
 查询雇员的姓名，工资，税，(1级不缴税，2-->2% ,3-->3%,4-->4%,5-->5%)
-select 
+select
   e.ename,
   e.sal,
   (sal*decode(s.grade,1,0,2,0.02,3,0.03,4,0.04,5,0.05,0)) tax
-from emp e,salgrade s 
+from emp e,salgrade s
 where e.sal between s.losal and s.hisal;
 
 部门总工资和部门上缴个税总和
 select deptno,sum(sal),sum(tax)
 from
-(select 
+(select
   e.sal,
   (sal*decode(s.grade,1,0,2,0.02,3,0.03,4,0.04,5,0.05,0)) tax,
   deptno
-from emp e,salgrade s 
+from emp e,salgrade s
 where e.sal between s.losal and s.hisal)
 group by deptno;
 
@@ -488,7 +521,7 @@ where rn between &p*5-4 and &p*5;
 ```
 
 
-### oracle的pause命令 
+### oracle的pause命令
 
 > 暂停屏幕输出
 
@@ -611,7 +644,7 @@ With the Partitioning, OLAP, Data Mining and Real Application Testing options
 
 [oracle@oracle0 ~]$ ls
 booboo.lst  rlwrap-0.30-1.el5.i386.rpm
-[oracle@oracle0 ~]$ cat booboo.lst 
+[oracle@oracle0 ~]$ cat booboo.lst
 SQL> select * from (select ename,nvl(comm,0),rank () over (order by nvl(comm,0) desc) ord from emp) where ord <= 2;
 
 ENAME      NVL(COMM,0)        ORD                                               
@@ -630,4 +663,3 @@ SQL> select deptno,sum(sal),sum(T) from (select deptno,ename,sal,grade,decode(gr
 SQL> spool off
 
 ```
-
