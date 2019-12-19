@@ -1,8 +1,57 @@
-# RMAN备份概念
+# 恢复管理器Recover Manager 03
 
-> 2019.12.15 BoobooWei
+> 2019.12.15 - BoobooWei
 
-[TOC]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [恢复管理器Recover Manager 03](#恢复管理器recover-manager-03)
+	- [数据库备份（冷备）与RMAN备份的概念](#数据库备份冷备与rman备份的概念)
+		- [数据库完全备份](#数据库完全备份)
+		- [RMAN备份](#rman备份)
+		- [RMAN备份的类型](#rman备份的类型)
+			- [完整备份](#完整备份)
+			- [增量备份](#增量备份)
+			- [一致性备份](#一致性备份)
+			- [非一致性备份](#非一致性备份)
+		- [备份集与镜像副本](#备份集与镜像副本)
+			- [备份集`backup`](#备份集backup)
+			- [镜像副本`copy`](#镜像副本copy)
+		- [备份路径](#备份路径)
+		- [备份限制](#备份限制)
+	- [使用RMAN进行备份](#使用rman进行备份)
+		- [备份数据库](#备份数据库)
+		- [备份数据文件](#备份数据文件)
+		- [备份表空间](#备份表空间)
+		- [备份控制文件](#备份控制文件)
+		- [备份参数文件](#备份参数文件)
+		- [备份归档日志文件](#备份归档日志文件)
+		- [备份闪回区](#备份闪回区)
+		- [总结：](#总结)
+	- [备份的其它特性](#备份的其它特性)
+		- [备份片大小的限制](#备份片大小的限制)
+		- [并发](#并发)
+		- [复用备份](#复用备份)
+		- [备份备份集](#备份备份集)
+		- [镜像备份](#镜像备份)
+		- [压缩备份集](#压缩备份集)
+		- [使用tag标记](#使用tag标记)
+		- [增量备份](#增量备份)
+			- [案例1](#案例1)
+			- [案例2](#案例2)
+		- [启用块变化跟踪](#启用块变化跟踪)
+		- [备份保留策略](#备份保留策略)
+			- [备份冗余](#备份冗余)
+			- [恢复窗口](#恢复窗口)
+			- [清除备份保留策略](#清除备份保留策略)
+			- [永不将备份置为obsolete](#永不将备份置为obsolete)
+			- [注意`obsolete` 与 `expired`](#注意obsolete-与-expired)
+		- [验证数据文件逻辑坏块](#验证数据文件逻辑坏块)
+	- [备份相关的动态性能视图及监控](#备份相关的动态性能视图及监控)
+		- [相关视图](#相关视图)
+		- [查看channel对应的server sessions](#查看channel对应的server-sessions)
+		- [Linux下的rman自动备份](#linux下的rman自动备份)
+
+<!-- /TOC -->
 
 ## 数据库备份（冷备）与RMAN备份的概念
 
@@ -42,7 +91,7 @@
 
 一个或多个数据文件的一个完整副本,包含从备份开始处所有的数据块.完整备份不能作为增量的基础
 
-   
+
 
 #### 增量备份
 
@@ -75,7 +124,7 @@
 
 * 在数据库处于打开(open)状态时，或数据库异常关闭(shut down abnormally)后，对一个或多个数据库文件进行的备份。非一致性备份需要在还原之后进行恢复操作
 
-   
+
 
 ### 备份集与镜像副本
 
@@ -100,7 +149,7 @@
 
 可以作为级增量备份
 
-   
+
 
 ### 备份路径
 
@@ -110,7 +159,7 @@
 
 闪回区
 
-   
+
 
 ### 备份限制
 
@@ -170,22 +219,22 @@ backup spfile format '/home/oracle/rmanbk/spfile.bkp';
 * 归档日志的备份集不能包含其它类型的文件
 
 ```sql
-list archivelog all; list copy of archivelog all; 
-list backup of archivelog all; 
-list copy of archivelog sequence between 264 and 265 thread=1 ; 
+list archivelog all; list copy of archivelog all;
+list backup of archivelog all;
+list copy of archivelog sequence between 264 and 265 thread=1 ;
 
 backup archivelog all;
-BACKUP ARCHIVELOG ALL DELETE INPUT  format 'd:\bk\arc%s.bk'; 
+BACKUP ARCHIVELOG ALL DELETE INPUT  format 'd:\bk\arc%s.bk';
 backup archivelog sequence between 264 and 265 thread=1 format 'd:\bk\arc%s.bk'; backup archivelog sequence between 50 and 52 thread=1 like '%0586360856%' format 'c:\bk\arc%s.bk';
 backup database plus archivelog;
-backup database plus archivelog delete all input; 
+backup database plus archivelog delete all input;
 
-BACKUP ARCHIVELOG ALL DELETE INPUT  format 'd:\bk\arc%s.bk'; 
---如果上面的语句有问题，请运行下面语句来标定控制文件中归档日志的状态。 
-change archivelog all crosscheck; 
-delete archivelog all; 
- 
-select SEQUENCE#,APPLIED,DELETED,STATUS,BACKUP_COUNT from v$archived_log 
+BACKUP ARCHIVELOG ALL DELETE INPUT  format 'd:\bk\arc%s.bk';
+--如果上面的语句有问题，请运行下面语句来标定控制文件中归档日志的状态。
+change archivelog all crosscheck;
+delete archivelog all;
+
+select SEQUENCE#,APPLIED,DELETED,STATUS,BACKUP_COUNT from v$archived_log
 ```
 
 备份归档日志方式有两种：
@@ -197,7 +246,7 @@ select SEQUENCE#,APPLIED,DELETED,STATUS,BACKUP_COUNT from v$archived_log
 
  运行`backup archivelog all`  命令时执行的步骤：
 
-1. `alter system archive log current;`  归档当前日志 
+1. `alter system archive log current;`  归档当前日志
 2. `backup  archivelog all ; `备份所有归档日志
 
 而运行`backup database plus archivelog`，的运行步骤是；
@@ -208,13 +257,13 @@ select SEQUENCE#,APPLIED,DELETED,STATUS,BACKUP_COUNT from v$archived_log
 4. `alter system archive log current; ` 归档当前日志文件
 5. `backup archivelog recently generated ; `  备份刚生成的归档日志文件
 
-由于归档日志会占用较多的空间，所以应对定期删除掉没用的归档日志。 
+由于归档日志会占用较多的空间，所以应对定期删除掉没用的归档日志。
 
  比如，在备份数据库及归档日志文件后，删除掉已经备份的归档日志文件。
 
 命令：`backup database plus archivelog delete all input; `
 
-其中，`delete all input`即为删除归档日志文件参数。 
+其中，`delete all input`即为删除归档日志文件参数。
 
 ### 备份闪回区
 
@@ -227,7 +276,7 @@ backup recovery files;
 
 使用`backup recovery files`时，将备份磁盘上未进行过备份的所有恢复文件，而不论是否位于闪回区   
 
-> 注：使用上述两条命令时，备份目的地必须是磁带 
+> 注：使用上述两条命令时，备份目的地必须是磁带
 
 ### 总结：
 
@@ -238,7 +287,7 @@ backup recovery files;
 
 ### 备份片大小的限制
 
-使用 rman 进行 backup 的操作.限制每个备份片的大小. 
+使用 rman 进行 backup 的操作.限制每个备份片的大小.
 
 
 限制通道的大小,什么是通道呢?
@@ -247,14 +296,14 @@ backup recovery files;
 
 你可以理解为备份集是压 缩包的名称,一个压缩包里含有多个被压缩的文件,我们又将压缩包分解为多个小压缩文件,当我们解压缩 的时候需要所有的小压缩包才能解压缩文件.我们一般限制备份片大小的目的是使得备份片可以存放在一 个磁带上.
 
-下面的命令是限制每个备份片大小为 10m,我们上面的实验看到正常备份有 25 m,所以会被切割为 三个备份片,前两个每个为 10m,最后一个为 5m. 
+下面的命令是限制每个备份片大小为 10m,我们上面的实验看到正常备份有 25 m,所以会被切割为 三个备份片,前两个每个为 10m,最后一个为 5m.
 
 ```sql
 RUN {
-ALLOCATE CHANNEL d1 TYPE disk; 
-set limit channel d1 kbytes=10000; 
+ALLOCATE CHANNEL d1 TYPE disk;
+set limit channel d1 kbytes=10000;
 backup datafile 4 FORMAT 'c:\bk\%s_%p' ;
-} 
+}
 ```
 
 
@@ -397,7 +446,7 @@ tag标记可以为备份集或映像副本指定一个有意义的名字，以�
 ```sql
 RMAN> backup as compressed backupset datafile 1,2,3 tag='Monthly_full_bak';
 RMAN> backup as compressed backupset tablespace users tag='Weekly_full_bak';
-RMAN> list backupset tag=monthly_full_bak; 
+RMAN> list backupset tag=monthly_full_bak;
 ```
 
 
@@ -405,9 +454,9 @@ RMAN> list backupset tag=monthly_full_bak;
 
 Backup 有增量,copy 没有增量。
 
-* `0`所有的使用的数据块，是基石 
-* `1-4` 增量级别,备份`<=n` 以来的变化 
-* `1c-4c` 累积增量,备份`<=n-1` 以来的变化 
+* `0`所有的使用的数据块，是基石
+* `1-4` 增量级别,备份`<=n` 以来的变化
+* `1c-4c` 累积增量,备份`<=n-1` 以来的变化
 
 通过增量的级别来指定完备的备份策略。
 
@@ -415,15 +464,15 @@ Backup 有增量,copy 没有增量。
 
 ![](pic/e-03.png)
 
-请看这个案例,每周日晚做 0 级备份,就是备份所有使用过的数据块. 
+请看这个案例,每周日晚做 0 级备份,就是备份所有使用过的数据块.
 
-* 周一做 2 级增量,备份小于等于 2 以来备份后发生变化的块,前面有个 0 级备份.所以备份当天的变化. 
-* 周二做 2 级增量,备份小于等于 2 以来备份后发生变化的块,前面有个 2 级备份.所以备份当天的变化. 
+* 周一做 2 级增量,备份小于等于 2 以来备份后发生变化的块,前面有个 0 级备份.所以备份当天的变化.
+* 周二做 2 级增量,备份小于等于 2 以来备份后发生变化的块,前面有个 2 级备份.所以备份当天的变化.
 * 周三做 1 级增量,备份小于等于 1 以来备份后发生变化的块,前面有个 0 级备份.所以备份三天的变化.
 * 周四做 2 级增量,备份小于等于 2 以来备份后发生变化的块,前面有个 1 级备份.所以备份当天的变化.
 * 周五做 2 级增量,备份小于等于 2 以来备份后发生变化的块,前面有个 2 级备份.所以备份当天的变化.
 * 周六做1c级增量,备份小于等于1-1=0以来备份后发生变化的块,前面有个零级备份.所以备份六天的变化.
-* 周日做 0 级增量, 备份所有使用过的数据块. 
+* 周日做 0 级增量, 备份所有使用过的数据块.
 
 #### 案例2
 
@@ -432,25 +481,25 @@ Backup 有增量,copy 没有增量。
 请看这个案例,
 
 * 每年元旦做 0 级备份,就是备份所有使用过的数据块.
-* 每天做 4 级增量,备份小于等于 4 以来备份后发生变化的块,任何级都小于等于 4.所以备份当天的变化. 
-* 每周做 3 级增量,备份小于等于 3 以来备份后发生变化的块,前面有个 3 级备份.所以备份一周的变化. 
-* 每月做 2 级增量,备份小于等于 2 以来备份后发生变化的块,前面有个 2 级备份.所以备份当月的变化. 
-* 每季度做 1 级增量,备份小于等于 1 以来备份后发生变化的块,前面有个 1 级备份.所以备份三个月的变化. 
-* 每年元旦做 0 级备份,就是备份所有使用过的数据块. 
+* 每天做 4 级增量,备份小于等于 4 以来备份后发生变化的块,任何级都小于等于 4.所以备份当天的变化.
+* 每周做 3 级增量,备份小于等于 3 以来备份后发生变化的块,前面有个 3 级备份.所以备份一周的变化.
+* 每月做 2 级增量,备份小于等于 2 以来备份后发生变化的块,前面有个 2 级备份.所以备份当月的变化.
+* 每季度做 1 级增量,备份小于等于 1 以来备份后发生变化的块,前面有个 1 级备份.所以备份三个月的变化.
+* 每年元旦做 0 级备份,就是备份所有使用过的数据块.
 
 语法
 
 ```sql
-RMAN> backup incremental level 0 datafile 4 format 'c:\bk\%d_%s_%p'; 
-RMAN> backup incremental level 1 datafile 4 format 'c:\bk\%d_%s_%p'; 
-RMAN> backup incremental level 2 datafile 4 format 'c:\bk\%d_%s_%p'; 
-RMAN> backup incremental level 3 datafile 4 format 'c:\bk\%d_%s_%p'; 
+RMAN> backup incremental level 0 datafile 4 format 'c:\bk\%d_%s_%p';
+RMAN> backup incremental level 1 datafile 4 format 'c:\bk\%d_%s_%p';
+RMAN> backup incremental level 2 datafile 4 format 'c:\bk\%d_%s_%p';
+RMAN> backup incremental level 3 datafile 4 format 'c:\bk\%d_%s_%p';
 RMAN> backup incremental level 4 datafile 4 format 'c:\bk\%d_%s_%p';
-RMAN> backup incremental level 1 cumulative datafile  4 format 'c:\bk\%d_%s_%p'; 
+RMAN> backup incremental level 1 cumulative datafile  4 format 'c:\bk\%d_%s_%p';
 RMAN> backup incremental level 2 cumulative datafile  4 format 'c:\bk\%d_%s_%p';
-RMAN> backup incremental level 3 cumulative datafile  4 format 'c:\bk\%d_%s_%p'; 
+RMAN> backup incremental level 3 cumulative datafile  4 format 'c:\bk\%d_%s_%p';
 RMAN> backup incremental level 4 cumulative datafile  4 format 'c:\bk\%d_%s_%p';
-RMAN> list backup of datafile 4; 
+RMAN> list backup of datafile 4;
 ```
 
 *  `1 `和` 1c `在列表中没有区分,实际数据库也不区分,在备份时的语法不同.备份集不区分累积增量和普通增量
@@ -495,7 +544,7 @@ DISABLED
 * RMAN会为每个数据文件、归档日志、控制文件生成一个备份。可以使用`report obsolete;`命令查看冗余的备份
 * 并使用`delete obsolete;`来删除冗余备份
 
-   
+
 #### 恢复窗口       
 
 * 恢复窗口允许完成恢复到过去某个时间点的时点恢复，通常设定为多少天
@@ -503,7 +552,7 @@ DISABLED
 * 该命令将确保具有足够的数据文件和归档日志来执行能够返回一个星期中任意时间点的不完全恢复，且允许删除随着时间推移而变为废弃的备份，即应当满足该条件：`SYSDATE - BACKUP CHECKPOINT TIME >= 7`
 * 对于大于天但是是恢复所需要的备份依然会被保留
 
-   
+
 #### 清除备份保留策略
 
 ```sql
@@ -584,7 +633,7 @@ SQL> select sid,spid,client_info
   4  and client_info like '%id=%';
 	   SID SPID         CLIENT_INFO
 ---------- ------------ ------------------------------
-	   140 5002         id=rman 
+	   140 5002         id=rman
 
 --查看rman完整的进度      
 SQL> select sid,serial#,context,sofar,totalwork,
@@ -676,10 +725,10 @@ Starting crond: [  OK  ]
 
 
 
- 
 
 
 
- 
+
+
 
 ​     
