@@ -1,4 +1,16 @@
-### 组函数 
+# SQL语句-查询语句-组函数
+
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [SQL语句-查询语句-组函数](#sql语句-查询语句-组函数)
+		- [组函数](#组函数)
+			- [组函数语法](#组函数语法)
+			- [应用实例](#应用实例)
+			- [课后练习](#课后练习)
+
+<!-- /TOC -->
+
+### 组函数
 
 #### 组函数语法
 
@@ -79,9 +91,11 @@ SQL> select deptno,sum(sal) sum_sal from emp group by deptno having sum(sal) > 9
 	30	 9400
 	20	10875
 
-# 注意having字句后面不可以使用别名。
-# where字句不可以过滤组函数运算后的结果。
 ```
+
+* 注意having字句后面不可以使用别名。
+* where字句不可以过滤组函数运算后的结果。
+
 
 6. 雇员中工资相同的员工分别是谁，工资为所少？
 
@@ -196,6 +210,3 @@ select deptno,sum(sal) from emp having sum(sal)>9000 group by deptno;
    1    10     1     2
 --------------------------------
 ```
-
-
-
