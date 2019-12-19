@@ -35,6 +35,21 @@
 * having 字句聚合函数过滤
 
 
+| 序列                                        | 举例      |
+| ------------------------------------------- | --------- |
+| `rownum()`                                  | 1 2 3 4 5 |
+| `rank() over (partition by order by)`       | 1 2 2 4 5 |
+| `dense_rank() over (partition by order by)` | 1 2 2 3 4 |
+
+```sql
+select rank() over (partition by deptno order by sal desc) ord from emp;
+```
+
+* partition by 给结果集分组
+* order by 给结果集排序
+* rank() 在每个分组内部进行排名
+
+
 ## 应用实例
 
 ### 1. 雇员中最大工资，最小工资，工资总和，平均工资。
