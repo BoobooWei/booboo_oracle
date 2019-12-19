@@ -1,7 +1,16 @@
-[toc]
+# SQL语句-查询语句—多表连接
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [SQL语句-查询语句—多表连接](#sql语句-查询语句多表连接)
+		- [多表连接](#多表连接)
+			- [熟悉每一张表的结构](#熟悉每一张表的结构)
+			- [原理](#原理)
+			- [案例](#案例)
+			- [国标连接语法](#国标连接语法)
+
+<!-- /TOC -->
 
 ### 多表连接
-
 
 #### 熟悉每一张表的结构
 
@@ -35,16 +44,16 @@
 | GRADE|等级|
 | LOSAL|最低薪资|
 | HISAL|最高薪资|
-	
+
 #### 原理
 
 1. N张表相连，需要N-1个条件
 2. 多表连接，在oracle内部是两两相连
 3. 内连接 from a,b where a.id=b.id 为
 4. 右连接 from a right join b on a.id=b.id 等效于 from a,b where a.id(+)=b.id
-5. 左连接 from a left join b on a.id=b.id 等小于 from a,b where a.id=b.id(+) 
+5. 左连接 from a left join b on a.id=b.id 等小于 from a,b where a.id=b.id(+)
 6. count(*) 会统计为null的行;count(列名)则不统计null的行
-7. 不等连接 from a,b where a.id between b.cc and b.dd 
+7. 不等连接 from a,b where a.id between b.cc and b.dd
 8. 自连接 from a t1,b t2 whee t1.id=t2.idd
 9. 笛卡尔连接 from a,b
 
@@ -76,7 +85,7 @@ MILLER	   NEW YORK
 3. 销售部门都有哪些员工，分别工作在哪些城市？
 
 ```shell
-SQL> select ename,dname,loc from emp,dept where emp.deptno=dept.deptno and lower(dept.dname)='sales'; 
+SQL> select ename,dname,loc from emp,dept where emp.deptno=dept.deptno and lower(dept.dname)='sales';
 ENAME	   DNAME	  LOC
 ---------- -------------- -------------
 WARD	   SALES	  CHICAGO
