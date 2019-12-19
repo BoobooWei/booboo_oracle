@@ -1,9 +1,19 @@
-# 表的管理总结
+# SQL语句-表的管理总结
 
 > Oracle对五大对象的管理
 > 新建、修改、删除、查看
 
-[toc]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [SQL语句-表的管理总结](#sql语句-表的管理总结)
+	- [对象命名规则](#对象命名规则)
+	- [管理的对象](#管理的对象)
+	- [常用查询](#常用查询)
+		- [查看建表语句](#查看建表语句)
+	- [index_stats表分析](#indexstats表分析)
+	- [rowid的格式](#rowid的格式)
+
+<!-- /TOC -->
 
 ## 对象命名规则
 
@@ -113,9 +123,9 @@ SQL> select num_rows,blocks from user_tab_statistics;
 ### 查看建表语句
 
 ```sql
-SET SERVEROUTPUT ON 
-SET LINESIZE 1000 
-SET FEEDBACK OFF 
+SET SERVEROUTPUT ON
+SET LINESIZE 1000
+SET FEEDBACK OFF
 set long 99999           
 set pagesize 4000  
 select dbms_metadata.get_ddl('TABLE','表名','用户名') from dual;
@@ -195,4 +205,3 @@ rowid是64进制的
 |object_id|file_id|block_id|row number|
 
 > 注意：在rowid中过的最后三位记录的row number是计算机记录的从0开始的，而我们在读表的时候使用的rownum是从1开始的。
-
