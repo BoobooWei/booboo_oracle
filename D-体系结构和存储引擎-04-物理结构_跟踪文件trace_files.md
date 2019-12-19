@@ -2,7 +2,31 @@
 
 > 2019.10.03 BoobooWei
 
-[TOC]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [物理结构_跟踪文件](#物理结构跟踪文件)
+	- [关于Oracle代码的可测量性](#关于oracle代码的可测量性)
+	- [自动诊断存储库ADR](#自动诊断存储库adr)
+	- [跟踪文件的分类](#跟踪文件的分类)
+		- [计划内的，由用户请求所产生的跟踪文件](#计划内的由用户请求所产生的跟踪文件)
+			- [产生方式](#产生方式)
+			- [跟踪文件的位置](#跟踪文件的位置)
+			- [命名约定](#命名约定)
+			- [对跟踪文件加标记](#对跟踪文件加标记)
+		- [计划外的，数据库服务器自动产生的跟踪文件](#计划外的数据库服务器自动产生的跟踪文件)
+			- [产生方式](#产生方式)
+			- [处理方式](#处理方式)
+		- [实践](#实践)
+			- [实践——查看是否开启跟踪文件](#实践查看是否开启跟踪文件)
+			- [实践——查看跟踪文件位置](#实践查看跟踪文件位置)
+			- [实践——启用用户跟踪文件](#实践启用用户跟踪文件)
+	- [笔记](#笔记)
+		- [1. 查看常用的跟踪文件路径](#1-查看常用的跟踪文件路径)
+		- [2. 掌握常用跟踪文件命名规则](#2-掌握常用跟踪文件命名规则)
+		- [3. 掌握打开/关闭当前会话跟踪的方法](#3-掌握打开关闭当前会话跟踪的方法)
+		- [4. 掌握打开/关闭指定的会话跟踪方法](#4-掌握打开关闭指定的会话跟踪方法)
+
+<!-- /TOC -->
 
 ## 关于Oracle代码的可测量性
 
@@ -193,7 +217,7 @@ show parameter trace
 #### 实践——查看跟踪文件位置
 
 ```sql
-show parameter dump_dest	
+show parameter dump_dest
 select name,value from v$parameter where name like '%dump_dest%';
 select name,value from v$diag_info;
 ```
@@ -330,6 +354,3 @@ TKPROF: Release 11.2.0.4.0 - Development on Sat Oct 5 23:37:25 2019
 
 Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
 ```
-
-
-
