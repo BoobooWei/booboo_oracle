@@ -2,42 +2,42 @@
 
 <!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-- [SQL语句-单行函数](#sql语句-单行函数)
-	- [查询语句DQL](#查询语句dql)
-		- [简单的sql查询](#简单的sql查询)
-		- [限制和排列数据](#限制和排列数据)
-		- [单行函数](#单行函数)
-			- [字符函数](#字符函数)
-				- [字符函数示例](#字符函数示例)
-			- [数值函数](#数值函数)
-			- [日期函数](#日期函数)
-			- [转换函数](#转换函数)
-				- [隐式数据类型转换](#隐式数据类型转换)
-				- [显式数据类型转换](#显式数据类型转换)
-				- [RR和YY年份](#rr和yy年份)
-			- [嵌套函数](#嵌套函数)
-			- [常规函数](#常规函数)
-			- [条件表达式](#条件表达式)
-	- [与mysql的区别](#与mysql的区别)
-	- [大小写区分](#大小写区分)
+- [SQL语句-查询语句-单行函数](#sql语句-查询语句-单行函数)
+	- [查询语句DQL简介](#查询语句dql简介)
+	- [简单的sql查询](#简单的sql查询)
+	- [限制和排列数据](#限制和排列数据)
+	- [单行函数](#单行函数)
+		- [字符函数](#字符函数)
+			- [字符函数示例](#字符函数示例)
+		- [数值函数](#数值函数)
+		- [日期函数](#日期函数)
+		- [转换函数](#转换函数)
+			- [隐式数据类型转换](#隐式数据类型转换)
+			- [显式数据类型转换](#显式数据类型转换)
+			- [RR和YY年份](#rr和yy年份)
+		- [嵌套函数](#嵌套函数)
+		- [常规函数](#常规函数)
+		- [条件表达式](#条件表达式)
+	- [与MySQL的区别](#与mysql的区别)
 		- [MySQL数据库名、表名、列名、别名大小写规则](#mysql数据库名表名列名别名大小写规则)
 		- [MySQL字符串大小写](#mysql字符串大小写)
 
 <!-- /TOC -->
-## 查询语句DQL
 
-```shell
-select *|{[distinct] column | expression [alias] , ...}
+## 查询语句DQL简介
+
+```sql
+select * | {[distinct] column | expression [alias] , ...}
 from table;
 ```
 
-1. select 后面跟 通配符|关键字|表达式 别名 或者一些计算
-2. from 后面跟 表名 或者 结果集 ，这就是oracle对国标扩展的部分，能够对结果集进行二次查询
-3. 必须要有结束符号 ; 有结束符，sql才会被运行
+1. `select` 后面跟 `通配符|关键字|表达式  别名` 或者一些计算
+2. `from` 后面跟 `表名 或者 结果集` ，这就是oracle对国标扩展的部分，能够对结果集进行二次查询
+3. 必须要有结束符号 `;`有结束符，sql才会被运行
 4. 大小写不区分
 5. 可以多行书写
 
-### 简单的sql查询
+## 简单的sql查询
 
 
 |简单的sql查询|语句|
@@ -63,7 +63,7 @@ sqlplus结果集的显示风格为:
 
 
 
-```shell
+```sql
 SQL> SELECT * FROM TAB;
 
 TNAME			       TABTYPE	CLUSTERID
@@ -235,7 +235,6 @@ SQL> select distinct deptno,job from emp;
 
 -- distinct 去除重复
 
-```sql
 SQL> save p1_1.sql
 Created file p1_1.sql
 SQL> get p1_1.sql
@@ -257,14 +256,14 @@ SQL> @p1_1.sql
 9 rows selected.
 ```
 
-### 限制和排列数据
+## 限制和排列数据
 
 1. 工资高于1500的销售员？
 2. 查询10部门的雇员和20部门工资小与2000的雇员？
 3. 查询有奖金的雇员？
 4. 使用rownum伪列限制查询返回的行的数量
 
-```shell
+```sql
 SQL> select ename,sal from emp where sal>1500;
 
 ENAME		  SAL
@@ -317,12 +316,11 @@ MARTIN
 -- mysql中限制行是用limit，而oracle用rownum
 ```
 
-
-### 单行函数
+## 单行函数
 
 >  五种：字符函数、数值函数、日期函数、转换函数、其他函数
 
-#### 字符函数
+### 字符函数
 
 |字符串函数|函数名|解释|
 |:--|:--|:--|
@@ -338,7 +336,7 @@ MARTIN
 ||TRIM(leading or trailing or both, trim_character FROM trim_source)|删除头尾字符，默认为空白，类似于python中strim|
 ||REPLACE(text,search_string,replacement_string)|查找并替换字符串|
 
-#####  字符函数示例
+#### 字符函数示例
 
 1. 记录中的字符串是区分大小写，如果想从海量数据中搜索scott用户，该如何去做呢？
 
@@ -504,7 +502,7 @@ select * from emp where trim(' ' from UPPER(ename))='SCOTT';
 select replace('Helloworld','owo','xxoo') from dual;
 ```
 
-#### 数值函数
+### 数值函数
 
 - ROUND :将值舍入到指定的小数位
 - TRUNC :将值截断到指定的小数位
@@ -531,7 +529,7 @@ select ceil(1.00001) from dual;
 select abs(-190) from dual;
 ```
 
-#### 日期函数
+### 日期函数
 
 日期是以数字保存的，可以进行加减运算
 
@@ -797,23 +795,19 @@ select trunc(sysdate,'month') from dual;
 select trunc(sysdate,'year') from dual;
 ```
 
-
-
-
-
-#### 转换函数
+### 转换函数
 
 数据类型转化分为两种：
 1. 隐式数据类型转换 系统自己能作的比较简单的，例如数字变字符串之类的
 2. 显示数据类型转换 必须通过函数，你来制定规则
 
-##### 隐式数据类型转换
+#### 隐式数据类型转换
 
 Oracle服务器可以自动转换下面的数据类型
 
 * number<--->varchar2|char<---->date
 
-##### 显式数据类型转换
+#### 显式数据类型转换
 
 
 num----------------------------->char---------------------------->date
@@ -1049,7 +1043,7 @@ TO_CHAR(TO
 1997-10-01
 ```
 
-##### RR和YY年份
+#### RR和YY年份
 
 yy年份表示法，当前系统时间所在的世纪
 
@@ -1118,7 +1112,7 @@ to_char(to_date('99','rr'),'yyyy') rr99
 from dual;
 ```
 
-#### 嵌套函数
+### 嵌套函数
 
 * 单行函数可以嵌套到任意层。
 * 嵌套函数的计算顺序是从最内层到最外层。
@@ -1215,7 +1209,7 @@ TO_CHAR
 15 rows selected.
 ```
 
-#### 常规函数
+### 常规函数
 
 > 主要是用来修改空值的；可用于任何数据类型
 
@@ -1327,7 +1321,7 @@ COALESCE(COMM,SAL)
 15 rows selected.
 ```
 
-#### 条件表达式
+### 条件表达式
 
 可以在 SQL 语句中使用 IF-THEN-ELSE 逻辑。
 
@@ -1445,14 +1439,12 @@ from emp order by job;
 ```
 
 
-## 与mysql的区别
+## 与MySQL的区别
 
 |sql|mysql|oracle|
 |:--|:--|:--|
 |查看用户的表|use dbname;show tables;|conn user/password;select * from tab;|
 |限制行数|select * from emp limit 5;|select * from emp where rownum < 6;|
-
-## 大小写区分
 
 ### MySQL数据库名、表名、列名、别名大小写规则
 
