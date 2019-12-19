@@ -1,6 +1,17 @@
-# `redolog`
+# 日志文件
 
-[TOC]
+> 2019-12-02 - BoobooWei
+
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [日志文件](#日志文件)
+	- [`redolog` 文件分类](#redolog-文件分类)
+		- [联机重做日志文件](#联机重做日志文件)
+		- [存档的重做日志文件](#存档的重做日志文件)
+	- [对 `redolog` 的管理](#对-redolog-的管理)
+	- [笔记](#笔记)
+
+<!-- /TOC -->
 
 ## `redolog` 文件分类
 
@@ -121,7 +132,7 @@ alter system switch logfile;
 手工产生检查点：
 alter system checkpoint;
 在组下增加成员：
-alter database add logfile member 
+alter database add logfile member
 '/home/oracle/redo01b.log' to group 1,
 '/home/oracle/redo02b.log' to group 2,
 '/home/oracle/redo03b.log' to group 3;
