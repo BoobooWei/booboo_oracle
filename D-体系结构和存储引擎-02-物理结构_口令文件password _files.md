@@ -2,7 +2,19 @@
 
 > 2019.10.01 BoobooWei
 
-[TOC]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [物理结构_口令文件](#物理结构口令文件)
+	- [用户安全审核的两种方式](#用户安全审核的两种方式)
+		- [数据库审核](#数据库审核)
+		- [外部审核](#外部审核)
+			- [操作系统审核](#操作系统审核)
+				- [实践——关闭操作系统审核](#实践关闭操作系统审核)
+			- [口令文件审核](#口令文件审核)
+				- [实践——通过口令文件登录](#实践通过口令文件登录)
+				- [实践——修改口令文件](#实践修改口令文件)
+
+<!-- /TOC -->
 
 ##  用户安全审核的两种方式
 
@@ -77,7 +89,7 @@ conn sys/Oracle11g as sysdba
 * 口令文件的位置和名字：`$ORACLE_HOME/dbs/orapw<$ORACLE_SID>`
 * 重新创建口令文件：当口令文件损坏，或者sys口令丢失`orapwd file=$ORACLE_HOME/dbs/orapw$ORACLE_SID password=oracle force=y`
 * 只要能够登录操作系统，就可以使用sys登录数据库！
-  
+
 
 ##### 实践——通过口令文件登录
 
