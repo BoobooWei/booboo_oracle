@@ -1,8 +1,22 @@
 # 恢复管理器Recover Manager
 
-> 2019.12.07 BoobooWei
+> 2019.12.07 - BoobooWei
 
-[TOC]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [恢复管理器Recover Manager](#恢复管理器recover-manager)
+	- [操作实践](#操作实践)
+		- [实践1-使用压缩备份集](#实践1-使用压缩备份集)
+		- [实践2-使用备份集备份表空间](#实践2-使用备份集备份表空间)
+		- [实践3-使用备份集备份全库](#实践3-使用备份集备份全库)
+		- [实践4-使用rman的备份片在新的节点还原恢复数据库](#实践4-使用rman的备份片在新的节点还原恢复数据库)
+			- [清空数据库](#清空数据库)
+			- [rman恢复脚本](#rman恢复脚本)
+		- [实践5-使用rman将数据文件恢复到新的位置](#实践5-使用rman将数据文件恢复到新的位置)
+		- [实践6-使用种子备份](#实践6-使用种子备份)
+	- [总结](#总结)
+
+<!-- /TOC -->
 
 
 ## 操作实践
@@ -198,7 +212,7 @@ BS Key  Size       Device Type Elapsed Time Completion Time
 
 ### 实践4-使用rman的备份片在新的节点还原恢复数据库
 
-> 2019.12.15 
+> 2019.12.15
 
 ```sql
 使用rman的备份片在新的节点还原恢复数据库：
@@ -259,7 +273,7 @@ cd $rmanbk
 for i in `ls`;do db_name=`strings $i | grep db_name`; if [[ $db_name != '' ]];then file=$i;sid=`echo $db_name | awk -F '=' '{print $2}' |awk -F "'" '{print $2}'`;fi;done
 echo "SID       :"$sid
 echo "RMAN FILE :"$file
-echo 
+echo
 }
 
 
@@ -270,7 +284,7 @@ sed -i "s/.*ORACLE_SID.*/export ORACLE_SID=${sid}/" ${sid_file}
 source ${sid_file}
 # 清空数据库
 
-echo -e "shutdown immediate;\nstartup restrict exclusive force mount;\ndrop database;\nexit;" > /tmp/clean_database.sql 
+echo -e "shutdown immediate;\nstartup restrict exclusive force mount;\ndrop database;\nexit;" > /tmp/clean_database.sql
 sqlplus / as sysdba @/tmp/clean_database.sql
 }
 
@@ -514,4 +528,3 @@ end;
 3. 备份全库`backup as compressed backupset database plus archivelog;` 重点掌握
 4. RMAN备份恢复脚本:[rman_recover_full_database.sh](scripts/rman_recover_full_database.sh)
 5. 学到此处会发现RMAN的功能非常强大，知识点非常多，我的建议是，首先了解RMAN能做什么；其次掌握工作中需要RMAN做什么（A. 通过RMAN做生产数据备份计划；B. 通过RMAN搭建DG；）下节课我们会开始学习冷备计划的制定和实施
-
