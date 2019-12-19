@@ -28,6 +28,7 @@
 			- [实践6-BREAK 命令将行分成部分并限制重复的值](#实践6-break-命令将行分成部分并限制重复的值)
 			- [实践7-将结果集以报表的形式打印bti](#实践7-将结果集以报表的形式打印bti)
 		- [SQLPlus的spool脱机模式](#sqlplus的spool脱机模式)
+	- [SQLPlus行转列](#sqlplus行转列)
 
 <!-- /TOC -->
 
@@ -986,4 +987,160 @@ SQL> select * from dept;
         40 OPERATIONS     BOSTON                                                                                        
 
 SQL> spool off
+```
+
+
+## SQLPlus行转列
+
+一直以来，觉得MySQL中使用\G参数改变输出结果集的显示方式非常好用，尤其是在命令行界面。但是ORACLE数据库没有这个功能，今天在搜索到Tom大师的一篇博文时，发现大师用一个存储过程print_table实现了类似这样的功能。只是我们这些凡夫俗子不知道而已，特意整理在此，方便自己或有需要的人以后查看。
+
+```sql
+CREATE OR REPLACE PROCEDURE print_table(p_query IN VARCHAR2)
+AUTHID CURRENT_USER
+IS
+ l_thecursor INTEGER DEFAULT dbms_sql.open_cursor;
+ l_columnvalue VARCHAR2(4000);
+ l_status  INTEGER;
+ l_desctbl  dbms_sql.desc_tab;
+ l_colcnt  NUMBER;
+BEGIN
+ EXECUTE IMMEDIATE 'alter session set nls_date_format=''dd-mon-yyyy hh24:mi:ss'' ';
+
+ dbms_sql.parse(l_thecursor, p_query, dbms_sql.native);
+
+ dbms_sql.describe_columns (l_thecursor, l_colcnt, l_desctbl);
+
+ FOR i IN 1 .. l_colcnt LOOP
+  dbms_sql.define_column (l_thecursor, i, l_columnvalue, 4000);
+ END LOOP;
+
+ l_status := dbms_sql.EXECUTE(l_thecursor);
+
+ WHILE ( dbms_sql.Fetch_rows(l_thecursor) > 0 ) LOOP
+  FOR i IN 1 .. l_colcnt LOOP
+   dbms_sql.column_value (l_thecursor, i, l_columnvalue);
+
+   dbms_output.Put_line (RPAD(L_desctbl(i).col_name, 30)
+         || ': '
+         || l_columnvalue);
+  END LOOP;
+
+  dbms_output.put_line('-----------------');
+ END LOOP;
+
+ EXECUTE IMMEDIATE 'alter session set nls_date_format=''dd-MON-rr'' ';
+EXCEPTION
+ WHEN OTHERS THEN
+    EXECUTE IMMEDIATE
+    'alter session set nls_date_format=''dd-MON-rr'' ';
+
+    RAISE;
+END;
+/
+```
+
+测试
+
+```sql
+SQL> execute print_table('select * from v$session where rownum < 2');
+SADDR			      : 00000000DF62D4B8
+SID			      : 1
+SERIAL# 		      : 1
+AUDSID			      : 0
+PADDR			      : 00000000DF4C9A20
+USER#			      : 0
+USERNAME		      :
+COMMAND 		      : 0
+OWNERID 		      : 2147483644
+TADDR			      :
+LOCKWAIT		      :
+STATUS			      : ACTIVE
+SERVER			      : DEDICATED
+SCHEMA# 		      : 0
+SCHEMANAME		      : SYS
+OSUSER			      : oracle
+PROCESS 		      : 30539
+MACHINE 		      : NB-flexgw1
+PORT			      : 0
+TERMINAL		      : UNKNOWN
+PROGRAM 		      : oracle@NB-flexgw1 (GEN0)
+TYPE			      : BACKGROUND
+SQL_ADDRESS		      : 00
+SQL_HASH_VALUE		      : 0
+SQL_ID			      :
+SQL_CHILD_NUMBER	      : 0
+SQL_EXEC_START		      :
+SQL_EXEC_ID		      :
+PREV_SQL_ADDR		      : 00
+PREV_HASH_VALUE 	      : 0
+PREV_SQL_ID		      :
+PREV_CHILD_NUMBER	      : 0
+PREV_EXEC_START 	      :
+PREV_EXEC_ID		      :
+PLSQL_ENTRY_OBJECT_ID	      :
+PLSQL_ENTRY_SUBPROGRAM_ID     :
+PLSQL_OBJECT_ID 	      :
+PLSQL_SUBPROGRAM_ID	      :
+MODULE			      :
+MODULE_HASH		      : 0
+ACTION			      :
+ACTION_HASH		      : 0
+CLIENT_INFO		      :
+FIXED_TABLE_SEQUENCE	      : 0
+ROW_WAIT_OBJ#		      : -1
+ROW_WAIT_FILE#		      : 0
+ROW_WAIT_BLOCK# 	      : 0
+ROW_WAIT_ROW#		      : 0
+TOP_LEVEL_CALL# 	      : 0
+LOGON_TIME		      : 18-dec-2019 19:02:50
+LAST_CALL_ET		      : 89209
+PDML_ENABLED		      : NO
+FAILOVER_TYPE		      : NONE
+FAILOVER_METHOD 	      : NONE
+FAILED_OVER		      : NO
+RESOURCE_CONSUMER_GROUP       :
+PDML_STATUS		      : DISABLED
+PDDL_STATUS		      : DISABLED
+PQ_STATUS		      : DISABLED
+CURRENT_QUEUE_DURATION	      : 0
+CLIENT_IDENTIFIER	      :
+BLOCKING_SESSION_STATUS       : NO HOLDER
+BLOCKING_INSTANCE	      :
+BLOCKING_SESSION	      :
+FINAL_BLOCKING_SESSION_STATUS : NO HOLDER
+FINAL_BLOCKING_INSTANCE       :
+FINAL_BLOCKING_SESSION	      :
+SEQ#			      : 29733
+EVENT#			      : 7
+EVENT			      : rdbms ipc message
+P1TEXT			      : timeout
+P1			      : 300
+P1RAW			      : 000000000000012C
+P2TEXT			      :
+P2			      : 0
+P2RAW			      : 00
+P3TEXT			      :
+P3			      : 0
+P3RAW			      : 00
+WAIT_CLASS_ID		      : 2723168908
+WAIT_CLASS#		      : 6
+WAIT_CLASS		      : Idle
+WAIT_TIME		      : 0
+SECONDS_IN_WAIT 	      : 1
+STATE			      : WAITING
+WAIT_TIME_MICRO 	      : 1383807
+TIME_REMAINING_MICRO	      : 1616193
+TIME_SINCE_LAST_WAIT_MICRO    : 0
+SERVICE_NAME		      : SYS$BACKGROUND
+SQL_TRACE		      : DISABLED
+SQL_TRACE_WAITS 	      : FALSE
+SQL_TRACE_BINDS 	      : FALSE
+SQL_TRACE_PLAN_STATS	      : FIRST EXEC
+SESSION_EDITION_ID	      : 0
+CREATOR_ADDR		      : 00000000DF4C9A20
+CREATOR_SERIAL# 	      : 1
+ECID			      :
+-----------------
+
+PL/SQL procedure successfully completed.
 ```
