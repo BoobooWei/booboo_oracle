@@ -1,8 +1,8 @@
-# SQL语句-查询语句-变量
+# SQL语句-查询语句-SQLPlus和变量
 
 <!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-- [SQL语句-查询语句-变量](#sql语句-查询语句-变量)
+- [SQL语句-查询语句-SQLPlus和变量](#sql语句-查询语句-sqlplus和变量)
 	- [变量的类型](#变量的类型)
 		- [替代变量](#替代变量)
 			- [实践1-where 字句中包含替代变量](#实践1-where-字句中包含替代变量)
