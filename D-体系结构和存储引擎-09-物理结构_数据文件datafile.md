@@ -1,170 +1,162 @@
-# 日志文件
+# 数据文件
 
-> 2019-12-02 - BoobooWei
+> 2019-12-21 - BoobooWei
 
 <!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-- [日志文件](#日志文件)
-	- [`redolog` 文件分类](#redolog-文件分类)
-		- [联机重做日志文件](#联机重做日志文件)
-		- [存档的重做日志文件](#存档的重做日志文件)
-	- [对 `redolog` 的管理](#对-redolog-的管理)
-	- [笔记](#笔记)
+- [关于数据文件](#关于数据文件)
+	- [数据文件](#数据文件)
+	- [实践1-建立新的表空间](#实践1-建立新的表空间)
+	- [实践2-更改表空间的名称，更改数据文件的名称](#实践2-更改表空间的名称，更改数据文件的名称)
 
 <!-- /TOC -->
 
-## `redolog` 文件分类
+## 关于数据文件
 
-### 联机重做日志文件
+[关于数据文件](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-data-files-and-temp-files.html#GUID-B1805034-94ED-4887-94B4-369FB8AAE416)
 
-[Managing the Redo Log](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-the-redo-log.html#GUID-BC1F1762-0BB1-4218-B7AF-6160C395AAE4)
+数据文件是操作系统的物理文件，用于存储数据库中所有逻辑结构的数据。必须为每个表空间显式创建它们。
 
-每个Oracle数据库都有一组两个或多个联机**重做日志文件**。这些联机重做日志文件，以及重做日志文件的存档副本，统称为数据库的重做日志。一个[**重做日志**](https://docs.oracle.com/cd/B28359_01/server.111/b28318/glossary.htm#CHDIHFBC)由重做条目（也称为**重做记录**），其记录的所有数据更改作出。如果发生故障导致修改后的数据无法永久写入数据文件，则可以从重做日志中获取更改，因此永远不会丢失工作。
+Oracle数据库为每个数据文件分配两个关联的文件号，一个绝对文件号和一个相对文件号，用于唯一地标识它。下表描述了这些数字：
 
-为了防止涉及重做日志本身的故障，Oracle数据库允许您创建**多路复用的重做日志，**以便可以在不同的磁盘上维护两个或**多个重做日志**副本。
+| 文件编号类型 | 描述                                                         |
+| ------------ | ------------------------------------------------------------ |
+| 绝对         | 唯一标识数据库中的数据文件。该文件号可以在许多引用数据文件的SQL语句中使用，而不是使用文件名。绝对文件号可以在找到`FILE# `所述的柱`V$DATAFILE`或`V$TEMPFILE`视图，或者在`FILE_ID`所述的柱`DBA_DATA_FILES`或`DBA_TEMP_FILES`视图。 |
+| 相对的       | 唯一标识表空间内的数据文件。对于中小型数据库，相对文件号通常具有与绝对文件号相同的值。但是，当数据库中的数据文件数超过阈值（通常为1023）时，相对文件数与绝对文件数不同。在bigfile表空间中，相对文件号始终为1024（在OS / 390平台上为4096）。 |
 
-### 存档的重做日志文件
-
-[Managing Archived Redo Log Files](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-5EE4AC49-E1B2-41A2-BEE7-AA951EAAB2F3)
-
-归档的重做日志文件是数据库生成的在线重做日志文件的脱机副本。当数据库处于`ARCHIVELOG`模式时，Oracle数据库会自动归档重做日志文件。Oracle建议您启用联机重做日志的自动存档。
-
-## 对 `redolog` 的管理
-
-| 管理内容                                                     | SQL                                                          |
-| ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 查看日志的工作工作状态                                       | select * from v$log;                                         |
-| 查看日志的物理信息                                           | select * from v$logfile;                                     |
-| 查看日志切换的历史                                           | select SEQUENCE#,to_char(FIRST_TIME,'yyyy-mm-dd hh24:mi:ss') from v$log_history; |
-| 监控日志切换频率：(成员大小、组的数量、切换频率，决定数据库性能) | select to_char(first_time,'yyyymmddhh24'),count(*) from v$log_history group by to_char(first_time,'yyyymmddhh24'); |
-| 改变成员尺寸：添加新的组同时指定新的成员大小                 | alter database add logfile group 3 '/home/oracle/db01/redo03.log' size 100m;<br/>alter database add logfile group 4 '/home/oracle/db01/redo04.log' size 100m; |
-| 删除日志组                                                   | alter database drop logfile group 1;                         |
-| 手工切换日志                                                 | alter system switch logfile;                                 |
-| 手工产生检查点                                               | alter system checkpoint;                                     |
-| 在组下增加成员                                               | alter database add logfile member <br/>'/home/oracle/redo01b.log' to group 1,<br/>'/home/oracle/redo02b.log' to group 2,<br/>'/home/oracle/redo03b.log' to group 3; |
-| 移动日志文件                                                 | shutdown immediate<br/>startup mount<br/>!mv /home/oracle/redo01b.log /home/oracle/db01/redo01b.log<br/>!mv /home/oracle/redo02b.log /home/oracle/db01/redo02b.log<br/>!mv /home/oracle/redo03b.log /home/oracle/db01/redo03b.log<br/>alter database rename file '/home/oracle/redo01b.log' to '/home/oracle/db01/redo01b.log';<br/>alter database rename file '/home/oracle/redo02b.log' to '/home/oracle/db01/redo02b.log';<br/>alter database rename file '/home/oracle/redo03b.log' to '/home/oracle/db01/redo03b.log'; |
-| **归档模式**                                                 | 每次联机日志切换时，当前组都会被备份下来，生成归档文件！     |
-| 查看数据库是否为归档模式                                     | show parameter DB_RECOVERY_FILE_DEST                         |
-| 将数据库转换为归档模式                                       | shutdown immediate<br/>startup mount<br/>alter database archivelog;<br/>alter database open;<br/>archive log list |
-| 查看存档位置                                                 | show parameter DB_RECOVERY_FILE_DEST                         |
-| 查看已经归档的日志文件                                       | select sequence#,name from v$archived_log;                   |
-| 修改存档位置                                                 | mkdir -p /home/oracle/arc_cctv_dest1/<br/>alter system set log_archive_dest_1='location=/home/oracle/arc_cctv_dest1/';<br/>alter system switch logfile;<br/>select sequence#,name from v$archived_log; |
+**父主题：** [管理数据文件的准则](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-data-files-and-temp-files.html#GUID-BB7D8910-FCAE-4DAD-BDE5-B5EE35C69C6B)
 
 
 
-练习
+* 数据文件是数据的存放载体 
+* 数据文件存在于操作系统上,可以不是文件。设备也可以。 
+* 数据文件不能独立存在,得有组织 数据文件的逻辑组织形式为表空间`tablespace`
+* 一个表空间内可以含有多个数据文件 数据库内可以有多个表空间
+
+![](pic/d03.png)
+
+* 红色是存放数据的数据文件 
+* 红色的变化存放在蓝色的日志文件 
+* 绿色为控制文件，存放红色和蓝色的结构和行为。
+
+
+
+
+
+## 实践1-建立新的表空间
+
+该实验的目的是初步认识数据文件和表空间。
+
+### 查看表空间和数据文件的信息 
+
+```SQL
+SELECT 
+    tablespace_name, file_name, CEIL(bytes / 1024 / 1024) mb
+FROM
+    dba_data_files
+ORDER BY 1;
+```
+
+### 建立新的表空间
 
 ```sql
-SQL> column member format a30
-SQL> select * from v$logfile;
-
-    GROUP# STATUS  TYPE    MEMBER			  IS_	  CON_ID
----------- ------- ------- ------------------------------ --- ----------
-	 3	   ONLINE  /u01/app/oracle/oradata/booboo NO	       0
-			   /redo03.log
-
-	 2	   ONLINE  /u01/app/oracle/oradata/booboo NO	       0
-			   /redo02.log
-
-	 1	   ONLINE  /u01/app/oracle/oradata/booboo NO	       0
-			   /redo01.log
-
-
-SQL> show parameter DB_RECOVERY_FILE_DEST;
-
-NAME				     TYPE	 VALUE
------------------------------------- ----------- ------------------------------
-db_recovery_file_dest		     string
-db_recovery_file_dest_size	     big integer 0
-
-SQL> archive log list;
-Database log mode	       No Archive Mode
-Automatic archival	       Disabled
-Archive destination	       /u01/app/oracle/product/12.2.0/db_1/dbs/arch
-Oldest online log sequence     4
-Current log sequence	       6
-
+CREATE TABLESPACE <tablespace_name> DATAFILE '<datafile_path>' SIZE 2M;
 ```
 
-您必须在以`NOARCHIVELOG`或`ARCHIVELOG`模式运行数据库之间进行选择。
+### 加入新的数据文件
 
-是否启用已归档的重做日志文件组的归档取决于数据库上运行的应用程序的可用性和可靠性要求。如果在发生磁盘故障时无法承受丢失数据库中任何数据的风险，请使用`ARCHIVELOG`模式。填充的重做日志文件的存档可能需要您执行额外的管理操作。
-
-- [在NOARCHIVELOG模式下](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-21A9A3AC-1D90-4848-B3BB-3A9E797547F8)
-  运行数据库在`NOARCHIVELOG`模式下运行数据库时，将禁用重做日志的归档。
-- [在ARCHIVELOG模式下](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-36F3335E-A28B-47BA-82C2-E17B4C8A453A)
-  运行数据库在`ARCHIVELOG`模式下运行数据库时，将启用重做日志的归档。
-
-- [Running a Database in NOARCHIVELOG Mode](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-21A9A3AC-1D90-4848-B3BB-3A9E797547F8)
-  When you run your database in `NOARCHIVELOG` mode, you disable the archiving of the redo log.
-- [Running a Database in ARCHIVELOG Mode](https://docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/managing-archived-redo-log-files.html#GUID-36F3335E-A28B-47BA-82C2-E17B4C8A453A)
-  When you run a database in `ARCHIVELOG` mode, you enable the archiving of the redo log.
-
-## 笔记
-
-
-```bash
-管理日志文件:
-记录所有数据块的变化
-用来做恢复
-以组为单位工作
-数据库正常工作至少需要2组日志
-每组下可以拥有多个成员
-组之间是切换运行
-同一组下的成员之间是镜像关系
-成员的信息记录在控制文件
-
-查看日志的工作工作状态：
-select * from v$log;
-查看日志的物理信息
-select * from v$logfile;
-查看日志切换的历史
-select SEQUENCE#,to_char(FIRST_TIME,'yyyy-mm-dd hh24:mi:ss') from v$log_history;
-监控日志切换频率：(成员大小、组的数量、切换频率，决定数据库性能)
-select to_char(first_time,'yyyymmddhh24'),count(*) from v$log_history group by to_char(first_time,'yyyymmddhh24');
-改变成员尺寸：添加新的组同时指定新的成员大小
-alter database add logfile group 3 '/home/oracle/db01/redo03.log' size 100m;
-alter database add logfile group 4 '/home/oracle/db01/redo04.log' size 100m;
-删除日志组：
-alter database drop logfile group 1;
-手工切换日志：
-alter system switch logfile;
-手工产生检查点：
-alter system checkpoint;
-在组下增加成员：
-alter database add logfile member
-'/home/oracle/redo01b.log' to group 1,
-'/home/oracle/redo02b.log' to group 2,
-'/home/oracle/redo03b.log' to group 3;
-移动日志文件：
-shutdown immediate
-startup mount
-!mv /home/oracle/redo01b.log /home/oracle/db01/redo01b.log
-!mv /home/oracle/redo02b.log /home/oracle/db01/redo02b.log
-!mv /home/oracle/redo03b.log /home/oracle/db01/redo03b.log
-alter database rename file '/home/oracle/redo01b.log' to '/home/oracle/db01/redo01b.log';
-alter database rename file '/home/oracle/redo02b.log' to '/home/oracle/db01/redo02b.log';
-alter database rename file '/home/oracle/redo03b.log' to '/home/oracle/db01/redo03b.log';
-
-归档模式：
-每次联机日志切换时，当前组都会被备份下来，生成归档文件！
-查看数据库是否为归档模式
-archive log list
-将数据库转换为归档模式
-shutdown immediate
-startup mount
-alter database archivelog;
-alter database open;
-archive log list
-
-查看存档位置：
-show parameter DB_RECOVERY_FILE_DEST
-查看已经归档的日志文件：
-select sequence#,name from v$archived_log;
-
-修改存档位置：
-mkdir -p /home/oracle/arc_cctv_dest1/
-alter system set log_archive_dest_1='location=/home/oracle/arc_cctv_dest1/';
-alter system switch logfile;
-select sequence#,name from v$archived_log;
+```sql
+ALTER TABLESPACE <tablespace_name> ADD DATAFILE '<datafile_path>' SIZE 2M;
 ```
+
+### 删除数据文件
+
+Oracle版本 小于 10g 时，数据文件只能加入，不能删除，除非将表空间删除。
+
+Oracle版本 从10g数据库版本开始可以删除。
+
+```SQL
+ALTER TABLESPACE <tablespace_name> DROP DATAFILE '<datafile_path>';
+```
+
+### 改变数据文件的大小
+
+改变数据文件的大小 可以加大，也可以缩小
+
+```sql
+ALTER DATABASE DATAFILE '<datafile_path>' RESIZE 3M;
+```
+
+3M为最后的大小，不是加大3M。
+
+* 一个数据文件的最小值为文件头加最小的表；
+* 一个数据文件的最大值为该表空间的块大小乘4M。
+
+### 数据文件的自动扩展
+
+查看表空间数据文件自动拓展属性
+
+```sql
+SELECT 
+    file_name, autoextensible, maxblocks, increment_by
+FROM
+    dba_data_files;
+```
+
+修改数据库文件为自动拓展
+
+```sql
+alter database datafile '/home/oracle/ts1.dbf' autoextend on next 1m maxsize 100m;
+```
+
+关闭数据文件自动扩展功能
+
+```sql
+alter database datafile '/home/oracle/ts1.dbf' autoextend off;
+```
+
+### 修改表空间状态
+
+查看表空间状态`status`属性
+
+```sql
+select tablespace_name,status from dba_tablespaces;
+```
+
+修改表空间的状态为只读
+
+```sql
+alter tablespace ts1 read only;
+```
+
+修改表空间状态为读写
+
+```sql
+alter tablespace ts1 read write;
+```
+
+* 只读表空间内的表不能DML，但可以DROP 。
+* 因为DROP操作的是SYSTEM表空间，SYSTEM表空间不能设为只读。
+
+修改表空间状态为离线
+
+```sql
+alter tablespace ts1 offline;
+```
+
+修改表空间状态为在线
+
+```sql
+alter tablespace ts1 online;
+```
+
+![](pic/d04.png)
+
+
+
+
+
+
+
+
+## 实践2-更改表空间的名称，更改数据文件的名称

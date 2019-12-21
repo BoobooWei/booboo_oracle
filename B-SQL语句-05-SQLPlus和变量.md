@@ -1144,3 +1144,23 @@ ECID			      :
 
 PL/SQL procedure successfully completed.
 ```
+
+SQLPLUS需要开启参数`serveroutput`，才能打印存储过程的结果。
+
+```sql
+SQL> set serveroutput on
+SQL> exec print_table('select * from scott.t01 where rownum < 2')
+EMPNO			      : 7369
+ENAME			      : SMITH
+JOB			      : CLERK
+MGR			      : 7902
+HIREDATE		      : 17-dec-1980 00:00:00
+SAL			      : 800
+COMM			      :
+DEPTNO			      : 20
+-----------------
+
+PL/SQL procedure successfully completed.
+
+```
+
