@@ -1,27 +1,50 @@
-## DCL管理用户
+# SQL语句-DCL管理用户
 
-[TOC]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [SQL语句-DCL管理用户](#sql语句-dcl管理用户)
+	- [权限的分类](#权限的分类)
+		- [系统权限](#系统权限)
+			- [典型的DBA权限](#典型的dba权限)
+			- [典型用户权限](#典型用户权限)
+		- [对象权限](#对象权限)
+	- [角色](#角色)
+		- [什么是角色？](#什么是角色)
+		- [创建和分配角色](#创建和分配角色)
+			- [步骤](#步骤)
+		- [语法](#语法)
+		- [实践](#实践)
+	- [数据字典-与角色和权限相关](#数据字典-与角色和权限相关)
+		- [实践1-查看用户的权限](#实践1-查看用户的权限)
+	- [级联授权](#级联授权)
+		- [系统权限级联授权：`with admin option` 权限回收无级联](#系统权限级联授权with-admin-option-权限回收无级联)
+		- [对象权限级联授权：`with grant option` 权限回收有级联](#对象权限级联授权with-grant-option-权限回收有级联)
+		- [实践1-系统用户只能用with admin option](#实践1-系统用户只能用with-admin-option)
+		- [实践2-一般用户只能使用with grant option](#实践2-一般用户只能使用with-grant-option)
+	- [用户权限总结](#用户权限总结)
+
+<!-- /TOC -->
 
 > 需掌握以下知识点：
 > * 创建用户
 > * 创建角色
-> * grant和revoke
+> * 授予权限和回收权限
 > * 创建和访问数据库连接
 
-### 权限
+## 权限的分类
 
 权限分为：
 * 系统权限：获取访问数据库的权限 （典型的DBA权限；用户系统权限）
-* 对象权限：操作数据库对象的内容 
+* 对象权限：操作数据库对象的内容
 
 > 个人理解：系统权限包括了ddl和dcl语句;对象权限包括了alter和dql和dml
 
-#### 系统权限
+### 系统权限
 
 * 超过100个权限可用
 * 数据库管理员拥有高级别的系统权限用于进行下列任务：创建、删除用户；删除表；备份表
 
-##### 典型的DBA权限
+#### 典型的DBA权限
 
 | 系统权限              | 操作认证               |
 | :---------------- | :----------------- |
@@ -34,7 +57,7 @@
 
 * 模式是对象的集和，例如表，视图，子查询。
 
-##### 典型用户权限
+#### 典型用户权限
 
 | 系统权限             | 操作认证                  |
 | :--------------- | :-------------------- |
@@ -44,8 +67,7 @@
 | create view      | 在用户的模式中创建视图           |
 | create procedure | 在用户的模式中创建一个存储过程，函数或者包 |
 
-#### 对象权限
-
+### 对象权限
 
 **授予对象权限**
 
@@ -82,82 +104,64 @@
 
 
 
-### 角色
+## 角色
 
-#### 什么是角色？
+### 什么是角色？
 
 角色是命名的组，包含相关的权限可以授予用户。这个方法可以使撤销和维护权限变得简单。一个用户可以拥有几个角色，几个用户可以分配相同的角色。角色通常为数据库的应用程序创建。
 
-#### 创建和分配角色
+### 创建和分配角色
 
-步骤：
+#### 步骤
+
 1. DBA必须创建角色
 2. DBA可以分配权利
 3. DBA给用户授与角色
 
-语法：
-```shell
+### 语法
+```SQL
 create role x_role;
 grant create table , create view to x_role;
 grant x_role to batman,superman;
 ```
 
-```shell
-SQL> show user;
-USER is "SYS"
-SQL> create role python;   
 
-Role created.
+### 实践
 
-SQL> grant create session,create table to python;
+```SQL
+create role r1;
+grant create session,create table to r1;
 
-Grant succeeded.
+create role r2;
+grant create view to r2;
+grant delete on scott.emp to r2;
 
-SQL> grant python to superman identified by superman;
+create role r3;
+grant create procedure to r3;
+grant update (sal) on scott.emp to r3;
 
-Grant succeeded.
+grant r3 to r1;
 
-SQL> conn superman/superman
-Connected.
+create user tom identified by tom;
+grant r1,r2 to tom;
 
-SQL> show user;
-USER is "SUPERMAN"
-SQL> create table t1 (id int);
-
-Table created.
-
-SQL> select * from tab;
-
-TNAME			       TABTYPE	CLUSTERID
------------------------------- ------- ----------
-T1			       TABLE
-
-
-SQL> select * from session_privs;
-
-PRIVILEGE
-----------------------------------------
-CREATE SESSION
-CREATE TABLE
-
-SQL> select * from user_tab_privs;
-
-no rows selected
-
-SQL> select * from user_sys_privs;
-
-no rows selected
-
+grant create sequence to tom;
+grant select on scott.emp to tom;
+grant insert on scott.emp to tom;
+grant update (comm) on scott.emp to tom;
 ```
-### 权限数据字典
+
+## 数据字典-与角色和权限相关
 
 | 数据字典视图              | 描述             |
 | :------------------ | :------------- |
 | role_sys_privs      | 角色被授予的系统权限     |
 | role_tab_privs      | 角色被授予的对象权限     |
 | user_role_privs     | 用户被授予的角色权限     |
+| user_tab_privs      | 用户对象权限            |
 | user_tab_privs_made | 用户的对象被授予的对象权限  |
 | user_tab_privs_recd | 用户被授予的对象权限     |
+| user_col_privs      | 用户对象对权限            |
 | user_col_privs_made | 用户对象的列被授予的对象权限 |
 | user_col_privs_recd | 用户指定的列被授予的对象权限 |
 | user_sys_privs      | 用户被授予的系统权限     |
@@ -166,17 +170,33 @@ no rows selected
 | dba_col_privs       | 用户被授予的列级别的对象权限 |
 | dba_role_privs      | 用户被授予的角色权限     |
 
-```shell
-# 背景：scott用户给ops$boobo 授权了emp表的select权限
 
-# 使用ops$boobo 用户登陆
+> 我的理解：
+> user_tab_privs      | 用户对象权限            | 我给别人的权限和别人给我的权限，对象级别|
+> user_tab_privs_made | 用户的对象被授予的对象权限  | 我给别人的权限，对象级别|
+> user_tab_privs_recd | 用户被授予的对象权限     | 别人给我的权限，对象级别|
+
+
+### 实践1-查看用户的权限
+
+
+背景：scott用户给ops$boobo 授权了emp表的select权限
+
+1. 使用ops$boobo 用户登陆，查看拥有的系统权限
+
+```SQL
 SQL> select * from user_sys_privs;
 
 USERNAME		       PRIVILEGE				ADM
 ------------------------------ ---------------------------------------- ---
 OPS$BOOBOO		       CREATE SESSION				NO
+```
 
+从返回结果可知，用户拥有的系统权限为`CREATE SESSION`。
 
+2. 使用ops$boobo 用户登陆，查看对象权限
+
+```SQL
 SQL> set linesize 500
 SQL> select * from user_tab_privs;
 
@@ -193,8 +213,15 @@ SCOTT			       EMP			      SCOTT			     SELECT				      YES NO
 SQL> select * from user_tab_privs_made;
 
 no rows selected
+```
 
-# 使用scott用户登陆
+* SCOTT用户 给了 OPS$BOOBOO 用户  SCOTT.EMP 的 SELECT 权限；
+* OPS$BOOBOO 用户 没有给 其他用户 授权的对象；
+
+
+3. 使用 scott 用户登陆，查看对象权限
+
+```SQL
 SQL> select * from user_tab_privs;
 
 GRANTEE 		       OWNER			      TABLE_NAME		     GRANTOR			    PRIVILEGE				     GRA HIE
@@ -210,12 +237,110 @@ SQL> select * from user_tab_privs_made;
 GRANTEE 		       TABLE_NAME		      GRANTOR			     PRIVILEGE				      GRA HIE
 ------------------------------ ------------------------------ ------------------------------ ---------------------------------------- --- ---
 OPS$BOOBOO		       EMP			      SCOTT			     SELECT				      YES NO
-
-
 ```
 
+* 其他用户 没有给 SCOTT 用户 授权的对象；
+* SCOTT 用户 授予了 OPS$BOOBOO 用户 SCOTT.EMP 的 SELECT 权限；
 
-### 创建和管理用户总结
+
+## 级联授权
+
+`dba --> user A --> user B`
+
+### 系统权限级联授权：`with admin option` 权限回收无级联
+
+```SQL
+grant CREATE SEQUENCE to tom with admin option;
+```
+
+### 对象权限级联授权：`with grant option` 权限回收有级联
+
+```SQL
+grant insert on scott.e01 to tom with grant option;
+```
+
+### 实践1-系统用户只能用with admin option
+
+```SQL
+SQL> conn / as sysdba   
+Connected.
+```
+
+级联授权
+
+```SQL
+SQL> grant create table to ops$booboo with admin option;
+```
+
+ops$booboo用户授权给ops$oracle用户create table的权限
+
+```SQL
+SQL> grant create table to ops$oracle;
+```
+
+sysdba回收ops$booboo用户的create table权限
+
+```SQL
+SQL> conn / as sysdba
+Connected.
+SQL> revoke create table from ops$booboo;
+```
+测试发现ops$booboo用户的create table权限被回收了，而ops$oracle用户create table的权限没有被回收
+
+### 实践2-一般用户只能使用with grant option
+
+一般用户只能使用with grant option
+
+```SQL
+SQL> grant select on emp to ops$booboo with admin option;
+grant select on emp to ops$booboo with admin option
+                                       *
+ERROR at line 1:
+ORA-00993: missing GRANT keyword
+
+
+SQL> grant select on emp to ops$booboo with grant option;
+
+Grant succeeded.
+```
+
+OPS$BOOBOO再授权给其他用户
+```SQL
+SQL> grant select on scott.emp to ops$oracle ;
+
+Grant succeeded.
+
+SQL> show user;
+USER is "OPS$BOOBOO"
+SQL> set linesize 150
+SQL> select * from scott.emp where rownum < 3;
+
+     EMPNO ENAME      JOB	       MGR HIREDATE	    SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7369 SMITH      CLERK	      7902 17-DEC-80	    800 		   20
+      7499 ALLEN      SALESMAN	      7698 20-FEB-81	   1600        300	   30
+--OPS$ORACLE用户
+SQL> show user;
+USER is "OPS$ORACLE"
+
+SQL> set linesize 150;
+SQL> select * from scott.emp where rownum < 3;
+
+     EMPNO ENAME      JOB	       MGR HIREDATE	    SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7369 SMITH      CLERK	      7902 17-DEC-80	    800 		   20
+      7499 ALLEN      SALESMAN	      7698 20-FEB-81	   1600        300	   30
+```
+
+scott用户回收对OPS$BOOBOO的授权后，ops$oracle也会失去select权限
+
+```SQL
+SQL> revoke select on emp from ops$booboo;
+
+Revoke succeeded.
+```
+
+## 用户权限总结
 
 | 功能                             | 命令                                                         |
 | :------------------------------- | :----------------------------------------------------------- |
@@ -241,21 +366,21 @@ OPS$BOOBOO		       EMP			      SCOTT			     SELECT				      YES NO
 | 角色被授予的系统权限             | select * from ROLE_SYS_PRIVS WHERE ROLE='R1';                |
 | 角色被授予的对象权限             | select * from ROLE_TAB_PRIVS WHERE ROLE='R1';                |
 
-```shell
-# sysdba创建一个用户blake
+```SQL
+--sysdba创建一个用户blake
 SQL> create user blake identified by blake;
 
 User created.
-# 该用户什么都做不了
+--该用户什么都做不了
 SQL> conn blake/blake;
 ERROR:
 ORA-01045: user BLAKE lacks CREATE SESSION privilege; logon denied
 
 
 Warning: You are no longer connected to ORACLE.
-# MySQL创建用户就会默认存在一个usage的权限允许该用户连接上数据库服务器
+--MySQL创建用户就会默认存在一个usage的权限允许该用户连接上数据库服务器
 
-# Oracle需要给用户授予create session的权限才能允许连接
+--Oracle需要给用户授予create session的权限才能允许连接
 SQL> conn / as sysdba
 Connected.
 SQL> grant create session to blake;
@@ -267,9 +392,9 @@ Connected.
 SQL> show user;
 USER is "BLAKE"
 
-# 用户的命名规则
-# 操作系统审核的用户：安全机制在系统级别，则前缀为ops$，后缀为当前登陆到服务器的操作系统用户名
-# os_authent_prefix 变量的值为 ops$
+--用户的命名规则
+--操作系统审核的用户：安全机制在系统级别，则前缀为ops$，后缀为当前登陆到服务器的操作系统用户名
+--os_authent_prefix 变量的值为 ops$
 SQL> conn / as sysdba
 Connected.
 
@@ -286,14 +411,14 @@ remote_os_authent		     boolean	 FALSE
 remote_os_roles 		     boolean	 FALSE
 timed_os_statistics		     integer	 0
 
-# 后缀为当前登陆到服务器的操作系统用户名
+--后缀为当前登陆到服务器的操作系统用户名
 SQL> select distinct osuser from v$session;
 
 OSUSER
 ------------------------------
 oracle
 
-# 如何创建操作系统审核的用户
+--如何创建操作系统审核的用户
 SQL> create user ops$oracle identified by oracle;
 
 User created.
@@ -307,8 +432,8 @@ Connected.
 SQL> show user;
 USER is "OPS$ORACLE"
 
-# 若目前是booboo用户登陆的服务器如何创建一个对应的操作系统审核用户
-# booboo的所属组为oinstall，附加组为dba
+--若目前是booboo用户登陆的服务器如何创建一个对应的操作系统审核用户
+--booboo的所属组为oinstall，附加组为dba
 
 [root@oracle0 ~]# id booboo
 uid=501(booboo) gid=501(oinstall) groups=501(oinstall),500(dba)
@@ -352,18 +477,18 @@ Connected.
 SQL> show user
 USER is "OPS$BOOBOO"
 
-# 查看自己的权限
+--查看自己的权限
 SQL> select * from session_privs;
 
 PRIVILEGE
 ----------------------------------------
 CREATE SESSION
 
-# 查看sysdba的权限
+--查看sysdba的权限
 SQL> conn / as sysdba
 SQL> select * from session_privs;
 
-# 授予多个系统权限给一个用户
+--授予多个系统权限给一个用户
 SQL> grant create table,create sequence to ops$booboo;
 
 Grant succeeded.
@@ -377,7 +502,7 @@ PRIVILEGE
 CREATE SESSION
 CREATE TABLE
 CREATE SEQUENCE
-# 注意此处的create权限包含了对对象的创建、修改、删除操作
+--注意此处的create权限包含了对对象的创建、修改、删除操作
 
 SQL> conn /
 Connected.
@@ -405,12 +530,12 @@ SQL> drop table t1 purge;
 
 Table dropped.
 
-# 回收权限
+--回收权限
 SQL> conn / as sysdba   
 Connected.
 SQL> revoke create table ,create sequence from ops$booboo ;
 
-# 级联授权
+--级联授权
 SQL> grant create table to ops$booboo with admin option;
 
 SQL> conn /
@@ -436,117 +561,3 @@ SQL> grant create table to ops$oracle;
 Grant succeeded.
 
 ```
-
-
-### 课后练习
-
-1. 创建操作系统认证用户ops$tom
-2. 查看自己的权限
-3. 查看所有的权限
-4. 级联授权
-
-
-```shell
-create role r1;
-grant create session,create table to r1;
-
-create role r2;
-grant create view to r2;
-grant delete on scott.emp to r2;
-
-create role r3;
-grant create procedure to r3;
-grant update (sal) on scott.emp to r3;
-
-grant r3 to r1;
-
-create user tom identified by tom;
-grant r1,r2 to tom;
-
-grant create sequence to tom;
-grant select on scott.emp to tom;
-grant insert on scott.emp to tom;
-grant update (comm) on scott.emp to tom;
-```
-
-### 级联授权
-
-`dba --> user A --> user B`
-
-系统权限级联授权：`with admin option` 权限回收无级联
-
-```shell
-grant CREATE SEQUENCE to tom with admin option;
-```
-
-对象权限级联授权：`with grant option` 权限回收有级联
-
-```shell
-grant insert on scott.e01 to tom with grant option;
-```
-
-```shell
-# 系统管理员sysdba只能使用 with admin option
-SQL> conn / as sysdba   
-Connected.
-# 级联授权
-SQL> grant create table to ops$booboo with admin option;
-
-# ops$booboo用户授权给ops$oracle用户create table的权限
-SQL> grant create table to ops$oracle;
-
-# sysdba回收ops$booboo用户的create table权限
-SQL> conn / as sysdba
-Connected.
-SQL> revoke create table from ops$booboo;
-
-# 测试发现ops$booboo用户的create table权限被回收了，而ops$oracle用户create table的权限没有被回收
-
-|=================
-# 一般用户只能使用with grant option
-SQL> grant select on emp to ops$booboo with admin option;
-grant select on emp to ops$booboo with admin option
-                                       *
-ERROR at line 1:
-ORA-00993: missing GRANT keyword
-
-
-SQL> grant select on emp to ops$booboo with grant option;
-
-Grant succeeded.
-
-# OPS$BOOBOO再授权给其他用户
-
-SQL> grant select on scott.emp to ops$oracle ;
-
-Grant succeeded.
-
-SQL> show user;
-USER is "OPS$BOOBOO"
-SQL> set linesize 150
-SQL> select * from scott.emp where rownum < 3;
-
-     EMPNO ENAME      JOB	       MGR HIREDATE	    SAL       COMM     DEPTNO
----------- ---------- --------- ---------- --------- ---------- ---------- ----------
-      7369 SMITH      CLERK	      7902 17-DEC-80	    800 		   20
-      7499 ALLEN      SALESMAN	      7698 20-FEB-81	   1600        300	   30
-# OPS$ORACLE用户
-SQL> show user;
-USER is "OPS$ORACLE"
-
-SQL> set linesize 150;
-SQL> select * from scott.emp where rownum < 3;
-
-     EMPNO ENAME      JOB	       MGR HIREDATE	    SAL       COMM     DEPTNO
----------- ---------- --------- ---------- --------- ---------- ---------- ----------
-      7369 SMITH      CLERK	      7902 17-DEC-80	    800 		   20
-      7499 ALLEN      SALESMAN	      7698 20-FEB-81	   1600        300	   30
-
-
-# scott用户回收对OPS$BOOBOO的授权后，ops$oracle也会失去select权限
-SQL> revoke select on emp from ops$booboo;
-
-Revoke succeeded.
-```
-
-

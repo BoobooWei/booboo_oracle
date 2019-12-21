@@ -1,8 +1,78 @@
-## DDL创建表和管理表
+# SQL语句-DDL管理5大对象
 
-[toc]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-### 管理的对象
+- [SQL语句-DDL管理5大对象](#sql语句-ddl管理5大对象)
+	- [管理的对象](#管理的对象)
+		- [对象命名规则](#对象命名规则)
+	- [管理表](#管理表)
+		- [表的分类](#表的分类)
+		- [数据类型](#数据类型)
+		- [表操作](#表操作)
+			- [创建表](#创建表)
+			- [查看表的结构](#查看表的结构)
+			- [子查询建表拷贝行](#子查询建表拷贝行)
+			- [子查询建表拷贝表结构](#子查询建表拷贝表结构)
+			- [创建事务级临时表](#创建事务级临时表)
+			- [创建会话级临时表](#创建会话级临时表)
+			- [增加列](#增加列)
+			- [修改列](#修改列)
+			- [重命名列](#重命名列)
+			- [删除列](#删除列)
+			- [在业务高峰期删除列分为两步](#在业务高峰期删除列分为两步)
+			- [对列添加注释](#对列添加注释)
+			- [对表添加注释](#对表添加注释)
+			- [重命名表](#重命名表)
+			- [截断表](#截断表)
+			- [将表放入回收站](#将表放入回收站)
+			- [将回收站对象还原](#将回收站对象还原)
+			- [彻底删除表](#彻底删除表)
+			- [清空回收站](#清空回收站)
+	- [管理约束](#管理约束)
+		- [建表时直接启用约束，列级别启用约束，约束产用系统命名](#建表时直接启用约束列级别启用约束约束产用系统命名)
+		- [建表时直接启用约束，列级别启用约束，约束产用户命名](#建表时直接启用约束列级别启用约束约束产用户命名)
+		- [启用唯一键约束](#启用唯一键约束)
+		- [启用主键约束](#启用主键约束)
+		- [启用外键约束](#启用外键约束)
+		- [启用check约束](#启用check约束)
+		- [外键的级联操作](#外键的级联操作)
+		- [查看约束状态](#查看约束状态)
+		- [启用|关闭约束](#启用关闭约束)
+		- [其它操作](#其它操作)
+		- [删除约束](#删除约束)
+	- [管理视图](#管理视图)
+		- [视图的优点](#视图的优点)
+		- [视图的分类—简单视图和复杂视图](#视图的分类简单视图和复杂视图)
+		- [管理视图的权限](#管理视图的权限)
+			- [查看用户目前是否没有创建视图的权限](#查看用户目前是否没有创建视图的权限)
+			- [授予用户创建视图的权限](#授予用户创建视图的权限)
+			- [创建视图](#创建视图)
+			- [创建视图](#创建视图)
+			- [删除视图](#删除视图)
+	- [管理序列](#管理序列)
+		- [序列两个伪列](#序列两个伪列)
+		- [序列的初始值不可以修改，其他属性都可以修改](#序列的初始值不可以修改其他属性都可以修改)
+		- [使用序列](#使用序列)
+		- [删除序列](#删除序列)
+	- [管理索引](#管理索引)
+		- [何时创建索引](#何时创建索引)
+		- [索引的数据字典](#索引的数据字典)
+		- [索引的操作](#索引的操作)
+			- [手工创建索引](#手工创建索引)
+			- [查看索引是否被使用](#查看索引是否被使用)
+			- [基于函数的索引](#基于函数的索引)
+			- [删除索引](#删除索引)
+		- [索引测试](#索引测试)
+			- [index_stats表分析](#indexstats表分析)
+			- [rowid的格式](#rowid的格式)
+	- [管理同义词](#管理同义词)
+		- [创建私有同义词](#创建私有同义词)
+		- [创建公有同义词](#创建公有同义词)
+		- [删除同义词](#删除同义词)
+
+<!-- /TOC -->
+
+## 管理的对象
 
 * 表：存储数据
 * 视图：一张或多张表的数据子集
@@ -12,77 +82,14 @@
 
 ### 对象命名规则
 
-* 由数字、字母、_、$、#组成
+* 由`数字、字母`、`_`、`$`、`#`组成
 * 表名和列名必须以字母开头，长度为1-30个字符
 * 同一个用户不能拥有两个同名的对象
 * 名字中不能使用Oracle服务器的保留字
 * 不区分大小写
 * 双引号打破规则
 
-### 创建和管理表
-
-```shell
-# 创建表
-create table t01 (id number(3),name varchar2(12));
-# 查看表的结构
-desc t01;
-
-create table t02 (id number,name varchar2(12),salary number(7,2) default 1000);
-
-# 子查询建表拷贝行：
-create table t03 as select empno,ename,sal,deptno from emp where deptno=30;
-
-# 子查询建表拷贝表结构：
-create table t03 as select empno,ename,sal,deptno from emp where 1=0;
-
-# 创建事务级临时表：commit数据消失,表结构共享，数据是每个会话私有的
-create global temporary table temp01 as select * from emp;
-
-# 创建会话级临时表：connect & disconnect 数据消失
-create global temporary table temp02 on commit preserve rows as select * from emp;
-
-# 增加列：
-alter table t03 add (hiredate date);
-alter table t03 add (loc varchar2(10));
-# 修改列:
-alter table t03 modify (loc varchar2(13));
-alter table t03 modify (hiredate date default sysdate);
-# 重命名列:
-alter table t03 rename column loc to location;
-# 删除列:
-alter table t03 drop (hiredate);
-
-# 在业务高峰期删除列分为两步
-# 系统繁忙时设置列为未使用状态：（不产生IO，在字典中将该列屏蔽掉）
-alter table t03 set unused column sal;
-# 系统不繁忙时删除未使用状态的列：（产生IO）
-alter table t03 drop unused columns;
-
-
-
-# 对列添加注释：
-comment on column t03.ename is 'first name';
-select COLUMN_NAME,COMMENTS from user_col_comments where TABLE_NAME='T03';
-# 对表添加注释：
-comment on table t03 is 'employees copy';
-select COMMENTS from user_tab_comments where TABLE_NAME='T03';
-# 重命名表：
-rename t03 to t04;
-# 截断表：
-truncate table t04;
-# 清空表中所有数据，不记录数据的老镜像，直接将表变成初始化状态
-
-
-# 将表放入回收站
-drop table t02;
-SQL> show recyclebin
-# 将回收站对象还原
-SQL> flashback table t02 to before drop;
-# 彻底删除表：
-drop table t01 purge;
-# 清空回车站
-purge recyclebin;
-```
+## 管理表
 
 ### 表的分类
 
@@ -97,9 +104,9 @@ purge recyclebin;
 |动态性能视图|v$|动态视图，数据库服务器性能，内存和锁|初始化在内存中，c语言的结构数组，作为排错和优化的|
 
 
-```shell
-# scott/tiger
-# scott用户拥有的表rw权限
+```SQL
+--scott/tiger
+--scott用户拥有的表rw权限
 SQL> select table_name from user_tables;
 
 TABLE_NAME
@@ -110,7 +117,7 @@ BONUS
 EMP
 DEPT
 
-# scott用户拥有的rw以及可查看ro的对象
+--scott用户拥有的rw以及可查看ro的对象
 SQL> select table_name from all_tables;
 
 TABLE_NAME
@@ -128,7 +135,7 @@ HS_PARTITION_COL_TYPE
 HELP
 ...省略
 
-# sysdba用户查看所有的对象
+--sysdba用户查看所有的对象
 SQL> select table_name from dba_tables;
 ...省略
 TABLE_NAME
@@ -140,7 +147,7 @@ AQ$_ORDERS_QUEUETABLE_L
 
 2864 rows selected.
 
-# sysdba用户查看scn
+--sysdba用户查看scn
 SQL> select current_scn from v$database;
 
 CURRENT_SCN
@@ -163,9 +170,149 @@ CURRENT_SCN
 |bfile|存储到外部文件中的二进制数，最大到4G|
 |rowid|表示行在表中的唯一地质|
 
+### 表操作
+
+#### 创建表
+```sql
+create table t01 (id number(3),name varchar2(12));
+create table t02 (id number,name varchar2(12),salary number(7,2) default 1000);
+```
+
+#### 查看表的结构
+
+```SQL
+desc t01;
+```
+
+#### 子查询建表拷贝行
+
+```SQL
+create table t03 as select empno,ename,sal,deptno from emp where deptno=30;
+```
+
+#### 子查询建表拷贝表结构
+
+```SQL
+create table t03 as select empno,ename,sal,deptno from emp where 1=0;
+```
+
+#### 创建事务级临时表
+
+commit 数据消失,表结构共享，数据是每个会话私有的
+
+```SQL
+create global temporary table temp01 as select * from emp;
+```
+
+#### 创建会话级临时表
+
+connect & disconnect 数据消失
+
+```SQL
+create global temporary table temp02 on commit preserve rows as select * from emp;
+```
+
+#### 增加列
+
+```SQL
+alter table t03 add (hiredate date);
+alter table t03 add (loc varchar2(10));
+```
+
+#### 修改列
+
+```SQL
+alter table t03 modify (loc varchar2(13));
+alter table t03 modify (hiredate date default sysdate);
+```
+
+#### 重命名列
+
+```SQL
+alter table t03 rename column loc to location;
+```
+
+#### 删除列
+
+```SQL
+alter table t03 drop (hiredate);
+```
+
+#### 在业务高峰期删除列分为两步
+
+1. 系统繁忙时设置列为未使用状态：（不产生IO，在字典中将该列屏蔽掉）
+
+```SQL
+alter table t03 set unused column sal;
+```
+
+2. 系统不繁忙时删除未使用状态的列：（产生IO）
+
+```SQL
+alter table t03 drop unused columns;
+```
 
 
-### 使用约束
+
+#### 对列添加注释
+
+```SQL
+comment on column t03.ename is 'first name';
+select COLUMN_NAME,COMMENTS from user_col_comments where TABLE_NAME='T03';
+```
+
+#### 对表添加注释
+
+```SQL
+comment on table t03 is 'employees copy';
+select COMMENTS from user_tab_comments where TABLE_NAME='T03';
+```
+
+#### 重命名表
+
+```SQL
+rename t03 to t04;
+```
+
+#### 截断表
+
+```SQL
+truncate table t04;
+```
+
+清空表中所有数据，不记录数据的老镜像，直接将表变成初始化状态
+
+
+#### 将表放入回收站
+
+```SQL
+drop table t02;
+```
+
+#### 将回收站对象还原
+
+```SQL
+SQL> show recyclebin
+SQL> flashback table t02 to before drop;
+```
+
+#### 彻底删除表
+
+```SQL
+drop table t01 purge;
+```
+
+#### 清空回收站
+
+```SQL
+purge recyclebin;
+```
+
+
+
+
+
+## 管理约束
 
 * not null 非空
 * unique 唯一键
@@ -174,65 +321,68 @@ CURRENT_SCN
 * check （指定的一个条件必须为真）
 
 
-建表时直接启用约束，列级别启用约束，约束产用系统命名
+### 建表时直接启用约束，列级别启用约束，约束产用系统命名
 
-```shell
+```SQL
 create table t01 (id number not null);
 select CONSTRAINT_NAME,CONSTRAINT_TYPE,SEARCH_CONDITION from user_constraints where TABLE_NAME='T01';
 select constraint_name,column_name from user_cons_columns where table_name='T01';
 ```
-建表时直接启用约束，列级别启用约束，约束产用户命名
 
-```shell
+### 建表时直接启用约束，列级别启用约束，约束产用户命名
+
+```SQL
 create table t01 (id number constraint nn_t01_id not null);
 ```
 * not null约束只能在列级别启用
 
-启用唯一键约束
-```shell
+### 启用唯一键约束
+```SQL
 create table t01 (id number constraint uk_t01_id unique);
 ```
 
-启用主键约束
-```shell
+### 启用主键约束
+```SQL
 create table t01 (id number constraint pk_t01_id primary key);
 ```
 
-启用外键约束
-```shell
-create table t02 (id number constraint fk_t02_id references t01); 
+### 启用外键约束
+```SQL
+create table t02 (id number constraint fk_t02_id references t01);
 select CONSTRAINT_NAME,CONSTRAINT_TYPE,R_CONSTRAINT_NAME from user_constraints where TABLE_NAME='T02';
 ```
 
-启用check约束
-```shell
+### 启用check约束
+```SQL
 create table t03 (id number,salary number constraint ck_t03_sal check (salary>1000));
 select CONSTRAINT_NAME,CONSTRAINT_TYPE,SEARCH_CONDITION from user_constraints where TABLE_NAME='T03';
 ```
 
-外键的级联操作：
-```shell
+### 外键的级联操作
+```SQL
 alter table t02 drop constraint FK_T02_ID;
 alter table t02 add constraint FK_T02_ID foreign key (id) references t01 on delete set null;
 alter table t02 add constraint FK_T02_ID foreign key (id) references t01 on delete cascade;
 ```
 
-查看约束状态：
-```shell
+### 查看约束状态
+```SQL
 select CONSTRAINT_NAME,STATUS,VALIDATED from user_constraints where table_name='T01';
 ```
 
-启用|关闭约束
-```shell
+### 启用|关闭约束
+
+* ENABLED  VALIDATED
+* ENABLED  NOT VALIDATED
+* DISABLED NOT VALIDATED
+* DISABLED VALIDATED:不影响子表数据的前提下重建父表
+
+
+```SQL
 alter table t02 modify constraint FK_T02_ID disable;
 alter table t02 modify constraint FK_T02_ID enable;
-alter table t02 modify constraint FK_T02_ID enable novalidate; # 不限制老数据
+alter table t02 modify constraint FK_T02_ID enable novalidate; --不限制老数据
 alter table t02 modify constraint FK_T02_ID disable validate;
-
-ENABLED  VALIDATED
-ENABLED  NOT VALIDATED
-DISABLED NOT VALIDATED
-DISABLED VALIDATED:不影响子表数据的前提下重建父表
 
 create table t04 (x int constraint u unique);
 insert into t04 values (1);
@@ -240,23 +390,25 @@ alter table t04 mdify constraint u disable;
 insert into t04 values (1);
 alter table t04 mdify constraint u enable novalidate;
 create index i_t04_x on t04 (x);
+```
+### 其它操作
 
-其它操作
+```SQL
 alter table emp add constraint ck_emp_sal check (sal>1000 and sal is not null);
 @?/rdbms/admin/utlexcpt.sql
 alter table emp add constraint ck_t04_sal check (sal>=1000 and sal is not null) exceptions into exceptions;
 ```
 
-删除约束
-```shell
+### 删除约束
+```SQL
 drop constraint:
 alter table e drop constraint XXXXXXXXXX;
 alter table d drop constraint PK_D_ID cascade;
 ```
 
-### 视图
+## 管理视图
 
-#### 优点
+### 视图的优点
 
 * 限制对数据的访问（主要功能）
 * 简化复杂的查询
@@ -265,7 +417,7 @@ alter table d drop constraint PK_D_ID cascade;
 * 往往会降低性能
 
 
-#### 简单视图和复杂视图
+### 视图的分类—简单视图和复杂视图
 
 |特性|简单视图|复杂视图|
 |:--|:--|:--|
@@ -275,9 +427,15 @@ alter table d drop constraint PK_D_ID cascade;
 |通过视图的dml操作|yes|不一定|
 
 
-需要权限
+### 管理视图的权限
 
-```shell
+* CREATE VIEW
+* CREATE ANY VIEW
+
+
+#### 查看用户目前是否没有创建视图的权限
+
+```SQL
 SQL> conn scott/tiger;
 Connected.
 
@@ -297,15 +455,12 @@ CREATE OPERATOR
 CREATE INDEXTYPE
 
 10 rows selected.
-# scott用户目前没有创建视图的权限
-
-CREATE VIEW
-CREATE ANY VIEW
 ```
 
-授予用户创建视图的权限
 
-```shell
+#### 授予用户创建视图的权限
+
+```SQL
 SQL> conn / as sysdba
 Connected.
 SQL> grant CREATE VIEW to scott;
@@ -333,8 +488,11 @@ CREATE INDEXTYPE
 11 rows selected.
 ```
 
-创建视图vu10为10部门的所有信息集和
-```shell
+#### 创建视图
+
+vu10为10部门的所有信息集和
+
+```SQL
 create view vu10 as select * from emp where deptno=10;
 create or replace view vu10 as select empno,ename,sal,deptno from emp where deptno=10;
 create or replace view vu10 (employee_id,first_name,salary,department_id)
@@ -342,8 +500,9 @@ as select empno,ename,sal,deptno from emp where deptno=10;
 create or replace view vu10 as select empno employee_id,ename,sal salary,deptno department_id from emp where deptno=10;
 ```
 
-创建视图vu30
-```shell
+#### 创建视图
+
+```SQL
 create or replace force view vu30 as select empno,ename,sal,deptno from e01 where deptno=30;
 select object_name,status from user_objects where object_name='VU30';
 create or replace force view vu30 as select empno,ename,sal,deptno from e01 where deptno=30 with check option;
@@ -370,14 +529,13 @@ VU30
 select empno,ename,sal,deptno from e01 where deptno=30 with check option
 ```
 
-删除视图vu30
-```shell
+#### 删除视图
+
+```SQL
 drop view vu30;
 ```
 
-
-
-### 序列
+## 管理序列
 
 > oracle和mysql不同，mysql中可以直接在列中声明自增长auto_increment
 
@@ -390,8 +548,8 @@ drop view vu30;
 
 数字产生器，只增不降，不可回退，为数字主键填充数据
 
-```shell
-create sequence seq_empno 
+```SQL
+create sequence seq_empno
 start with 7935
 increment by 1
 minvalue 7935
@@ -420,18 +578,20 @@ SEQ_EMPNO			     7935	9999		1 N N	      50
 
 ```
 
+### 序列两个伪列
+
 与序列相关的两个伪列，currval & nextval，崭新的序列没有初始化的序列没有currval只有nextval
 
 * currval 当前值
 * nextval 下一个值
 
-```shell
+```SQL
 select seq_empno.currval,seq_empno.nextval from dual;
 ```
 
-序列的初始值不可以修改，其他属性都可以修改
+### 序列的初始值不可以修改，其他属性都可以修改
 
-```shell
+```SQL
 alter sequence seq_empno increment by 5;
 alter sequence seq_empno minvalue 7936;
 alter sequence seq_empno maxvalue 8888;
@@ -439,24 +599,24 @@ alter sequence seq_empno cache 100;
 alter sequence seq_empno cycle;
 ```
 
-使用序列
+### 使用序列
 
-```shell
+```SQL
 insert into emp (empno) values (seq_empno.nextval);
 ```
 
-删除序列
+### 删除序列
 
-```shell
+```SQL
 drop sequence seq_empno;
 ```
 
 
-### 索引
+## 管理索引
 
 > 相当于目录，记录表中的关键字和rowid的对应关系，加速查找数据的速度。
 
-#### 何时创建索引
+### 何时创建索引
 
 * 一列包含有大范围值
 * 一列包含有大量空值
@@ -464,59 +624,61 @@ drop sequence seq_empno;
 * 表很大并且大部分的查询预期检索少于2%或%4的行数
 * 多不一定好
 
-#### 索引的数据字典
+### 索引的数据字典
 
-* user_indexes 数据字典视图包含索引的名字和唯一性
-* user_ind_columns 视图包含索引名称，表名称和列名称
-* index_stats 索引的详细信息
+* `user_indexes` 数据字典视图包含索引的名字和唯一性
+* `user_ind_columns` 视图包含索引名称，表名称和列名称
+* `index_stats` 索引的详细信息
 
-#### 索引的操作
+### 索引的操作
 
-手工创建索引
+#### 手工创建索引
+
 ```
 create index i_emp_ename on emp (ename);
 ```
 
-查看索引是否被使用
+#### 查看索引是否被使用
 ```
 set autotrace traceonly explain
 select * from emp where ename='SCOTT';
 set autotrace off
 ```
 
-基于函数的索引
+#### 基于函数的索引
 ```
 create index i_emp_ename_f on emp (upper(ename));
 ```
 
-删除索引
+#### 删除索引
 ```
 drop index I_EMP_NAME_F;
 ```
 
 
-索引测试
-```shell
-# 新建测试表e01
+### 索引测试
+
+```SQL
+--新建测试表e01
 create table e01 as select * from emp;
-# 扩充数据
+--扩充数据
 insert into e01 select * from e01;
-# 将该语句多执行几次
+--将该语句多执行几次
 /
-# 修改empno的属性
+--修改empno的属性
 alter table e01 modify (empno number);
-# 将empno的值改为rownum
+--将empno的值改为rownum
 update e01 set empno=rownum
-# 开启sqlplus中的时间记录器
+--开启sqlplus中的时间记录器
 set timing on
-# 查看当前该表的大小
+--查看当前该表的大小
 SQL> select blocks/128 from user_segments where segment_name='E01';
 
 BLOCKS/128
 ----------
 	39
-#  39M
-# 看执行时间
+--39M
+--看执行时间
 SQL> select * from e01 where empno=1500;
 
      EMPNO ENAME      JOB	       MGR HIREDATE	    SAL       COMM
@@ -529,7 +691,7 @@ SQL> select * from e01 where empno=1500;
 
 Elapsed: 00:00:00.02
 
-# 看执行成本
+--看执行成本
 set autot trace exp
 
 SQL> set autot trace exp
@@ -556,7 +718,7 @@ Note
 -----
    - dynamic sampling used for this statement (level=2)
 
-# 查看e01表有4992个block块，每个block大小为8KB
+--查看e01表有4992个block块，每个block大小为8KB
 SQL> select segment_name,blocks from user_segments where segment_name=upper('e01');
 
 SEGMENT_NAME
@@ -565,12 +727,12 @@ SEGMENT_NAME
 ----------
 E01
       4992
-# 当前为了找到empno为1500的行，会读取4992个block
-# 新建索引
+--当前为了找到empno为1500的行，会读取4992个block
+--新建索引
 SQL> create index i_e01_empno on e01 (empno);
 
 Index created.
-# 重新查看相同的sql，对比执行成本的对比
+--重新查看相同的sql，对比执行成本的对比
 SQL> set linesize 150
 SQL> select * from e01 where empno=1500;
 Elapsed: 00:00:00.00
@@ -595,8 +757,8 @@ Predicate Information (identified by operation id):
 Note
 -----
    - dynamic sampling used for this statement (level=2)
-# 可以看到执行成本从1338降低到2
-# 索引的详细信息
+--可以看到执行成本从1338降低到2
+--索引的详细信息
 SQL> desc index_stats
  Name										     Null?    Type
  ----------------------------------------------------------------------------------- -------- --------------------------------------------------------
@@ -626,7 +788,7 @@ SQL> desc index_stats
  OPT_CMPR_COUNT 									      NUMBER
  OPT_CMPR_PCTSAVE									      NUMBER
 
-# 打开scott用户的信息搜集
+--打开scott用户的信息搜集
 begin
 dbms_stats.gather_schema_stats(ownname=>'scott',
 estimate_percent=>DBMS_STATS.AUTO_SAMPLE_SIZE,
@@ -637,7 +799,7 @@ cascade=>TRUE);
 END;
 /
 
-# 查看表的情况
+--查看表的情况
 SQL> select num_rows,blocks from user_tab_statistics;
 
   NUM_ROWS     BLOCKS
@@ -664,7 +826,7 @@ EMP					5
 DEPT					5
 
 6 rows selected.
-# 查看索引情况
+--查看索引情况
 SQL> select index_name,blevel,num_rows from user_ind_statistics;
 
 INDEX_NAME			   BLEVEL   NUM_ROWS
@@ -674,8 +836,8 @@ PK_EMP					0	  15
 I_E01_EMPNO				2     860160
 
 
-# 分析索引结构有效性
-# index_stats记录的时当前会话中最近一次的分析索引情况
+--分析索引结构有效性
+--index_stats记录的时当前会话中最近一次的分析索引情况
 select name,height,blocks,br_blks,br_rows,lf_blks,lf_rows from index_stats;
 
 create index i_e01 on e01 (deptno);
@@ -699,7 +861,7 @@ NAME				   HEIGHT     BLOCKS	BR_BLKS    BR_ROWS    LF_BLKS	 LF_ROWS
 I_E01_EMPNO				3	1920	      5       1791	 1792	  860160
 ```
 
-index_stats表分析
+#### index_stats表分析
 
 |属性|说明|
 |:--|:--|
@@ -727,7 +889,7 @@ st->i_br->i_lf->data_b->e
 
 通过rowid来查找数据是最快的
 
-```shell
+```SQL
 SQL> select rowid,ename,empno from e01 where rownum < 11;
 
 ROWID		   ENAME	   EMPNO
@@ -775,7 +937,7 @@ Predicate Information (identified by operation id):
 
    2 - access("EMPNO"=9)
 
-# 可以看到通过rowid来查找数据的消耗是1
+--可以看到通过rowid来查找数据的消耗是1
 ```
 
 #### rowid的格式
@@ -794,13 +956,13 @@ rowid是64进制的
 
 64位换算
 
-```shell
+```SQL
 A  -   Z    a    -   z   0   -   9   +   /
 0  -   25   26   -   51  52  -   61  62  63
-VRE = 21*64*64+17*64+4 = 87108 
-2*64+23 = 151 
+VRE = 21*64*64+17*64+4 = 87108
+2*64+23 = 151
 
-# AAAVo9AAEAAAAILAAI 代表的含义
+--AAAVo9AAEAAAAILAAI 代表的含义
 AAAVo9=21*64*64+40*64+61*1=88637
 AAE=4
 AAAAIL=8*64+11=523
@@ -811,7 +973,7 @@ AAI=8
 块id为523
 rownum为8
 
-# 通过rowid来手动读取数据
+--通过rowid来手动读取数据
 conn / as sysdba
 alter system dump datafile 4 block 523;
 show parameter background;
@@ -867,7 +1029,7 @@ col  4: [ 7]  77 bb 04 13 01 01 01
 col  5: [ 2]  c2 1f
 col  6: *NULL*
 col  7: [ 2]  c1 15
-# 找到rownum=8的行，找到ename列的值为“53 43 4f 54 54”16进制
+--找到rownum=8的行，找到ename列的值为“53 43 4f 54 54”16进制
 select chr(to_number('53','xx'))||chr(to_number('43','xx'))||chr(to_number('4f','xx'))||chr(to_number('54','xx'))||chr(to_number('54','xx')) from dual;
 
 SQL> select chr(to_number('53','xx'))||chr(to_number('43','xx'))||chr(to_number('4f','xx'))||chr(to_number('54','xx'))||chr(to_number('54','xx')) from dual;
@@ -881,21 +1043,21 @@ oracle中可以通过`chr(to_number('43','xx'))`将16进制转字符串
 
 
 
-### 同义词
+## 管理同义词
 
-> 对象的别名！
+> 对象的别名
 
-私有同义词
-```
+### 创建私有同义词
+```SQL
 create synonym e01 for scott.e01;
 ```
 
-公有同义词
-```
+### 创建公有同义词
+```SQL
 create public synonym e01 for scott.e01;
 ```
 
-删除同义词
-```
+### 删除同义词
+```SQL
 drop synonym e01;
 ```

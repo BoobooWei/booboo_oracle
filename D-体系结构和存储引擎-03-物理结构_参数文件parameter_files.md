@@ -2,7 +2,34 @@
 
 > 2019.10.02 BoobooWei
 
-[TOC]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [物理文件_参数文件](#物理文件参数文件)
+	- [初始化参数的功能](#初始化参数的功能)
+	- [初始化参数的类型](#初始化参数的类型)
+		- [Derived Parameters](#derived-parameters)
+		- [Operating System-Dependent Parameters](#operating-system-dependent-parameters)
+		- [Variable Parameters](#variable-parameters)
+	- [初始化参数的查看](#初始化参数的查看)
+		- [实践——查看初始化参数视图的结构](#实践查看初始化参数视图的结构)
+		- [实践——查看所有初始化参数](#实践查看所有初始化参数)
+		- [实践——查看无默认值的初始化参数](#实践查看无默认值的初始化参数)
+		- [实践——查看基础的初始化参数](#实践查看基础的初始化参数)
+		- [实践——查看可以动态修改的初始化参数](#实践查看可以动态修改的初始化参数)
+		- [实践——查看不可以动态修改的初始化参数](#实践查看不可以动态修改的初始化参数)
+	- [初始化参数总结](#初始化参数总结)
+		- [动态参数](#动态参数)
+		- [静态参数](#静态参数)
+	- [参数文件](#参数文件)
+		- [服务器参数文件 spfile](#服务器参数文件-spfile)
+		- [初始化参数文件 pfile](#初始化参数文件-pfile)
+		- [实践——查看参数文件类型](#实践查看参数文件类型)
+		- [实践——修改spfile启动的实例参数值](#实践修改spfile启动的实例参数值)
+		- [实践——修改pfile启动的实例参数值](#实践修改pfile启动的实例参数值)
+		- [实践——修改pfile和spfile的位置](#实践修改pfile和spfile的位置)
+		- [实践——将spfile写入字符设备（裸设备）](#实践将spfile写入字符设备裸设备)
+
+<!-- /TOC -->
 
 ## 初始化参数的功能
 
@@ -26,7 +53,7 @@ Oracle数据库服务器具有以下类型的初始化参数：
 - [操作系统相关参数](https://docs.oracle.com/cd/B28359_01/server.111/b28320/initparams001.htm#i1124377)
 - [可变参数](https://docs.oracle.com/cd/B28359_01/server.111/b28320/initparams001.htm#i1124386)
 
-### Derived Parameters 
+### Derived Parameters
 
 > 衍生参数
 
@@ -199,7 +226,7 @@ total 36168
 -rw-r-----. 1 oracle oinstall     3584 Aug 10 04:28 spfiledbtest.ora
 [oracle@oratest dbs]$ file init.ora
 init.ora: ASCII English text
-[oracle@oratest dbs]$ file spfiledbtest.ora 
+[oracle@oratest dbs]$ file spfiledbtest.ora
 spfiledbtest.ora: data
 
 ```

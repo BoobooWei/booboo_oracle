@@ -1,3 +1,6 @@
+# 命令行安装Oracle11.2.0.4
+
+
 <!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [命令行安装Oracle11.2.0.4](#命令行安装oracle11204)
@@ -10,7 +13,6 @@
 	- [7. 修改监听配置文件并启动](#7-修改监听配置文件并启动)
 
 <!-- /TOC -->
-# 命令行安装Oracle11.2.0.4
 
 ## 1. 查看操纵系统版本
 

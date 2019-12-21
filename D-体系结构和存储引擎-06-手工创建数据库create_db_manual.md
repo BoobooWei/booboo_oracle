@@ -2,7 +2,18 @@
 
 > 2019.10.08 BoobooWei
 
-[TOC]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [手工创建数据库](#手工创建数据库)
+	- [实践——手工创建数据库db01](#实践手工创建数据库db01)
+	- [自动静默建库脚本](#自动静默建库脚本)
+		- [1. 根据模板配置创建参数文件](#1-根据模板配置创建参数文件)
+		- [2. 创建口令文件](#2-创建口令文件)
+		- [3. 创建pfile并启动到nomount状态](#3-创建pfile并启动到nomount状态)
+		- [4. 生成建库SQL](#4-生成建库sql)
+		- [5. 执行生成数据字典信息的脚本并执行](#5-执行生成数据字典信息的脚本并执行)
+
+<!-- /TOC -->
 
 [创建和配置Oracle数据库](https://docs.oracle.com/cd/B28359_01/server.111/b28310/create.htm#i1017640)
 
@@ -59,13 +70,12 @@ group 2 '/home/oracle/db01/redo02.log' size 50m;
 ## 自动静默建库脚本
 
 ```bash
-#!/bin/bash
+\#!/bin/bash
+echo "author: BoobooWei"
+echo "Desc: 安装数据库"
+echo "User: Oracle"
 
-# author: BoobooWei
-# Desc: 安装数据库
-# User: Oracle 
-
-## 1. 根据模板配置创建参数文件
+### 1. 根据模板配置创建参数文件
 export ORACLE_SID=BOOBOO
 mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID
 mkdir -p $ORACLE_BASE/admin/$ORACLE_SID/adump
@@ -73,15 +83,15 @@ mkdir -p $ORACLE_BASE/flash_recovery_area
 grep -v '^#\|^$' $ORACLE_HOME/dbs/init.ora | sed  "s/\(ORCL\|orcl\)/${ORACLE_SID}/;s/<ORACLE_BASE>/\$ORACLE_BASE/;s@ora_control1@\$ORACLE_BASE/oradata/${ORACLE_SID}/ora_control1.ctl@;s@ora_control2@\$ORACLE_BASE/oradata/${ORACLE_SID}/ora_control2.ctl@" > $ORACLE_HOME/dbs/init${ORACLE_SID}.ora
 
 
-## 2. 创建口令文件
+### 2. 创建口令文件
 orapwd file=orapw$ORACLE_SID password=oracle entries=30
 
-## 3. 创建pfile并启动到nomount状态
+### 3. 创建pfile并启动到nomount状态
 echo "create spfile from pfile" | sqlplus / as sysdba
 echo "startup nomount" | sqlplus / as sysdba
 
 
-## 4. 生成建库SQL
+### 4. 生成建库SQL
 cat > createdb.sql << ENDF
 CREATE DATABASE $ORACLE_SID
    USER SYS IDENTIFIED BY oracle
@@ -106,12 +116,12 @@ CREATE DATABASE $ORACLE_SID
       SIZE 20M REUSE
    UNDO TABLESPACE undotbs1
       DATAFILE '$ORACLE_BASE/oradata/$ORACLE_SID/undotbs01.dbf'
-      SIZE 200M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;	
+      SIZE 200M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
 ENDF
 
 echo "@createdb.sql" | sqlplus / as sysdba
 
-## 5. 执行生成数据字典信息的脚本并执行
+### 5. 执行生成数据字典信息的脚本并执行
 
 cat > 1.sql << ENDF
 @?/rdbms/admin/catalog.sql

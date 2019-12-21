@@ -1,19 +1,43 @@
-# SQL语句
+# SQL语句-查询语句-单行函数
 
-## 查询语句DQL
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-```shell
-select *|{[distinct] column | expression [alias] , ...}
+- [SQL语句-查询语句-单行函数](#sql语句-查询语句-单行函数)
+	- [查询语句DQL简介](#查询语句dql简介)
+	- [简单的sql查询](#简单的sql查询)
+	- [限制和排列数据](#限制和排列数据)
+	- [单行函数](#单行函数)
+		- [字符函数](#字符函数)
+			- [字符函数示例](#字符函数示例)
+		- [数值函数](#数值函数)
+		- [日期函数](#日期函数)
+		- [转换函数](#转换函数)
+			- [隐式数据类型转换](#隐式数据类型转换)
+			- [显式数据类型转换](#显式数据类型转换)
+			- [RR和YY年份](#rr和yy年份)
+		- [嵌套函数](#嵌套函数)
+		- [常规函数](#常规函数)
+		- [条件表达式](#条件表达式)
+	- [与MySQL的区别](#与mysql的区别)
+		- [MySQL数据库名、表名、列名、别名大小写规则](#mysql数据库名表名列名别名大小写规则)
+		- [MySQL字符串大小写](#mysql字符串大小写)
+
+<!-- /TOC -->
+
+## 查询语句DQL简介
+
+```sql
+select * | {[distinct] column | expression [alias] , ...}
 from table;
 ```
 
-1. select 后面跟 通配符|关键字|表达式 别名 或者一些计算
-2. from 后面跟 表名 或者 结果集 ，这就是oracle对国标扩展的部分，能够对结果集进行二次查询
-3. 必须要有结束符号 ; 有结束符，sql才会被运行
+1. `select` 后面跟 `通配符|关键字|表达式  别名` 或者一些计算
+2. `from` 后面跟 `表名 或者 结果集` ，这就是oracle对国标扩展的部分，能够对结果集进行二次查询
+3. 必须要有结束符号 `;`有结束符，sql才会被运行
 4. 大小写不区分
 5. 可以多行书写
 
-### 简单的sql查询
+## 简单的sql查询
 
 
 |简单的sql查询|语句|
@@ -39,7 +63,7 @@ sqlplus结果集的显示风格为:
 
 
 
-```shell
+```sql
 SQL> SELECT * FROM TAB;
 
 TNAME			       TABTYPE	CLUSTERID
@@ -113,8 +137,8 @@ MILLER		  16800
 
 14 rows selected.
 
-# (SAL+100)*12列在磁盘上并没有保存，我们称其为计算表达式所生成的伪列
-# 空值不能参与运算
+-- (SAL+100)*12列在磁盘上并没有保存，我们称其为计算表达式所生成的伪列
+-- 空值不能参与运算
 SQL> select ename,sal,comm,sal+comm from emp;
 
 ENAME		  SAL	    COMM   SAL+COMM
@@ -139,7 +163,7 @@ MILLER		 1300
 
 14 rows selected.
 
-# 将工资和奖金求和，结果发现奖金comm列为null的员工不用发工资了！这是错误的
+-- 将工资和奖金求和，结果发现奖金comm列为null的员工不用发工资了！这是错误的
 
 SQL> select ename as first_name , sal*12 "Annual Salary" from emp;    
 
@@ -165,9 +189,9 @@ MILLER		   15600
 
 14 rows selected.
 
-# as可以省略，如果别名加了引号，则显示指定的字符，而不会使用缺省的大写
+-- as可以省略，如果别名加了引号，则显示指定的字符，而不会使用缺省的大写
 
-SQL> select ename,job,ename||' is a '||job detail from emp;
+SQL> select ename,job,ename || ' is a ' || job detail from emp;
 
 ENAME	   JOB	     DETAIL
 ---------- --------- -------------------------
@@ -191,7 +215,7 @@ MILLER	   CLERK     MILLER is a CLERK
 
 14 rows selected.
 
-# ||是字符连接符 detail是别名
+-- ||是字符连接符 detail是别名
 
 SQL> select distinct deptno,job from emp;
 
@@ -209,7 +233,7 @@ SQL> select distinct deptno,job from emp;
 
 9 rows selected.
 
-# distinct 去除重复
+-- distinct 去除重复
 
 SQL> save p1_1.sql
 Created file p1_1.sql
@@ -230,17 +254,16 @@ SQL> @p1_1.sql
 	20 ANALYST
 
 9 rows selected.
-
 ```
 
-### 限制和排列数据
+## 限制和排列数据
 
 1. 工资高于1500的销售员？
 2. 查询10部门的雇员和20部门工资小与2000的雇员？
 3. 查询有奖金的雇员？
 4. 使用rownum伪列限制查询返回的行的数量
 
-```shell
+```sql
 SQL> select ename,sal from emp where sal>1500;
 
 ENAME		  SAL
@@ -290,15 +313,14 @@ WARD
 JONES
 MARTIN
 
-# mysql中限制行是用limit，而oracle用rownum
+-- mysql中限制行是用limit，而oracle用rownum
 ```
 
-
-### 单行函数
+## 单行函数
 
 >  五种：字符函数、数值函数、日期函数、转换函数、其他函数
 
-#### 字符函数
+### 字符函数
 
 |字符串函数|函数名|解释|
 |:--|:--|:--|
@@ -314,7 +336,7 @@ MARTIN
 ||TRIM(leading or trailing or both, trim_character FROM trim_source)|删除头尾字符，默认为空白，类似于python中strim|
 ||REPLACE(text,search_string,replacement_string)|查找并替换字符串|
 
-#####  字符函数示例
+#### 字符函数示例
 
 1. 记录中的字符串是区分大小写，如果想从海量数据中搜索scott用户，该如何去做呢？
 
@@ -355,7 +377,7 @@ SQL> select instr('superman batman wonderwoman','batman') from dual;
 INSTR('SUPERMANBATMANWONDERWOMAN','BATMAN')
 -------------------------------------------
 					 10
-# 截取字符串'superman batman wonderwoman'中从batman开始到最后
+-- 截取字符串'superman batman wonderwoman'中从batman开始到最后
 
 SQL> select substr('superman batman wonderwoman',instr('superman batman wonderwoman','batman')) from dual;
 
@@ -480,7 +502,7 @@ select * from emp where trim(' ' from UPPER(ename))='SCOTT';
 select replace('Helloworld','owo','xxoo') from dual;
 ```
 
-#### 数值函数
+### 数值函数
 
 - ROUND :将值舍入到指定的小数位
 - TRUNC :将值截断到指定的小数位
@@ -507,7 +529,7 @@ select ceil(1.00001) from dual;
 select abs(-190) from dual;
 ```
 
-#### 日期函数
+### 日期函数
 
 日期是以数字保存的，可以进行加减运算
 
@@ -727,7 +749,7 @@ ROUND(SYS
 
 SQL> select to_date('2017-07-16','yyyy-mm-dd') from dual;
 
-TO_DATE('
+TO_DATE(
 ---------
 16-JUL-17
 
@@ -773,23 +795,19 @@ select trunc(sysdate,'month') from dual;
 select trunc(sysdate,'year') from dual;
 ```
 
-
-
-
-
-#### 转换函数
+### 转换函数
 
 数据类型转化分为两种：
 1. 隐式数据类型转换 系统自己能作的比较简单的，例如数字变字符串之类的
 2. 显示数据类型转换 必须通过函数，你来制定规则
 
-##### 隐式数据类型转换
+#### 隐式数据类型转换
 
 Oracle服务器可以自动转换下面的数据类型
 
 * number<--->varchar2|char<---->date
 
-##### 显式数据类型转换
+#### 显式数据类型转换
 
 
 num----------------------------->char---------------------------->date
@@ -931,7 +949,7 @@ TO_CHAR(number, 'format_model')
 
 ``` shell
 
-# 将数字以指定格式打印出来
+-- 将数字以指定格式打印出来
 
 SQL> select ename,to_char(sal,'L99,999.99') as sal from emp;
 
@@ -955,7 +973,7 @@ MILLER		      $1,300.00
 
 15 rows selected.
 
-# 00和99的区别在整数会前置0补满指定位数
+-- 00和99的区别在整数会前置0补满指定位数
 
 SQL> select ename,to_char(sal,'L00,000.00') as sal from emp;
 
@@ -978,9 +996,6 @@ FORD		     $03,000.00
 MILLER		     $01,300.00
 
 15 rows selected.
-
-
-
 ```
 
 3. char to_number
@@ -1028,7 +1043,7 @@ TO_CHAR(TO
 1997-10-01
 ```
 
-##### RR和YY年份
+#### RR和YY年份
 
 yy年份表示法，当前系统时间所在的世纪
 
@@ -1065,7 +1080,7 @@ CURR YY07 YY97 RR07 RR97
 ---- ---- ---- ---- ----
 2017 2007 2097 2007 1997
 
-# 将字符串97转换为日期时，一定注意rr和yy，建议不要用两位表示年份。
+-- 将字符串97转换为日期时，一定注意rr和yy，建议不要用两位表示年份。
 
 SQL> select to_char(to_date('97-2-1','rr-mm-dd'),'yyyy-mm-dd') from dual;
 
@@ -1097,13 +1112,13 @@ to_char(to_date('99','rr'),'yyyy') rr99
 from dual;
 ```
 
-#### 嵌套函数
+### 嵌套函数
 
 * 单行函数可以嵌套到任意层。
 * 嵌套函数的计算顺序是从最内层到最外层。
 
 ```shell
-# 打印出大写的雇员名字从第一位开始的8个字符，并加上'_china'
+-- 打印出大写的雇员名字从第一位开始的8个字符，并加上'_china'
 SQL> select ename,upper(concat(substr(ename,1,8),'_china')) from emp;
 
 ENAME	   UPPER(CONCAT(S
@@ -1126,7 +1141,7 @@ MILLER	   MILLER_CHINA
 
 15 rows selected.
 
-# 打印大写雇员的姓名，去除头尾空白并加上'_china'
+-- 打印大写雇员的姓名，去除头尾空白并加上'_china'
 
 SQL> select ename,upper(concat(trim(' ' from ename),'_china')) from emp;
 
@@ -1194,7 +1209,7 @@ TO_CHAR
 15 rows selected.
 ```
 
-#### 常规函数
+### 常规函数
 
 > 主要是用来修改空值的；可用于任何数据类型
 
@@ -1206,7 +1221,7 @@ TO_CHAR
 |COALESCE (expr1, expr2, ..., exprn)|返回枚举中的第一个非空表达式|
 
 ```shell
-# 计算员工工资和奖金的和
+-- 计算员工工资和奖金的和
 
 SQL> select ename,sal,comm,sal+comm from emp;
 
@@ -1282,7 +1297,7 @@ NULLIF(3,2)
 -----------
 	  3
 
-# 有奖金返回奖金，没有奖金返回工资
+-- 有奖金返回奖金，没有奖金返回工资
 SQL> select coalesce(comm,sal)from emp;
 
 COALESCE(COMM,SAL)
@@ -1304,12 +1319,9 @@ COALESCE(COMM,SAL)
 	      1300
 
 15 rows selected.
-
 ```
 
-
-
-#### 条件表达式
+### 条件表达式
 
 可以在 SQL 语句中使用 IF-THEN-ELSE 逻辑。
 
@@ -1320,7 +1332,7 @@ COALESCE(COMM,SAL)
 
 
 ```shell
-# 职员工资上涨百分之10，销售工资上涨百分之15，其他人不变
+-- 职员工资上涨百分之10，销售工资上涨百分之15，其他人不变
 
 SQL> select ename,job,sal,
   2  case job when 'CLERK' then sal*1.1
@@ -1370,9 +1382,9 @@ MILLER	   CLERK	   1300       1300
 
 15 rows selected.
 
-# 工资低于1000并且job为雇员的员工薪资涨百分之15，其他人不涨
-# 非标准的case when，不能转化为decode()
-# 任何条件满足则break
+-- 工资低于1000并且job为雇员的员工薪资涨百分之15，其他人不涨
+-- 非标准的case when，不能转化为decode()
+-- 任何条件满足则break
 
 SQL> select ename,job,sal,case when sal>1000 then sal when job='CLERK' then sal*1.15  else sal end as rev_sal from emp;
 
@@ -1427,14 +1439,12 @@ from emp order by job;
 ```
 
 
-## 与mysql的区别
+## 与MySQL的区别
 
 |sql|mysql|oracle|
 |:--|:--|:--|
 |查看用户的表|use dbname;show tables;|conn user/password;select * from tab;|
 |限制行数|select * from emp limit 5;|select * from emp where rownum < 6;|
-
-## 大小写区分
 
 ### MySQL数据库名、表名、列名、别名大小写规则
 

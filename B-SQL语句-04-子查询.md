@@ -1,28 +1,47 @@
-### 子查询
+# SQL语句-查询语句-子查询和SQLPlus
 
-[TOC]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-#### 类型、语法和准则
+- [SQL语句-查询语句-子查询和SQLPlus](#sql语句-查询语句-子查询和sqlplus)
+	- [子查询类型、语法和准则](#子查询类型语法和准则)
+		- [子查询练习](#子查询练习)
+			- [1. 工资高于BLAKE的？](#1-工资高于blake的)
+			- [2. 工资最低的人？](#2-工资最低的人)
+			- [3. 低于10部门最低工资的人？](#3-低于10部门最低工资的人)
+			- [4. 高于30部门最高工资的人？](#4-高于30部门最高工资的人)
+			- [5. 工资相同的人？](#5-工资相同的人)
+			- [6. blake的工资是smith的几倍？](#6-blake的工资是smith的几倍)
+			- [7. 每个部门工资最高的人？](#7-每个部门工资最高的人)
+			- [8. 每个部门工资最高的前2个人？](#8-每个部门工资最高的前2个人)
+			- [9. 工资最高的前5行？](#9-工资最高的前5行)
+			- [10. 工资6～10名？](#10-工资610名)
+			- [11. 随机从表中取出3行数据？](#11-随机从表中取出3行数据)
+			- [12. 查询雇员的姓名，工资，税，(1级不缴税，2-->2% ,3-->3%,4-->4%,5-->5%)](#12-查询雇员的姓名工资税1级不缴税2-2-3-34-45-5)
+			- [13. 部门总工资和部门上缴个税总和](#13-部门总工资和部门上缴个税总和)
+			- [14. 比WARD奖金低的人？](#14-比ward奖金低的人)
+			- [15. 奖金最高的前两名雇员？](#15-奖金最高的前两名雇员)
+			- [16. 工资高于本部门平均工资的人？](#16-工资高于本部门平均工资的人)
+		- [课后练习](#课后练习)
+	- [SQLPlus 的常用命令](#sqlplus-的常用命令)
+		- [pause命令暂停屏幕输出](#pause命令暂停屏幕输出)
+		- [通过sqlplus执行shell命令](#通过sqlplus执行shell命令)
+		- [spool保存执行记录](#spool保存执行记录)
 
-| 序列                                        | 举例      |
-| ------------------------------------------- | --------- |
-| `rownum()`                                  | 1 2 3 4 5 |
-| `rank() over (partition by order by)`       | 1 2 2 4 5 |
-| `dense_rank() over (partition by order by)` | 1 2 2 3 4 |
+<!-- /TOC -->
 
-```shell
-select rank() over (partition by deptno order by sal desc) ord from emp;
-# partition by 给结果集分组
-# order by 给结果集排序
-# rank() 在每个分组内部进行排名
+## 子查询类型、语法和准则
 
+```sql
 select ename,sal,deptno from emp order by dbms_random.value();
-# order by 排序
-# dbms_random.value() 随即数
-
-select * from (select rownum rn,a.* from (select * from emp order by sal desc) a) where rn between &p*5-4 and &p*5;
-# &p 为自定义变量
+* order by 排序
+* dbms_random.value() 随机数
 ```
+
+```sql
+select * from (select rownum rn,a.* from (select * from emp order by sal desc) a) where rn between &p*5-4 and &p*5;
+```
+
+* &p 为自定义变量
 
 * where 型
 	- 单行 `= 、 != 、 > 、 < 、 <= 、 >=`等
@@ -32,40 +51,40 @@ select * from (select rownum rn,a.* from (select * from emp order by sal desc) a
 
 ```shell
 子查询3种{
-	
+
 	where 型{
-		
+
 		# 把内层查询的结果作为外层查询的比较条件
 		# 查询最大、最贵商品
-		
+
 		查询最新的商品（以id最大为最新，不用order by）:{
 			select goods_id,goods_name from goods where goods_id = (select max(goods_id) from goods);
 		}
 		每个栏目下最新的商品：{
-			select cat_id,goods_id,goods_name from goods where goods_id in (select max(goods_id) from goods group by cat_id);	
+			select cat_id,goods_id,goods_name from goods where goods_id in (select max(goods_id) from goods group by cat_id);
 		}
 		每个栏目下最贵的商品：{
 			select cat_id,goods_id,goods_name,shop_price from goods where shop_price in (select max(shop_price) from goods group by cat_id);
-		}	
-		
+		}
+
 	}
-	
+
 	from 型{
-		
+
 		# 把内层查询的结果作为外层查询的临时表
 		# 查询每个栏目下最新、最贵商品
-		
+
 		每个栏目下最新的商品：{
 			select * from (select cat_id,goods_id,goods_name from goods order by cat_id,goods_id desc) as a group by cat_id;
 		}
-		
+
 	}
-	
+
 	exits 型{
-		
+
 		# 把外层的查询结果，拿到内层，看内存查询是否成立
 		# 查询有商品的栏目
-		
+
 		查有商品的栏目{
 			select cat_id,cat_name from category where cat_id in (select cat_id from goods where cat_id in (select cat_id from category) group by cat_id);
 			select cat_id,cat_name from category where exists (select * from goods where goods.cat_id = category.cat_id);
@@ -73,9 +92,9 @@ select * from (select rownum rn,a.* from (select * from emp order by sal desc) a
 	}
 ```
 
-#### 案例
+### 子查询练习
 
-1. 工资高于BLAKE的？
+#### 1. 工资高于BLAKE的？
 
 ```shell
 SQL> select ename,sal from emp where sal > (select sal from emp where ename='BLAKE');
@@ -88,7 +107,7 @@ KING		 5000
 FORD		 3000
 ```
 
-2. 工资最低的人？
+#### 2. 工资最低的人？
 
 ```shell
 SQL> select ename,sal from emp where sal = (select min(sal) from emp);
@@ -98,7 +117,7 @@ ENAME		  SAL
 SMITH		  800
 ```
 
-3. 低于10部门最低工资的人？
+#### 3. 低于10部门最低工资的人？
 
 ```shell
 SQL> select ename,sal from emp where sal < all (select sal from emp where deptno=10);
@@ -122,7 +141,7 @@ ADAMS		 1100
 JAMES		  950
 ```
 
-4. 高于30部门最高工资的人？
+#### 4. 高于30部门最高工资的人？
 
 ```shell
 SQL> select ename,sal from emp where sal > all (select sal from emp where deptno=30);
@@ -144,10 +163,10 @@ KING		 5000
 FORD		 3000
 ```
 
-5. 工资相同的人？
+#### 5. 工资相同的人？
 
 ```shell
-SQL> select a.ename,b.ename,a.sal from emp a ,emp b where a.sal=b.sal and a.ename!=b.ename; 
+SQL> select a.ename,b.ename,a.sal from emp a ,emp b where a.sal=b.sal and a.ename!=b.ename;
 
 ENAME	   ENAME	     SAL
 ---------- ---------- ----------
@@ -158,7 +177,7 @@ SCOTT	   FORD 	    3000
 
 ```
 
-6. blake的工资是smith的几倍？
+#### 6. blake的工资是smith的几倍？
 
 ```shell
 SQL> select (select sal from emp where ename='BLAKE')/(select sal from emp where ename='SMITH') "B-S" from dual;
@@ -168,7 +187,7 @@ SQL> select (select sal from emp where ename='BLAKE')/(select sal from emp where
     3.5625
 ```
 
-7. 每个部门工资最高的人？
+#### 7. 每个部门工资最高的人？
 
 ```shell
 SQL> select deptno,ename,sal from emp where sal in (select max(sal) from emp group by deptno) order by deptno ;
@@ -215,7 +234,7 @@ BLAKE		   30	    2850	  1
 
 ```
 
-8. 每个部门工资最高的前2个人？
+#### 8. 每个部门工资最高的前2个人？
 
 ```shell
 SQL> select * from (select ename,deptno,sal,rank () over (partition by deptno order by sal desc) Ord from emp) where ord<=2;
@@ -233,7 +252,7 @@ ALLEN		   30	    1600	  2
 ```
 
 
-9. 工资最高的前5行？ 
+#### 9. 工资最高的前5行？
 
 ```shell
 SQL> select * from (select ename,deptno,sal,rank () over (order by sal desc) ord from emp) where ord <=5 ;
@@ -259,7 +278,7 @@ BLAKE		   30	    2850
 
 ```
 
-10. 工资6～10名？
+#### 10. 工资6～10名？
 
 ```shell
 SQL> select * from (select ename,deptno,sal,rank () over (order by sal desc) ord from emp) where ord between 6 and 10 ;
@@ -276,7 +295,7 @@ MARTIN		   30	    1250	 10
 6 rows selected.
 ```
 
-11. 随机从表中取出3行数据？
+#### 11. 随机从表中取出3行数据？
 
 ```shell
 SQL> select ename,sal,deptno from emp order by dbms_random.value();
@@ -320,7 +339,7 @@ MILLER		 1300	      10
 WARD		 1250	      30
 ```
 
-12. 查询雇员的姓名，工资，税，(1级不缴税，2-->2% ,3-->3%,4-->4%,5-->5%)
+#### 12. 查询雇员的姓名，工资，税，(1级不缴税，2-->2% ,3-->3%,4-->4%,5-->5%)
 
 ```shell
 SQL> select ename,sal,grade,decode(grade,1,0,2,sal*0.02,3,sal*0.03,4,sal*0.04,5,sal*0.05) T from emp,salgrade where emp.sal between salgrade.losal and salgrade.hisal;
@@ -349,7 +368,7 @@ KING		 5000	       5	250
 
 ```
 
-13. 部门总工资和部门上缴个税总和
+#### 13. 部门总工资和部门上缴个税总和
 
 ```shell
 SQL> select deptno,sum(sal),sum(T) from (select deptno,ename,sal,grade,decode(grade,1,0,2,sal*0.02,3,sal*0.03,4,sal*0.04,5,sal*0.05) T from emp,salgrade where emp.sal between salgrade.losal and salgrade.hisal) group by deptno;
@@ -361,7 +380,7 @@ SQL> select deptno,sum(sal),sum(T) from (select deptno,ename,sal,grade,decode(gr
 	10	 8750	     374
 ```
 
-14. 比WARD奖金低的人？
+#### 14. 比WARD奖金低的人？
 
 ```shell
 SQL> select ename,comm from emp where nvl(comm,0) < (select comm from emp where ename='WARD');
@@ -388,7 +407,7 @@ MILLER
 
 ```
 
-15. 奖金最高的前两名雇员？
+#### 15. 奖金最高的前两名雇员？
 
 ```shell
 SQL> select * from (select ename,comm from emp order by nvl(comm,0) desc) where rownum <= 2;
@@ -407,10 +426,10 @@ MARTIN		  1400		1
 WARD		   500		2
 ```
 
-16. 工资高于本部门平均工资的人？
+#### 16. 工资高于本部门平均工资的人？
 
 ```shell
-SQL> select e.deptno,e.ename,e.sal from emp e,(select deptno,avg(sal) asal from emp group by deptno) b where e.deptno=b.deptno and e.sal > b.asal; 
+SQL> select e.deptno,e.ename,e.sal from emp e,(select deptno,avg(sal) asal from emp group by deptno) b where e.deptno=b.deptno and e.sal > b.asal;
 
     DEPTNO ENAME	     SAL
 ---------- ---------- ----------
@@ -424,18 +443,17 @@ SQL> select e.deptno,e.ename,e.sal from emp e,(select deptno,avg(sal) asal from 
 6 rows selected.
 ```
 
-
-#### 课后练习
+### 课后练习
 
 
 ```shell
 
-select deptno,ename, sal 
+select deptno,ename, sal
 from emp
 where sal in (select max(sal) from emp group by deptno) or
-sal in (select max(sal) 
-       from (select sal,deptno 
-             from emp where sal not in 
+sal in (select max(sal)
+       from (select sal,deptno
+             from emp where sal not in
                       (select max(sal) from emp group by deptno)) group by deptno)
 order by 1;
 
@@ -452,21 +470,21 @@ select * from (select rownum rn,a.* from (select ename,sal from emp order by sal
 select * from (select * from emp order by dbms_random.value()) where rownum<=3;
 
 查询雇员的姓名，工资，税，(1级不缴税，2-->2% ,3-->3%,4-->4%,5-->5%)
-select 
+select
   e.ename,
   e.sal,
   (sal*decode(s.grade,1,0,2,0.02,3,0.03,4,0.04,5,0.05,0)) tax
-from emp e,salgrade s 
+from emp e,salgrade s
 where e.sal between s.losal and s.hisal;
 
 部门总工资和部门上缴个税总和
 select deptno,sum(sal),sum(tax)
 from
-(select 
+(select
   e.sal,
   (sal*decode(s.grade,1,0,2,0.02,3,0.03,4,0.04,5,0.05,0)) tax,
   deptno
-from emp e,salgrade s 
+from emp e,salgrade s
 where e.sal between s.losal and s.hisal)
 group by deptno;
 
@@ -487,33 +505,47 @@ select * from (select rownum rn,a.* from (select * from emp order by sal desc) a
 where rn between &p*5-4 and &p*5;
 ```
 
+## SQLPlus 的常用命令
 
-### oracle的pause命令 
+### pause命令暂停屏幕输出
 
-> 暂停屏幕输出
+1. 查看当前pause的状态为off
 
-
-```shell
-# 查看当前pause的状态为off
+```sql
 SQL> show pause;
 PAUSE is OFF
+```
 
-# 将pasue设置为开启状态 on
+2. 将pasue设置为开启状态 on
+
+```sql
 SQL> set pause on;
 SQL> show pause;
 PAUSE is ON and set to ""
+```
 
-# 查看当前设置的pagesize的大小，即每页显示多少行
+3. 查看当前设置的pagesize的大小，即每页显示多少行
+
+```sql
 SQL> show pagesize;
 pagesize 14
+```
 
-# 修改pagesize为10，每页显示10行
+4. 修改pagesize为10，每页显示10行
+
+```sql
 SQL> set pagesize 10;
+```
 
-# 执行查询语句
+5. 执行查询语句
+
+```sql
 SQL> select rownum rn,ename,sal from emp;
-# 需要输入enter健
+```
 
+需要输入enter健
+
+```sql
 	RN ENAME	     SAL
 ---------- ---------- ----------
 	 1 SMITH	     800
@@ -523,8 +555,11 @@ SQL> select rownum rn,ename,sal from emp;
 	 5 MARTIN	    1250
 	 6 BLAKE	    2850
 	 7 CLARK	    2450
-# 需要输入enter健
+```
 
+需要输入enter健
+
+```sql
 	RN ENAME	     SAL
 ---------- ---------- ----------
 	 8 SCOTT	    3000
@@ -539,16 +574,20 @@ SQL> select rownum rn,ename,sal from emp;
 ```
 
 
-### oracle的sqlplus执行shell命令
+### 通过sqlplus执行shell命令
 
-> spool
+> host 或者 ！
 
-```shell
-# 执行shell命令 pwd 打印当前路径
+执行shell命令 pwd 打印当前路径
+
+```sql
 SQL> host pwd
 /home/oracle
+```
 
-# 执行shell命令 free 查看当前内存使用情况
+执行shell命令 free 查看当前内存使用情况
+
+```sql
 SQL> host free
              total       used       free     shared    buffers     cached
 Mem:       2058756     937308    1121448          0      49720     683304
@@ -557,72 +596,57 @@ Swap:      4095992          0    4095992
 ```
 
 
-### oracle的保存执行的sql语句
+### spool保存执行记录
 
-```shell
-# 在但前目录下创建booboo.lst文件保存sql
+1. 在当前目录下创建booboo.lst文件保存sql
+
+```sql
 SQL> spool booboo append
-# 执行sql查询
-SQL> select * from (select ename,nvl(comm,0),rank () over (order by nvl(comm,0) desc) ord from emp) where ord <= 2;
+```
 
+2. 执行sql查询
 
-ENAME	   NVL(COMM,0)	      ORD
----------- ----------- ----------
-MARTIN		  1400		1
-WARD		   500		2
-# 执行sql查询
-SQL> select deptno,sum(sal),sum(T) from (select deptno,ename,sal,grade,decode(grade,1,0,2,sal*0.02,3,sal*0.03,4,sal*0.04,5,sal*0.05) T from emp,salgrade where emp.sal between salgrade.losal and salgrade.hisal) group by deptno;
-
-
-    DEPTNO   SUM(SAL)	  SUM(T)
----------- ---------- ----------
-	30	 9400	     257
-	20	10875	     359
-	10	 8750	     374
-# 关闭spool
-SQL> spool off
-
-# 查看当前目录下的文档
-SQL> host ls
-booboo.lst  rlwrap-0.30-1.el5.i386.rpm
-
-# 打印booboo.lst到屏幕上
-SQL> host cat booboo.lst
+```sql
 SQL> select * from (select ename,nvl(comm,0),rank () over (order by nvl(comm,0) desc) ord from emp) where ord <= 2;
 
 ENAME      NVL(COMM,0)        ORD                                               
----------- ----------- ----------                                               
+---------- ----------- ----------
 MARTIN            1400          1                                               
-WARD               500          2                                               
+WARD               500          2
+```
 
+3. 执行sql查询
+
+```sql
 SQL> select deptno,sum(sal),sum(T) from (select deptno,ename,sal,grade,decode(grade,1,0,2,sal*0.02,3,sal*0.03,4,sal*0.04,5,sal*0.05) T from emp,salgrade where emp.sal between salgrade.losal and salgrade.hisal) group by deptno;
 
     DEPTNO   SUM(SAL)     SUM(T)                                                
----------- ---------- ----------                                                
+---------- ---------- ----------
         30       9400        257                                                
         20      10875        359                                                
-        10       8750        374                                                
+        10       8750        374   
+```
+4. 关闭spool
 
+```sql
 SQL> spool off
-SQL> exit
-Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
-With the Partitioning, OLAP, Data Mining and Real Application Testing options
+```
 
+5. 查看保存的执行记录
 
-[oracle@oracle0 ~]$ ls
-booboo.lst  rlwrap-0.30-1.el5.i386.rpm
-[oracle@oracle0 ~]$ cat booboo.lst 
+```sql
+[oracle@oracle0 ~]$ cat booboo.lst
 SQL> select * from (select ename,nvl(comm,0),rank () over (order by nvl(comm,0) desc) ord from emp) where ord <= 2;
 
 ENAME      NVL(COMM,0)        ORD                                               
----------- ----------- ----------                                               
+---------- ----------- ----------
 MARTIN            1400          1                                               
 WARD               500          2                                               
 
 SQL> select deptno,sum(sal),sum(T) from (select deptno,ename,sal,grade,decode(grade,1,0,2,sal*0.02,3,sal*0.03,4,sal*0.04,5,sal*0.05) T from emp,salgrade where emp.sal between salgrade.losal and salgrade.hisal) group by deptno;
 
     DEPTNO   SUM(SAL)     SUM(T)                                                
----------- ---------- ----------                                                
+---------- ---------- ----------
         30       9400        257                                                
         20      10875        359                                                
         10       8750        374                                                
@@ -631,3 +655,6 @@ SQL> spool off
 
 ```
 
+```
+
+```

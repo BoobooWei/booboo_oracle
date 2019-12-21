@@ -4,7 +4,36 @@
 
 > 2019.11.10 BoobooWei
 
-[toc]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [冷备和恢复工具-exp和imp](#冷备和恢复工具-exp和imp)
+	- [`exp`和`imp`简介](#exp和imp简介)
+		- [`exp`注意事项](#exp注意事项)
+	- [逻辑备份恢复的一般步骤](#逻辑备份恢复的一般步骤)
+		- [`exp`逻辑备份的一般步骤](#exp逻辑备份的一般步骤)
+		- [`imp`逻辑恢复的一般步骤](#imp逻辑恢复的一般步骤)
+	- [检查字符集一致性](#检查字符集一致性)
+		- [1 检查Oracle实例字符集的SQL命令](#1-检查oracle实例字符集的sql命令)
+		- [2 检查Oracle实例字符集的Bash命令](#2-检查oracle实例字符集的bash命令)
+		- [3 修改Oracle实例字符集的Bash命令](#3-修改oracle实例字符集的bash命令)
+		- [4 修改Oracle实例字符集的SQL命令](#4-修改oracle实例字符集的sql命令)
+		- [5 检查Oracle实例字符集的SQL命令](#5-检查oracle实例字符集的sql命令)
+	- [课堂实践](#课堂实践)
+		- [实践1-检查字符集一致性](#实践1-检查字符集一致性)
+		- [实践2-修改服务器字符集为`AMERICAN_AMERICA.ZHS16GBK`](#实践2-修改服务器字符集为americanamericazhs16gbk)
+		- [实践3-备份`scott`用户的`t02`表并恢复到当前实例](#实践3-备份scott用户的t02表并恢复到当前实例)
+			- [要求](#要求)
+			- [Step1：备份](#step1备份)
+			- [Step2：模拟误操作](#step2模拟误操作)
+			- [Step3：恢复数据](#step3恢复数据)
+		- [实践4-备份`scott`用户的所有表并导入到其他实例](#实践4-备份scott用户的所有表并导入到其他实例)
+			- [要求](#要求)
+			- [Step1：备份](#step1备份)
+			- [Step2：导入](#step2导入)
+		- [实践5-单表带过滤条件的备份和恢复](#实践5-单表带过滤条件的备份和恢复)
+	- [老师笔记](#老师笔记)
+
+<!-- /TOC -->
 
 ## `exp`和`imp`简介
 
@@ -186,7 +215,7 @@ startup;
 
 #### 要求
 
-1. 通过`exp`工具备份`scott`用户下的`t02`表 
+1. 通过`exp`工具备份`scott`用户下的`t02`表
 2. 模拟人为误操作将`t02`表`drop`
 3. 通过`imp`工具将`t02`表还原
 
@@ -237,8 +266,7 @@ USCOTT
 RTABLES
 8192
                                       Sat Nov 16 19:56:15 2019/home/oracle/oracle_exp_backup/t02.dmp
-#G#G
-#G#G
+
 -08:00
 BYTE
 UNUSED
@@ -276,8 +304,7 @@ USCOTT
 RTABLES
 8192
                                       Sat Nov 16 19:56:15 2019/home/oracle/oracle_exp_backup/t02.dmp
-#G#G
-#G#G
+
 -08:00
 BYTE
 UNUSED
@@ -313,7 +340,7 @@ SQL> select * from t02;
 
 #### 要求
 
-1. 通过`exp`工具备份`scott`用户下的所有表 
+1. 通过`exp`工具备份`scott`用户下的所有表
 2. 通过`imp`工具将`scott`用户下的所有表导入到其他实例
 
 #### Step1：备份
@@ -378,14 +405,13 @@ total 32
 -rw-r--r-- 1 oracle oinstall 16384 Nov  9 22:23 t02.query.dmp
 
 --3.将二进制的备份文件转换为文本文件查看
-[oracle@oratest expbk]$ strings t02.query.dmp 
+[oracle@oratest expbk]$ strings t02.query.dmp
 TEXPORT:V11.02.00
 USCOTT
 RTABLES
 8192
                                        Sat Nov 9 22:23:35 2019/home/oracle/expbk/t02.query.dmp
-#G#G
-#G#G
+
 -08:00
 BYTE
 UNUSED
@@ -402,17 +428,17 @@ METRICSTtriggers
 METRICET 1
 METRICSTbitmap, functional and extensible indexes
 TABLE "T02"
-ANALSTATS CR "T02" ("X" ) 
+ANALSTATS CR "T02" ("X" )
 BEGIN  DBMS_STATS.SET_INDEX_STATS(NULL,'"SYS_C                         "',NULL,NULL,NULL,1,1,1,1,1,1,0,6); END;
 ENDTABLE
 METRICET 2
 METRICSTposttables actions
 METRICET 2
-METRICSTPost-inst procedural actions 
+METRICSTPost-inst procedural actions
 METRICET 2
-METRICSTDeferred analyze commands 
+METRICSTDeferred analyze commands
 TABLE "T02"
-ANALCOMPUTE INDEXR "T02" ANALYZI 13763 "T02" 2 ("X" ) 
+ANALCOMPUTE INDEXR "T02" ANALYZI 13763 "T02" 2 ("X" )
 ENDTABLE
 METRICET 3
 METRICETG0
@@ -420,7 +446,7 @@ EXIT
 EXIT
 
 --4.登陆数据库删除t02表
-[oracle@oratest expbk]$ sqlplus scott/tiger 
+[oracle@oratest expbk]$ sqlplus scott/tiger
 SQL> drop table t02 purge;
 
 Table dropped.
@@ -479,7 +505,7 @@ exp scott/tiger tables=ob1 file=/home/oracle/expbk/ob1.dmp buffer=10000000 log=/
 导出单张表时过滤行：
 exp scott/tiger tables=ob1 file=/home/oracle/expbk/ob1_table.dmp buffer=10000000 log=/home/oracle/expbk/expob1.log query=\'where object_type=\'\'TABLE\'\'\'
 导入时追加行：
-exp scott/tiger tables=ob1 file=/home/oracle/expbk/ob1_table.dmp ignore=y buffer=10000000 log=/home/oracle/expbk/impob1.log 
+exp scott/tiger tables=ob1 file=/home/oracle/expbk/ob1_table.dmp ignore=y buffer=10000000 log=/home/oracle/expbk/impob1.log
 
 导出多张表：将多张表捆绑为一个读一致性CONSISTENT
 exp scott/tiger tables=ob1,ob2 file=/home/oracle/expbk/ob.dmp buffer=10000000 log=/home/oracle/expbk/expob.log CONSISTENT=y
@@ -496,7 +522,7 @@ exp scott/tiger owner=scott file=/home/oracle/expbk/scott.dmp buffer=10000000 lo
 drop user scott cascade;
 grant connect,resource,create view to scott identified by tiger;
 还原用户数据：
-imp scott/tiger file=/home/oracle/expbk/scott.dmp full=y 
+imp scott/tiger file=/home/oracle/expbk/scott.dmp full=y
 跨用户导入数据：
 imp system/uplooking file=/home/oracle/expbk/scott.dmp fromuser=scott touser=u01 tables=DEPT,EMP,SALGRADE log=impu01.log
 

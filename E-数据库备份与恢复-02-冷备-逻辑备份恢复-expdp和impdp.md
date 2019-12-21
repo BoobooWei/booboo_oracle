@@ -4,7 +4,35 @@
 
 > 2019.11.14 BoobooWei
 
-[toc]
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [冷备和恢复工具-expdp和impdp](#冷备和恢复工具-expdp和impdp)
+	- [数据泵官方介绍](#数据泵官方介绍)
+	- [数据泵组件](#数据泵组件)
+		- [数据泵如何移动数据？](#数据泵如何移动数据)
+		- [数据泵导出和导入操作的必需角色](#数据泵导出和导入操作的必需角色)
+	- [expdp导出步骤](#expdp导出步骤)
+		- [1 创建逻辑目录](#1-创建逻辑目录)
+		- [2 `expdp`的五种导出方式](#2-expdp的五种导出方式)
+			- [第一种：`full=y`全量导出数据库](#第一种fully全量导出数据库)
+			- [第二种：`schemas`按用户导出](#第二种schemas按用户导出)
+			- [第三种：`tablespace`按表空间导出](#第三种tablespace按表空间导出)
+			- [第四种：`tables`导出表](#第四种tables导出表)
+			- [第五种：`query`按查询条件导](#第五种query按查询条件导)
+		- [3 `impdp`导入步骤](#3-impdp导入步骤)
+			- [第一种：`full=y`全量导入数据库](#第一种fully全量导入数据库)
+			- [第二种：`schemas`按用户导出后同名用户导入](#第二种schemas按用户导出后同名用户导入)
+			- [第三种：`tablespaces`导入表空间](#第三种tablespaces导入表空间)
+			- [第四种：`tables`导入表](#第四种tables导入表)
+			- [第五种：追加数据](#第五种追加数据)
+	- [课堂实践](#课堂实践)
+		- [实践1-创建逻辑目录用于存放逻辑备份](#实践1-创建逻辑目录用于存放逻辑备份)
+		- [实践2-解决报错 ORA-39213](#实践2-解决报错-ora-39213)
+		- [实践3-全库备份导出](#实践3-全库备份导出)
+	- [逻辑备份恢复工具对比](#逻辑备份恢复工具对比)
+		- [我的理解](#我的理解)
+
+<!-- /TOC -->
 
 ## 数据泵官方介绍
 
@@ -175,7 +203,7 @@ impdp sys/passwd tablespaces=tbs1 directory=data_dir dumpfile=expdp.dmp logfile=
 跨用户：将表空间TBS01、TBS02、TBS03导入到表空间A_TBS，将用户B的数据导入到A，并生成新的oid防止冲突；
 
 ```bash
-impdp A/passwd remap_tablespace=TBS01:A_TBS,TBS02:A_TBS,TBS03:A_TBS remap_schema=B:A FULL=Y transform=oid:n 
+impdp A/passwd remap_tablespace=TBS01:A_TBS,TBS02:A_TBS,TBS03:A_TBS remap_schema=B:A FULL=Y transform=oid:n
 directory=data_dir dumpfile=expdp.dmp logfile=impdp.log
 ```
 
@@ -198,7 +226,7 @@ impdp B/passwd tables=A.table1,A.table2 remap_schema=A:B directory=data_dir dump
 `--table_exists_action`:导入对象已存在时执行的操作。有效关键字:`SKIP,APPEND,REPLACE和TRUNCATE`
 
 ```bash
-impdp sys/passwd directory=data_dir dumpfile=expdp.dmp schemas=system table_exists_action=replace logfile=impdp.log; 
+impdp sys/passwd directory=data_dir dumpfile=expdp.dmp schemas=system table_exists_action=replace logfile=impdp.log;
 
 ```
 
@@ -341,7 +369,7 @@ Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
 
 Connected to: Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
 With the Partitioning, OLAP, Data Mining and Real Application Testing options
-Starting "SYSTEM"."FULL_JOB":  userid=system/******** job_name=full_job directory=expbk dumpfile=full.dump full=y logfile=full.log 
+Starting "SYSTEM"."FULL_JOB":  userid=system/******** job_name=full_job directory=expbk dumpfile=full.dump full=y logfile=full.log
 Estimate in progress using BLOCKS method...
 Processing object type DATABASE_EXPORT/SCHEMA/TABLE/TABLE_DATA
 Total estimation using BLOCKS method: 576 KB
@@ -507,4 +535,3 @@ HF((0
 3. 数据泵的导出模式：1）`full` 完全模式；2）`schema` 库模式；3）`tables` 表模式；4） `tablespace`表空间模式；5） `transport_tablespaces`可传输表空间模式
 4. 从`11g`开始使用该工具做逻辑备份
 5. 备份文件为`二进制文件`
-

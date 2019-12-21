@@ -1,3 +1,7 @@
+# oracle 11g 数据库安装
+
+> 2017.04.19
+
 <!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [oracle 11g 数据库安装](#oracle-11g-数据库安装)
@@ -33,9 +37,6 @@
 - [查看当前数据库的状态:](#查看当前数据库的状态)
 
 <!-- /TOC -->
-# oracle 11g 数据库安装
-
-> 2017.04.19
 
 ## 安装数据库软件有三种方法
 

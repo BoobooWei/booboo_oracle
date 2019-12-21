@@ -1,6 +1,23 @@
-### 组函数 
+# SQL语句-查询语句-组函数
 
-#### 组函数语法
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [SQL语句-查询语句-组函数](#sql语句-查询语句-组函数)
+	- [组函数语法](#组函数语法)
+	- [应用实例](#应用实例)
+		- [1. 雇员中最大工资，最小工资，工资总和，平均工资。](#1-雇员中最大工资最小工资工资总和平均工资)
+		- [2. 每个部门的工资总和和平均值](#2-每个部门的工资总和和平均值)
+		- [3. 部门工资总和的最大值为多少](#3-部门工资总和的最大值为多少)
+		- [4. 部门工资总和最多的部门名称和工资总和](#4-部门工资总和最多的部门名称和工资总和)
+		- [5. 工资总和超过9000的部门](#5-工资总和超过9000的部门)
+		- [6. 雇员中工资相同的员工分别是谁，工资为所少？](#6-雇员中工资相同的员工分别是谁工资为所少)
+		- [7. 相同的工资有几个？](#7-相同的工资有几个)
+		- [8. 每一年参加工作的雇员的数量](#8-每一年参加工作的雇员的数量)
+	- [课后练习](#课后练习)
+
+<!-- /TOC -->
+
+## 组函数语法
 
 > 对多行进行的计算
 
@@ -18,11 +35,26 @@
 * having 字句聚合函数过滤
 
 
-#### 应用实例
+| 序列                                        | 举例      |
+| ------------------------------------------- | --------- |
+| `rownum()`                                  | 1 2 3 4 5 |
+| `rank() over (partition by order by)`       | 1 2 2 4 5 |
+| `dense_rank() over (partition by order by)` | 1 2 2 3 4 |
 
-1. 雇员中最大工资，最小工资，工资总和，平均工资。
+```sql
+select rank() over (partition by deptno order by sal desc) ord from emp;
+```
 
-```shell
+* partition by 给结果集分组
+* order by 给结果集排序
+* rank() 在每个分组内部进行排名
+
+
+## 应用实例
+
+### 1. 雇员中最大工资，最小工资，工资总和，平均工资。
+
+```sql
 SQL> select min(sal),max(sal),sum(sal),avg(sal) from emp;
 
   MIN(SAL)   MAX(SAL)	SUM(SAL)   AVG(SAL)
@@ -30,9 +62,9 @@ SQL> select min(sal),max(sal),sum(sal),avg(sal) from emp;
        800	 5000	   29025 2073.21429
 ```
 
-2. 每个部门的工资总和和平均值
+### 2. 每个部门的工资总和和平均值
 
-```shell
+```sql
 SQL> select deptno,to_char(avg(sal),'L99999.99') avg_sal,to_char(sum(sal),'L99999.99') sum_sal from emp group by deptno;
 
     DEPTNO AVG_SAL	       SUM_SAL
@@ -42,9 +74,9 @@ SQL> select deptno,to_char(avg(sal),'L99999.99') avg_sal,to_char(sum(sal),'L9999
 	10	      $2916.67		  $8750.00
 ```
 
-3. 部门工资总和的最大值为多少
+### 3. 部门工资总和的最大值为多少
 
-```shell
+```sql
 SQL> select max(sum(sal)) from emp group by deptno;
 
 MAX(SUM(SAL))
@@ -52,9 +84,9 @@ MAX(SUM(SAL))
 	10875
 ```
 
-4. 部门工资总和最多的部门名称和工资总和
+### 4. 部门工资总和最多的部门名称和工资总和
 
-```shell
+```sql
 SQL> select deptno,sum_sal from (select deptno,sum(sal) sum_sal from emp group by deptno order by sum_sal desc ) where rownum < 2;
 
     DEPTNO    SUM_SAL
@@ -62,9 +94,9 @@ SQL> select deptno,sum_sal from (select deptno,sum(sal) sum_sal from emp group b
 	20	10875
 ```
 
-5. 工资总和超过9000的部门
+### 5. 工资总和超过9000的部门
 
-```shell
+```sql
 SQL> select deptno,sum(sal) sum_sal from emp group by deptno having sum_sal > 9000;
 select deptno,sum(sal) sum_sal from emp group by deptno having sum_sal > 9000
                                                                *
@@ -79,13 +111,15 @@ SQL> select deptno,sum(sal) sum_sal from emp group by deptno having sum(sal) > 9
 	30	 9400
 	20	10875
 
-# 注意having字句后面不可以使用别名。
-# where字句不可以过滤组函数运算后的结果。
 ```
 
-6. 雇员中工资相同的员工分别是谁，工资为所少？
+* 注意having字句后面不可以使用别名。
+* where字句不可以过滤组函数运算后的结果。
 
-```shell
+
+### 6. 雇员中工资相同的员工分别是谁，工资为所少？
+
+```sql
 SQL> select e1.ename,e2.ename,e1.sal from emp e1,emp e2 where e1.sal=e2.sal and e1.ename != e2.ename;
 
 ENAME	   ENAME	     SAL
@@ -96,9 +130,9 @@ FORD	   SCOTT	    3000
 SCOTT	   FORD 	    3000
 ```
 
-7. 相同的工资有几个？
+### 7. 相同的工资有几个？
 
-```shell
+```sql
 SQL> select sal,count(sal) from emp group by sal;
 
        SAL COUNT(SAL)
@@ -145,9 +179,9 @@ SCOTT		 3000
 FORD		 3000
 ```
 
-8. 每一年参加工作的雇员的数量
+### 8. 每一年参加工作的雇员的数量
 
-```shell
+```sql
 SQL> select count(to_char(hiredate,'yyyy')) enum, to_char(hiredate,'yyyy') year from emp group by to_char(hiredate,'yyyy');
 
       ENUM YEAR
@@ -169,9 +203,9 @@ SQL> select sum(case when to_char(hiredate,'yy')='81' then 1 else 0 end) "81",su
 
 
 
-#### 课后练习
+## 课后练习
 
-```shell
+```sql
 select max(sal),min(sal),sum(sal),avg(sal) from emp;
 
 select count(*) from emp;
@@ -196,6 +230,3 @@ select deptno,sum(sal) from emp having sum(sal)>9000 group by deptno;
    1    10     1     2
 --------------------------------
 ```
-
-
-
