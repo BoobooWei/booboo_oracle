@@ -20,7 +20,7 @@
       - [修改表空间名](#修改表空间名)   
       - [数据文件改名称](#数据文件改名称)   
          - [只将待修改的数据文件offline](#只将待修改的数据文件offline)   
-      - [将表空间offline](#将表空间offline)   
+         - [将表空间offline](#将表空间offline)   
    - [数据字典总结](#数据字典总结)   
 
 <!-- /MDTOC -->
@@ -230,7 +230,7 @@ alter database datafile '<new_file_path>' online;
 select name,status from v$datafile;
 ```
 
-### 将表空间offline
+#### 将表空间offline
 
 1. 查看数据文件位置
 2. 修改表空间状态为`offline`
