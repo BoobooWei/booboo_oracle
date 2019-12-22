@@ -15,16 +15,19 @@
       - [改变数据文件的大小](#改变数据文件的大小)   
       - [数据文件的自动扩展](#数据文件的自动扩展)   
       - [修改表空间状态](#修改表空间状态)   
-      - [删除表空间](#删除表空间)   
    - [实践2-更改表空间的名称，更改数据文件的名称](#实践2-更改表空间的名称，更改数据文件的名称)   
       - [修改表空间名](#修改表空间名)   
       - [数据文件改名称](#数据文件改名称)   
          - [只将待修改的数据文件offline](#只将待修改的数据文件offline)   
          - [将表空间offline](#将表空间offline)   
+   - [拓展知识点-数据文件的文件头](#拓展知识点-数据文件的文件头)   
+      - [如何得到文件头的转储文件](#如何得到文件头的转储文件)   
+      - [获取跟踪文件名](#获取跟踪文件名)   
+      - [查看跟踪文件](#查看跟踪文件)   
+      - [获取数据块的转储文件](#获取数据块的转储文件)   
    - [数据字典总结](#数据字典总结)   
 
 <!-- /MDTOC -->
-
 
 
 ## 关于数据文件
@@ -181,17 +184,6 @@ alter tablespace ts1 online;
 ![](pic/d04.png)
 
 
-### 删除表空间
-
-1. 数据库层删除表空间
-2. 操作系统层删除表空间所有的数据文件
-
-
-```SQL
-DROP TABLEASPACE TS1;
-!rm /home/oracle/ts1.dbf
-```
-
 ## 实践2-更改表空间的名称，更改数据文件的名称
 
 该实验的目的是管理表空间,了解什么是数据文件的一致性。
@@ -246,6 +238,166 @@ alter tablespace <tbs_name> offline;
 alter database rename file '<old_file_path>' TO '<new_file_path>';
 alter tablespace <tbs_name> online;
 select name,status from v$datafile;
+```
+
+##实践3-删除表空间
+
+* 删除数据文件：只能删除表空间，才能删除数据文件
+* 临时表空间的临时文件除外，你可以删除临时表空间内的临时文件。
+
+```sql
+drop tablespace ts1 including contents and datafiles;
+```
+
+## 拓展知识点-数据文件的文件头
+
+Oracle提供了一类命令，可以将Oracle各类内部结构中所包含的信息转储(dump)到跟踪文件中，以便用户能根据文件内容来解决各种故障，或查看物理文件的内容。
+
+
+### 如何得到文件头的转储文件
+
+```SQL
+ALTER SESSION SET EVENTS 'immediate trace name file_hdrs level 3';
+```
+这句话将所有数据文件的头都转储到dump文件中。
+
+* file_hdrs事件：dump所有数据文件的头部信息
+|level | 含义|
+|:--|:--|
+|1| 控制文件中的文件头信息 |
+|2| level 1 + 文件头信息|
+|3| level 2 + 数据文件头信息 |
+
+### 获取跟踪文件名
+
+```SQL
+SELECT    a.VALUE
+       || b.symbol
+       || c.instance_name
+       || '_ora_'
+       || d.spid
+       || '.trc' trace_file
+  FROM (SELECT VALUE
+          FROM v$parameter
+         WHERE NAME = 'user_dump_dest') a,
+       (SELECT SUBSTR (VALUE, -6, 1) symbol
+          FROM v$parameter
+         WHERE NAME = 'user_dump_dest') b,
+       (SELECT instance_name
+          FROM v$instance) c,
+       (SELECT spid
+          FROM v$session s, v$process p, v$mystat m
+         WHERE s.paddr = p.addr AND s.SID = m.SID AND m.statistic# = 0) d;
+```
+
+### 查看跟踪文件
+
+```bash
+[oracle@oratest ~]$ less /u01/app/oracle/diag/rdbms/booboo/BOOBOO/trace/BOOBOO_ora_4763.trc
+Trace file /u01/app/oracle/diag/rdbms/booboo/BOOBOO/trace/BOOBOO_ora_4763.trc
+Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+ORACLE_HOME = /u01/app/oracle/product/11.2.0.4
+System name:    Linux
+Node name:      oratest
+Release:        2.6.32-573.el6.x86_64
+Version:        #1 SMP Wed Jul 1 18:23:37 EDT 2015
+Machine:        x86_64
+VM name:        VMWare Version: 6
+Instance name: BOOBOO
+Redo thread mounted by this instance: 1
+Oracle process number: 17
+Unix process pid: 4763, image: oracle@oratest (TNS V1-V3)
+
+
+*** 2019-12-22 15:06:13.116
+*** SESSION ID:(162.35) 2019-12-22 15:06:13.116
+*** CLIENT ID:() 2019-12-22 15:06:13.116
+*** SERVICE NAME:(SYS$USERS) 2019-12-22 15:06:13.116
+*** MODULE NAME:(sqlplus@oratest (TNS V1-V3)) 2019-12-22 15:06:13.116
+*** ACTION NAME:() 2019-12-22 15:06:13.116
+
+DUMP OF DATA FILES: 8 files in database
+
+DATA FILE #1:
+  name #7: /u01/app/oracle/oradata/BOOBOO/system01.dbf
+creation size=41600 block size=8192 status=0xe head=7 tail=7 dup=1
+ tablespace 0, index=1 krfil=1 prev_file=0
+ unrecoverable scn: 0x0000.00000000 01/01/1988 00:00:00
+ Checkpoint cnt:76 scn: 0x0000.000779cc 12/21/2019 22:50:59
+ Stop scn: 0xffff.ffffffff 12/21/2019 19:55:30
+ Creation Checkpointed at scn:  0x0000.00000007 11/09/2019 21:31:08
+ thread:1 rba:(0x1.3.10)
+ enabled  threads:  01000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000
+ Offline scn: 0x0000.0006e823 prev_range: 0
+ Online Checkpointed at scn:  0x0000.0006e824 12/15/2019 11:25:12
+ thread:1 rba:(0x1.2.0)
+ enabled  threads:  01000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   00000000 00000000 00000000 00000000 00000000 00000000
+  Hot Backup end marker scn: 0x0000.00000000
+  aux_file is NOT DEFINED
+  Plugged readony: NO
+  Plugin scnscn: 0x0000.00000000
+  Plugin resetlogs scn/timescn: 0x0000.00000000 01/01/1988 00:00:00
+  Foreign creation scn/timescn: 0x0000.00000000 01/01/1988 00:00:00
+  Foreign checkpoint scn/timescn: 0x0000.00000000 01/01/1988 00:00:00
+  Online move state: 0
+  V10 STYLE FILE HEADER:
+          Compatibility Vsn = 186647552=0xb200400
+          Db ID=3420951115=0xcbe7924b, Db Name='BOOBOO'
+          Activation ID=0=0x0
+          Control Seq=1383=0x567, File size=41600=0xa280
+          File Number=1, Blksiz=8192, File Type=3 DATA
+
+```         
+
+文件头最特殊,使用上面的语法dump,
+
+### 获取数据块的转储文件
+
+转储文件1的2到4数据块：
+
+```SQL
+SQL> alter system dump datafile 1 block min 2 block max 4;
+System altered.
+```
+
+转储文件1的2号数据块：
+
+```SQL
+SQL> alter system dump datafile 1 block 2;
+System altered.
 ```
 
 
