@@ -2,14 +2,30 @@
 
 > 2019-12-21 - BoobooWei
 
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- MDTOC maxdepth:6 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
 
-- [关于数据文件](#关于数据文件)
-	- [数据文件](#数据文件)
-	- [实践1-建立新的表空间](#实践1-建立新的表空间)
-	- [实践2-更改表空间的名称，更改数据文件的名称](#实践2-更改表空间的名称，更改数据文件的名称)
+- [数据文件](#数据文件)   
+   - [关于数据文件](#关于数据文件)   
+   - [实践1-建立新的表空间](#实践1-建立新的表空间)   
+      - [查看表空间和数据文件的信息](#查看表空间和数据文件的信息)   
+      - [查看每个表空间有多少个数据文件](#查看每个表空间有多少个数据文件)   
+      - [建立新的表空间](#建立新的表空间)   
+      - [加入新的数据文件](#加入新的数据文件)   
+      - [删除数据文件](#删除数据文件)   
+      - [改变数据文件的大小](#改变数据文件的大小)   
+      - [数据文件的自动扩展](#数据文件的自动扩展)   
+      - [修改表空间状态](#修改表空间状态)   
+      - [删除表空间](#删除表空间)   
+   - [实践2-更改表空间的名称，更改数据文件的名称](#实践2-更改表空间的名称，更改数据文件的名称)   
+      - [修改表空间名](#修改表空间名)   
+      - [数据文件改名称](#数据文件改名称)   
+         - [只将待修改的数据文件offline](#只将待修改的数据文件offline)   
+      - [将表空间offline](#将表空间offline)   
+   - [数据字典总结](#数据字典总结)   
 
-<!-- /TOC -->
+<!-- /MDTOC -->
+
+
 
 ## 关于数据文件
 
@@ -28,15 +44,15 @@ Oracle数据库为每个数据文件分配两个关联的文件号，一个绝�
 
 
 
-* 数据文件是数据的存放载体 
-* 数据文件存在于操作系统上,可以不是文件。设备也可以。 
+* 数据文件是数据的存放载体
+* 数据文件存在于操作系统上,可以不是文件。设备也可以。
 * 数据文件不能独立存在,得有组织 数据文件的逻辑组织形式为表空间`tablespace`
 * 一个表空间内可以含有多个数据文件 数据库内可以有多个表空间
 
 ![](pic/d03.png)
 
-* 红色是存放数据的数据文件 
-* 红色的变化存放在蓝色的日志文件 
+* 红色是存放数据的数据文件
+* 红色的变化存放在蓝色的日志文件
 * 绿色为控制文件，存放红色和蓝色的结构和行为。
 
 
@@ -47,13 +63,24 @@ Oracle数据库为每个数据文件分配两个关联的文件号，一个绝�
 
 该实验的目的是初步认识数据文件和表空间。
 
-### 查看表空间和数据文件的信息 
+### 查看表空间和数据文件的信息
 
 ```SQL
-SELECT 
+SELECT
     tablespace_name, file_name, CEIL(bytes / 1024 / 1024) mb
 FROM
     dba_data_files
+ORDER BY 1;
+```
+
+### 查看每个表空间有多少个数据文件
+
+```sql
+SELECT
+    tablespace_name, count(*) file_num
+FROM
+    dba_data_files
+GROUP BY tablespace_name    
 ORDER BY 1;
 ```
 
@@ -61,6 +88,7 @@ ORDER BY 1;
 
 ```sql
 CREATE TABLESPACE <tablespace_name> DATAFILE '<datafile_path>' SIZE 2M;
+CREATE TABLESPACE <tablespace_name> DATAFILE '<datafile_path>' SIZE 2M, '<datafile_path>' SIZE 2M;
 ```
 
 ### 加入新的数据文件
@@ -97,7 +125,7 @@ ALTER DATABASE DATAFILE '<datafile_path>' RESIZE 3M;
 查看表空间数据文件自动拓展属性
 
 ```sql
-SELECT 
+SELECT
     file_name, autoextensible, maxblocks, increment_by
 FROM
     dba_data_files;
@@ -153,10 +181,90 @@ alter tablespace ts1 online;
 ![](pic/d04.png)
 
 
+### 删除表空间
+
+1. 数据库层删除表空间
+2. 操作系统层删除表空间所有的数据文件
 
 
-
-
-
+```SQL
+DROP TABLEASPACE TS1;
+!rm /home/oracle/ts1.dbf
+```
 
 ## 实践2-更改表空间的名称，更改数据文件的名称
+
+该实验的目的是管理表空间,了解什么是数据文件的一致性。
+
+
+### 修改表空间名
+
+表空间改名称（10g新特性），前提条件为：
+* `system`和`sysaux`表空间不能改名称
+* 要改的表空间必须`online`,`read write`
+* 数据库版本10g以上
+
+```SQL
+ALTER TABLESPACE ts1 RENAME TO ts2;
+```
+
+
+### 数据文件改名称
+
+#### 只将待修改的数据文件offline
+
+1. 查看数据文件位置
+2. 修改数据文件状态为`Offline`
+3. 操作系统层文件名变更
+4. 数据库层文件名变更
+5. 修改数据文件状态为`online`
+6. 查看`dba_data_files`验证
+
+```SQL
+select tablespace_name,file_name,online_status from dba_data_files where tablespace_name='<tbs_name>';
+alter database datafile '<old_file_path>' offline;
+!mv '<old_file_path>' to '<new_file_path>'
+ALTER DATABASE RENAME FILE '<old_file_path>' TO '<new_file_path>';
+recover datafile '<new_file_path>';
+alter database datafile '<new_file_path>' online;
+select name,status from v$datafile;
+```
+
+### 将表空间offline
+
+1. 查看数据文件位置
+2. 修改表空间状态为`offline`
+3. 操作系统层文件名变更跟
+4. 数据库层文件名变更
+5. 修改表空间状态为`online`
+6. 查看`dba_data_files`验证
+
+```SQL
+select tablespace_name,file_name,online_status from dba_data_files where tablespace_name='<tbs_name>';
+alter tablespace <tbs_name> offline;
+!mv '<old_file_path>' to '<new_file_path>'
+alter database rename file '<old_file_path>' TO '<new_file_path>';
+alter tablespace <tbs_name> online;
+select name,status from v$datafile;
+```
+
+
+## 数据字典总结
+
+[DBA_DATA_FILES](https://docs.oracle.com/cd/E11882_01/server.112/e40402/statviews_3143.htm#REFRN23049)
+
+Online status of the file:
+
+- `SYSOFF`
+- `SYSTEM`
+- `OFFLINE`
+- `ONLINE`
+- `RECOVER`
+
+[DBA_TABLESPACES](<https://docs.oracle.com/cd/E11882_01/server.112/e40402/statviews_5060.htm#REFRN23287> )
+
+ Tablespace status:
+
+* `ONLINE`
+* `OFFLINE`
+* `READ ONLY`
