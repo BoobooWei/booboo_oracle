@@ -102,7 +102,7 @@ tablespace的空间管理：
 
 管理表空间和数据文件:
 * Database files 	Maximum per database 	65533
-* Database files 	Maximum per tablespace 	Operating system dependent; usually 1022
+	 Database files 	Maximum per tablespace 	Operating system dependent; usually 1022
 
 表空间相当于vg;数据文件相当于pv;一个表空间下至少要包含一个数据文件
 
@@ -195,11 +195,20 @@ order by 4;
 
 #### 与空间问题相关的可恢复语句
 
+在`resumable`开启 的情况下，如果Oracle执行某一个SQL申请不到空间了，会停顿下来（时间可以由TIMEOUT来控制），但是不会报`OUT-OF-SPACE`这个错 误。等你把空间的问题解决了，Oracle会继续从停下来的部分开始刚才的SQL。
+
 ```SQL
 grant resumable to scott;
 alter session enable resumable;
 select * from dba_resumable;
 ```
+
+ 步骤：
+
+1. 具有dba角色的用户：`grant resumable to scott`
+
+2. scott下面就可以执行`ALTER SESSION{ ENABLE RESUMABLE [ TIMEOUT integer ][ NAME string ]| DISABLE RESUMABLE}`
+3. 监控：通过`USER_RESUMABLE` and `DBA_RESUMABLE`来查看
 
 
 #### 表空间扩容
@@ -233,11 +242,11 @@ ORA-32771: cannot add file to bigfile tablespace
 
 1. 临时表空间中存放的是什么？
 
-临时表数据（事务提交即销毁 | 会话提交即销毁） 和 排序缓冲
+   临时表数据（事务提交即销毁 | 会话提交即销毁） 和 排序缓冲
 
 2. 临时表空间是否可以删除？
 
-可以删除；备份的时候不需要备份。
+   可以删除；备份的时候不需要备份。
 
 3. 如何查看临时表空间属性？
 
@@ -250,39 +259,65 @@ select * from dba_temp_files;
 
 #### 实践1-创建事务提交即销毁的临时表
 
-```SQL
+只是将数据清空，表还在
 
+```SQL
+create global temporary table temp as select * from emp;
 ```
 
 #### 实践2-创建会话提交即销毁的临时表
 
-```SQL
+只是将数据清空，表还在
 
+```SQL
+create global temporary table temp2 on commit preserve rows as select * from emp;
 ```
 
 #### 实践3-执行排序操作使用临时表空间
 
 ```SQL
-
+select USERNAME,TABLESPACE,BLOCKS from v$sort_usage;
 ```
 
 #### 实践4-验证删除临时表空间不影响数据库使用
 
 ```SQL
+alter system set pga_aggregate_target=10m;
+show parameter pga_aggregate_target;
+show parameter memory_target;
+--1 准备一个大表21万行
+SYS@BOOBOO>select count(*) from scott.ob1;
+
+  COUNT(*)
+----------
+    217968
+
+--对该表进行排序后报错说临时表空间不够了使用
+SYS@BOOBOO>select * from scott.ob1 order by 1,2,3,4,5;
+select * from scott.ob1 order by 1,2,3,4,5
+                    *
+ERROR at line 1:
+ORA-01652: unable to extend temp segment by 128 in tablespace TEMP
+select USERNAME,TABLESPACE,BLOCKS from v$sort_usage;
+
+--2 准备一个大表2.7万行
+SYS@BOOBOO>select count(*) from scott.ob1;
+
+  COUNT(*)
+----------
+     27246
+--使用了临时表
+SYS@BOOBOO>select USERNAME,TABLESPACE,BLOCKS from v$sort_usage;
+
+USERNAME		       TABLESPACE			   BLOCKS
+------------------------------ ------------------------------- ----------
+SYS			       TEMP				      384
 
 ```
 
+#### 其他常用命令
 
 ```SQL
-创建临时表空间:
-create temporary tablespace temp02 tempfile '/home/oracle/temp02.dbf' size 50m;
-
-查看临时表空间的使用情况：
-create global temporary table temp02 on commit preserve rows as select * from emp;
-select USERNAME,TABLESPACE,BLOCKS from v$sort_usage;
-
-select * from t05 order by 5,4,3,2,1;
-
 数据库默认临时表空间:
 select * from database_properties where rownum<4;
 查看用户使用的默认临时表空间：
@@ -299,8 +334,12 @@ alter user scott temporary tablespace tempgroup;
 排序操作由oracle服务器自动均衡到组下不同的临时表空间！
 表空间改名：
 alter tablespace TEMP rename to temp01;
-移动临时文件：
+```
+
+##### 移动临时文件
+
 查看临时文件和临时表空间的对应关系
+```sql
 select tablespace_name,file_name from dba_temp_files;
 alter tablespace temp02 add tempfile '/home/oracle/db01/temp02.dbf' size 50m;
 alter database tempfile '/home/oracle/temp02.dbf' drop;
@@ -310,7 +349,11 @@ startup mount
 !mv /home/oracle/db01/temp02.dbf /home/oracle/temp02.dbf
 alter database rename file '/home/oracle/db01/temp02.dbf' to '/home/oracle/temp02.dbf';
 alter database open;
----------------------------------------------------------------------------------------
+```
+
+##### 查看所有的物理文件
+
+```sql
 select * from
 (select name from v$controlfile
 union all
@@ -319,66 +362,59 @@ union all
 select name from v$tempfile
 union all
 select member from v$logfile);
-
-移动数据库到目录 /testdata/
-mkdir /testdata
-chown oracle. /testdata -R
-
-set lines 3000
-set pages 3000
-set trimspool on
-set heading off
-spool mv_file.sql
-select '!mv '||name||' /testdata/'
-from
-(select name from v$controlfile
-union all
-select name from v$datafile
-union all
-select name from v$tempfile
-union all
-select member from v$logfile);
-spool off
-spool rename_file.sql
-select 'alter database rename file '||chr(39)||name||chr(39)||' to '||chr(39)||'/testdata'||substr(name,instr(name,'/',-1))||chr(39)||';'
-from
-(select name from v$datafile
-union all
-select name from v$tempfile
-union all
-select member from v$logfile);
-spool off
-
-alter system set control_files=
-'/testdata/control01.ctl',
-'/testdata/control02.ctl'
-scope=spfile;
-
-shut immediate
-@mv_file.sql
-startup mount
-@rename_file.sql
-alter database open;
-
 ```
 
 ## segment的空间管理
 
+segment的空间管理，重点掌握两种管理段内所拥有的空闲空间的方式：
+
+* MANUAL:使用空闲列表管理段内的空闲块
+* AUTO  :使用位图块管理段内的空闲空间
 
 ```SQL
-segment的空间管理：段内所拥有的空闲空间如何管理
 select tablespace_name,segment_space_management from dba_tablespaces;
-MANUAL:
-AUTO  :
+
+SYS@BOOBOO>select tablespace_name,segment_space_management from dba_tablespaces;
+
+TABLESPACE_NAME 	       SEGMEN
+------------------------------ ------
+SYSTEM			       MANUAL
+SYSAUX			       AUTO
+UNDOTBS1		       MANUAL
+TEMP			       MANUAL
+USERS			       MANUAL
+TS2			       AUTO
+
+6 rows selected.
+```
+
+
+
+### MANUAL
 
 什么叫做MANUAL:使用空闲列表管理段内的空闲块
+
 创建段空间管理模式为手工的表空间：
+
+```sql
 create tablespace tbs04 datafile '/testdata/tbs04.dbf' size 10m segment space management manual;
+```
+
 向表空间下创建表：
+
+```sql
 create table scott.t04 (x int,name varchar2(10)) segment creation immediate tablespace tbs04;
+```
+
 查看表的空闲列表：
+
+```sql
 select freelists from dba_tables where table_name='T04';
+```
+
 查看t04段的头：
+
+```sql
 select header_file,header_block from dba_segments where segment_name='T04';
 
 SQL> select header_file,header_block from dba_segments where segment_name='T04';
@@ -390,18 +426,28 @@ HEADER_FILE HEADER_BLOCK
 alter system checkpoint;
 alter session set tracefile_identifier='t04_1';
 alter system dump datafile 9 block 128;
+```
 空闲列表就是段头块中的指针，指向段内的空闲块
+
+```sql
 SEG LST:: flg: UNUSED lhd: 0x00000000 ltl: 0x00000000
 
 insert into scott.t04 values (1,'Tom');
 SEG LST:: flg: USED   lhd: 0x02400082 ltl: 0x02400082
+```
+
+### AUTO
 
 什么叫做auto:使用位图块管理段内的空闲空间
+
+```sql
 create tablespace tbs05 datafile '/testdata/tbs05.dbf' size 10m;
 
 create table scott.t06 (x int,name varchar2(10)) segment creation immediate tablespace tbs05;
-
+```
 查看t06段的头：
+
+```sql
 SQL> select header_file,header_block from dba_segments where segment_name='T06';
 
 HEADER_FILE HEADER_BLOCK
@@ -411,7 +457,9 @@ HEADER_FILE HEADER_BLOCK
 alter system checkpoint;
 alter session set tracefile_identifier='t06_1';
 alter system dump datafile 10 block 130;
------------------------------------------------
+```
+
+```
 Last Level 1 BMB:  0x02800080
 Last Level II BMB:  0x02800081
 Last Level III BMB:  0x00000000
@@ -419,11 +467,11 @@ Last Level III BMB:  0x00000000
 
 ## extent管理
 
+### extent分配
+
+#### 数据增长时会自动分配extent
 
 ```SQL
-extent管理：
-
-extent分配：
 create table t07 (x int,name varchar2(20));
 insert into t07 values (1,'Tom');
 commit;
@@ -433,12 +481,18 @@ SQL> select file_id,block_id,blocks from dba_extents where segment_name='T07';
    FILE_ID   BLOCK_ID	  BLOCKS
 ---------- ---------- ----------
 	 4	  128	       8
+```
 
-数据增长时会自动分配extent！
-手工扩展：
+
+
+#### 手工扩展
+
+```sql
 alter table t07 allocate extent (size 128k);
+```
 
 extent空间分配算法（类型）：
+```sql
 select tablespace_name,allocation_type from dba_tablespaces;
 SYSTEM :系统扩展，阶梯增长
 1~16 extent   : 8*8K
@@ -457,8 +511,10 @@ SQL> select blocks,count(*) from dba_extents where segment_name='T07' group by b
 
 UNIFORM:同一分配（extent的尺寸不变）
 create tablespace tbs06 datafile '/testdata/tbs06.dbf' size 100m uniform size 10m;
+```
 
-extent回收：
+### extent回收
+```sql
 alter table scott.t05 deallocate unused;
 
 alter table t05 enable row movement;
@@ -472,8 +528,9 @@ drop
 
 ## oracle block空间管理
 
+### block空间管理
+
 ```SQL
-oracle block空间管理:
 SQL> show parameter db_block_size
 
 NAME				     TYPE	 VALUE
@@ -497,8 +554,11 @@ SQL> select file_id,block_id,blocks from dba_extents where segment_name='T09';
 	 4	  384	       8
 
 384\385\386\387\388\389\390\391
+```
 
-计算行的分布情况:
+### 计算行的分布情况
+
+```sql
 SQL> select dbms_rowid.rowid_block_number(rowid),count(*) from scott.t09 group by dbms_rowid.rowid_block_number(rowid) order by 1;
 
 DBMS_ROWID.ROWID_BLOCK_NUMBER(ROWID)   COUNT(*)
