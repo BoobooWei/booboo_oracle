@@ -1,3 +1,59 @@
+# PLSQL-变量
+
+> 2019.12.29 BoobooWei
+
+<!-- MDTOC maxdepth:6 firsth1:1 numbering:1 flatten:0 bullets:0 updateOnSave:1 -->
+
+1. [PLSQL-变量](#plsql-变量)   
+&emsp;1.1. [为什么要使用 pl/sql](#为什么要使用-plsql)   
+&emsp;1.2. [块的结构和声明变量](#块的结构和声明变量)   
+&emsp;1.3. [使用变量](#使用变量)   
+&emsp;&emsp;1.3.1. [变量的优点](#变量的优点)   
+&emsp;&emsp;1.3.2. [设置变量的语法](#设置变量的语法)   
+&emsp;&emsp;1.3.3. [变量的命名规则](#变量的命名规则)   
+&emsp;&emsp;1.3.4. [变量的作用范围](#变量的作用范围)   
+&emsp;&emsp;1.3.5. [`%TYPE`属性](#%type属性)   
+&emsp;1.4. [流程控制](#流程控制)   
+&emsp;&emsp;1.4.1. [条件判断](#条件判断)   
+&emsp;&emsp;&emsp;1.4.1.1. [`IF`条件判断](#if条件判断)   
+&emsp;&emsp;&emsp;1.4.1.2. [`CASE`条件判断](#case条件判断)   
+&emsp;&emsp;1.4.2. [循环](#循环)   
+&emsp;&emsp;&emsp;1.4.2.1. [基本循环loop](#基本循环loop)   
+&emsp;&emsp;&emsp;1.4.2.2. [While 循环](#while-循环)   
+&emsp;&emsp;&emsp;1.4.2.3. [For循环](#for循环)   
+&emsp;1.5. [实践](#实践)   
+&emsp;&emsp;1.5.1. [实践1-书写一个最简单的块，运行并查看结果](#实践1-书写一个最简单的块，运行并查看结果)   
+&emsp;&emsp;1.5.2. [实践2-在块中操作变量](#实践2-在块中操作变量)   
+&emsp;&emsp;1.5.3. [实践3-在块中操作变量理解`%TYPE`属性](#实践3-在块中操作变量理解%type属性)   
+&emsp;&emsp;1.5.4. [实践4-在块中操作表的数据](#实践4-在块中操作表的数据)   
+&emsp;&emsp;1.5.5. [实践5-在块中的分支操作`IF`语句](#实践5-在块中的分支操作if语句)   
+&emsp;&emsp;1.5.6. [实践6-在块中的分支操作`CASE`语句](#实践6-在块中的分支操作case语句)   
+
+<!-- /MDTOC -->
+
+## 为什么要使用 pl/sql
+
+* 便于维护(模块化)
+* 提高数据安全性和完整性(通过程序操作数据)
+* 提高性能(编译好的)
+* 简化代码(反复调用)
+
+## 块的结构和声明变量
+
+* 块：是 PL/SQL 的基石；程序都是通过块组成。
+* 匿名块：没有名称的块叫匿名块，完成一定的功能。
+
+|模块的组成|说明|是否必要|
+|:--|:--|:--|
+|`DECLARE`|变量声明部分|非|
+|`Begin`|逻辑处理执行部分的开始|是|
+|`Exception`|错误处理部分|非|
+|`End`|逻辑处理结束|是|
+| `/` |`Begin` 语句的提交|是|
+
+```plsql
+--是行注释
+/* */是多行注释
 declare
   --私有变量声明
 begin
@@ -6,291 +62,310 @@ exception
   --异常处理
 end;
 /
+```
 
+## 使用变量
+
+### 变量的优点
+
+* 用来存储数据
+* 操作存储的数据
+* 可以重复应用
+* 使维护工作简单
+
+### 设置变量的语法
+
+```PLSQL
+identifier [CONSTANT] datatype [NOT NULL] [:= | DEFAULT expr];
+```
+
+* `[ ]`内为可选项
+* 每行定义一个变量
+* 在 declare 部分声明
+* 如果设置了`Not null` 一定要给初值
+* `CONSTANT` 也一定要给值
+* `:=` 为赋值，`=`为逻辑判断，判断是否相等。
+
+### 变量的命名规则
+
+* 在不同的模块中，变量可以重名
+* 变量的名称不应该和模块中引用的列的名称相同
+* 变量名称应该有一定的可读性
+
+
+### 变量的作用范围
+
+* 外部模块变量可以传到内部模块
+* 内部模块的变量不会影响外部
+
+
+### `%TYPE`属性
+
+* 声明一个变量和某列数据类型相同
+* 声明一个变量和另外一个变量数据类型一致
+
+减小程序的无效的可能性，可以不知道列的数据类型，定义一个与之相同的变量。
+
+```PLSQL
+v_name emp.ename%TYPE;
+v_balance NUMBER(7,2);
+v_min_balance v_balance%TYPE := 10;
+```
+
+## 流程控制
+
+### 条件判断
+
+#### `IF`条件判断
+
+分支就是树的结构，条件就是分支的选择，我们只能走到一个支干上，即使每个条件都符合，我们也只能 操作一个支干的语句。
+
+* `IF`-`THEN`-`END IF`
+* `IF`-`THEN`-`ELSE`-`END IF `
+* `IF`-`THEN`-`ELSIF`-`END IF`
+
+语法
+
+```plsql
+IF condition
+THEN statements;
+[ELSIF condition THEN statements;]
+[ELSE
+statements;]
+END IF;
+```
+
+#### `CASE`条件判断
+
+语法
+
+```SQLPLUS
+CASE v1
+WHEN 'A' THEN 'Excellent'
+WHEN 'B' THEN 'Very Good'
+WHEN 'C' THEN 'Good'
+ELSE 'No such grade'
+END;
+```
+
+### 循环
+
+#### 基本循环loop
+
+```PLSQL
+Declare
+v1 number(2) :=1;
+Begin
+Loop
+insert into t1 values (v1);
+v1:=v1+1;
+Exit When v1>10 ;
+End loop;
+End; /
+```
+
+建立实验表 t1，我们将想 t1 表中加入数据。
+
+```PLSQL
+drop table t1 purge;
+create table t1 (c1 number(2));
+select * from t1;
+```
+Loop 循环必须含有退出的条件，而且该条件一定要每次循环都要变化，如果没有变化就是死循环，死循环的结果就是 cpu 总是 100%，你可以重新启动数据库来消除死循环。
+
+
+
+
+#### While 循环
+
+#### For循环
+
+
+
+
+
+## 实践
+
+### 实践1-书写一个最简单的块，运行并查看结果
+
+> 先设定 SQLPLUS 的环境变量，如果不指定默认值为不输出，设定后用 `show` 来验证。
+
+
+```SQLPLUS
 set serveroutput on
+show serveroutput
+```
+
+该实验的目的是掌握简单的 pl/sql 语法，执行一个最简单的匿名块。
+
+书写一个最简单的块，将字符串输出到屏幕。使用的是 `sqlplus` 输出 `Hello world`。
+
+```sqlplus
+begin
+dbms_output.put_line('-----------------Begin------------------');
+dbms_output.put_line('hello world');
+dbms_output.put_line('-----------------End------------------');
+end;
+/
+```
+
+每句话以分号结束，最后加上 `/`。
+
+### 实践2-在块中操作变量
+
+该实验的目的是掌握在 pl/sql 块中操作变量。
+
+说出一下变量定义的含义。
+
+```PLSQL
+DECLARE
+v_hiredate DATE;
+v_deptno NUMBER(2) NOT NULL := 10;
+v_location VARCHAR2(13) := 'Atlanta';
+c_comm CONSTANT NUMBER := 1400;
+v_valid BOOLEAN NOT NULL := TRUE;
+```
+
+### 实践3-在块中操作变量理解`%TYPE`属性
+
+该实验的目的是掌握参数定义时的`%TYPE`属性。
+
+```PLSQL
+DECLARE
+v_sal NUMBER (9,2);
+g_monthly_sal v_sal%TYPE := 10;
+BEGIN
+/* Compute the annual salary based on the
+monthly salary input from the user */
+v_sal := g_monthly_sal * 12;
+dbms_output.put_line(v_sal);
+END; -- This is the end of the block
+/
+```
+
+### 实践4-在块中操作表的数据
+
+该实验的目的是掌握在 pl/sql 块中操作数据库中的表，通过`select..into..`将表中的数据放入到变量。
+
+1. 取表中的数据
+
+* 一定要有 into
+* 一次只能操作一行，
+* 操作多行得用循环
+* 变量类型和个数要匹配
+
+```PLSQL
 declare
-  v_message varchar2(50);
+v1 emp.ename%type;
+v2 emp.sal%type;
 begin
-  v_message := 'My First PL/Sql Block!';
-  dbms_output.put_line(v_message);
+select ename,sal into v1,v2 from emp where empno=7900;
+dbms_output.put_line(v1);
+dbms_output.put_line(v2);
 end;
 /
+```
 
+2. 删除表中的数据并打印删除的行数
+
+DML 语句和 SQL 相同，使用隐式游标的属性来控制 DML，有四种隐式的游标：
+* `SQL%ROWCOUNT`
+* `SQL%FOUND`
+* `SQL%NOTFOUND`
+* `SQL%ISOPEN`
+
+```PLSQL
 declare
-  v_count CONSTANT number:=10;
+v1 emp.deptno%type :=20;
+v2 number;
 begin
-  dbms_output.put_line(v_count);
+delete emp where deptno=v1;
+v2:=sql%rowcount;
+dbms_output.put_line('delete rows :');
+dbms_output.put_line(v2);
+rollback;
 end;
 /
+```
 
-declare
-  v_dd date not null:=to_date('2016-09-20','yyyy-mm-dd');
-begin
-  dbms_output.put_line(v_dd);
-end;
-/
+执行结果
 
-if条件判断：
-declare
-  v_flag number:=8000;
-begin
-  if v_flag<1000 then
-    dbms_output.put_line('1');
-  elsif v_flag>=1000 and v_flag<2000 then
-    dbms_output.put_line('2');
-  else
-    dbms_output.put_line('3');
-  end if;
-end;
-/
+```SQLPLUS
+SCOTT@testdb>select * from emp where deptno=20;
 
-case分枝选择：
-declare
-  v_grade char:=upper('&p_grade');
-  v_mess varchar2(30);
-begin
-  v_mess := case v_grade when 'A' then 'Excellent!'
-                         when 'B' then '很好'
-                         when 'C' then '好'
-                         when 'D' then '一般'
-           else '没有这样的等级' end;
-  dbms_output.put_line(v_mess);
-end;
-/
-
-循环遍历：
-1.基本loop循环
-declare
-  v_count number:=0;
-begin
-  loop
-    v_count:=v_count+1;
-    exit when v_count>10;
-    dbms_output.put_line(v_count);
-  end loop;
-end;
-/
-
-2.while循环
-declare
-  v_count number:=0;
-begin
-  while v_count<10 loop
-    v_count:=v_count+1;
-    dbms_output.put_line(v_count);
-  end loop;
-end;
-/
-
-3.for循环
-begin
-  for i in 1..10 loop
-    dbms_output.put_line(i);
-  end loop;
-end;
-/
-
-begin
-  for i in reverse 1..10 loop
-    dbms_output.put_line(i);
-  end loop;
-end;
-/
-
-4.循环嵌套:
-begin
-  for i in 1..10 loop
-    dbms_output.put(i||' ');
-  end loop;
-    dbms_output.put_line('');
-end;
-/
-
-begin
-  for m in 1..9 loop
-    for n in 1..m loop
-      dbms_output.put(n||'*'||m||'='||n*m||' ');
-    end loop;
-      dbms_output.put_line('');
-  end loop;
-end;
-/
-
-隔天取值
-set serverout on
-declare
-  v date;
-begin
-  for i in 1..10 loop
-    if mod(i,2)=1 then
-      select to_date('2009-01-01','yyyy-mm-dd')+i into v from dual;
-    end if;
-  end loop;
-end;
-/
-
-复合变量：
-1.数组:保存表中一列数据
-declare
-  type empno_list is varray (5) of number;
-  v_test empno_list;
-begin
-  v_test := empno_list();
-  v_test.extend;
-  v_test(1):='7369';
-  v_test.extend(2);
-  v_test(2):='7566';
-  v_test(3):='7499';
-  dbms_output.put_line(v_test(3));
-  dbms_output.put_line(v_test.count);
-end;
-/
+     EMPNO ENAME      JOB	       MGR HIREDATE	    SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7369 SMITH      CLERK	      7902 17-DEC-80	    800 		   20
+      7566 JONES      MANAGER	      7839 02-APR-81	   2975 		   20
+      7788 SCOTT      ANALYST	      7566 19-APR-87	   3000 		   20
+      7876 ADAMS      CLERK	      7788 23-MAY-87	   1100 		   20
+      7902 FORD       ANALYST	      7566 03-DEC-81	   3000 		   20
 
 declare
-  type empno_list is varray (5) of number;
-  v_test empno_list;
+v1 emp.deptno%type :=20;
+v2 number;
 begin
-  v_test := empno_list();
-  v_test.extend;
-  select empno into v_test(1) from emp where ename='SCOTT';
-  dbms_output.put_line(v_test(1));
+  5  delete emp where deptno=v1;
+v2:=sql%rowcount;
+dbms_output.put_line('delete rows :');
+dbms_output.put_line(v2);
+rollback;
+end;
+ 11  /
+delete rows :
+5
+
+PL/SQL procedure successfully completed.
+```
+
+### 实践5-在块中的分支操作`IF`语句
+
+该实验的目的是掌握在 pl/sql 块中使用 if 语句进行分支操作。
+
+```PLSQL
+DECLARE
+v1 DATE := to_date('12-11-1990','mm-dd-yyyy');
+v2 BOOLEAN;
+BEGIN
+IF MONTHS_BETWEEN(SYSDATE,v1) > 5 THEN
+v2 := TRUE;
+dbms_output.put_line('True');
+ELSE
+v2 := FALSE;
+dbms_output.put_line('False');
+END IF;
 end;
 /
+```
 
-declare
-  type ename_list is varray (100) of varchar2(10);
-  v_test ename_list;
-begin
-  v_test := ename_list();
-  select ename bulk collect into v_test from emp;
-  for i in 1..v_test.count loop
-    dbms_output.put_line(v_test(i));
-  end loop;
-end;
+结果
+
+```PLSQL
+True
+
+PL/SQL procedure successfully completed.
+```
+
+
+### 实践6-在块中的分支操作`CASE`语句
+
+该实验的目的是掌握在 pl/sql 块中使用 `CASE` 语句进行分支操作。
+
+```PLSQL
+DECLARE
+v1 CHAR(1) := UPPER('&v1');
+v2 VARCHAR2(20);
+BEGIN
+v2 :=CASE v1
+WHEN 'A' THEN 'Excellent'
+WHEN 'B' THEN 'Very Good'
+WHEN 'C' THEN 'Good'
+ELSE 'No such grade'
+END;
+DBMS_OUTPUT.PUT_LINE (v1 || ' is  ' || v2); END;
 /
-2.record：保存表中一行数据
-declare
-  type dept_record is record
-  (deptno number(2),
-   dname varchar2(10),
-   loc varchar2(13));
-  r_dept dept_record;
-begin
-  select * into r_dept from dept where deptno=10;
-  dbms_output.put_line(r_dept.dname||' '||r_dept.loc);
-end;
-/
+```
 
-动态声明record：
-declare
-  r_dept dept%rowtype;
-begin
-  select * into r_dept from dept where deptno=10;
-  dbms_output.put_line(r_dept.dname||' '||r_dept.loc);
-end;
-/
-
-3.plsql表
-declare
-  type dept_table is table of varchar2(10) index by binary_integer;
-  v_dept dept_table;
-begin
-  v_dept(100):='Beijing';
-  v_dept(-1):='Shanghai';
-  v_dept(0):='Shenzhen';
-  dbms_output.put_line(v_dept(-1));
-end;
-/
-
-declare
-  type dept_table is table of dept%rowtype index by binary_integer;
-  v_dept dept_table;
-begin
-  v_dept(100).loc:='Beijing';
-  v_dept(-1).loc:='Shanghai';
-  v_dept(0).loc:='Shenzhen';
-  dbms_output.put_line(v_dept(-1).loc);
-end;
-/
-
-declare
-  v_count number;
-  type dept_table is table of dept%rowtype index by binary_integer;
-  v_dept dept_table;
-begin
-  select count(*) into v_count from dept;
-  for i in 1..v_count loop
-    select * into v_dept(i) from dept where deptno=i*10;
-    dbms_output.put_line(v_dept(i).loc);
-  end loop;
-end;
-/
-
-非pl/sql变量:
-var b1 number
-begin
-  select sal into :b1 from emp where ename='ALLEN';
-end;
-/
-
-游标变量：声明 --> 打开 --> 获取 --> 关闭
-declare
-  cursor c1 is select * from dept;
-  r1 c1%rowtype;
-begin
-  open c1;
-  fetch c1 into r1;
-  dbms_output.put_line(r1.loc);
-  fetch c1 into r1;
-  dbms_output.put_line(r1.loc);
-  close c1;
-end;
-/
-
-游标名字%rowcount
-游标名字%found
-游标名字%notfound
-游标名字%isopen
-
-declare
-  cursor c1 is select * from dept;
-  r1 c1%rowtype;
-begin
-  open c1;
-  loop
-    fetch c1 into r1;
-    exit when c1%notfound;
-    dbms_output.put_line(c1%rowcount);
-    dbms_output.put_line(r1.loc);
-  end loop;
-  close c1;
-end;
-/
-
-declare
-  cursor c1 is select * from dept;
-  r1 c1%rowtype;
-begin
-  open c1;
-  loop
-    fetch c1 into r1;
-    exit when c1%rowcount>2;
-    dbms_output.put_line(c1%rowcount);
-    dbms_output.put_line(r1.loc);
-  end loop;
-  close c1;
-end;
-/
-
-游标for循环
-declare
-  cursor c1 is select * from dept;
-begin
-  for r1 in c1 loop
-    dbms_output.put_line(r1.loc);
-  end loop;
-end;
-/
-
-
-
+Null 的逻辑运算真值表
+* True and null 结果为 null
+* Flase and null 结果为 flase
