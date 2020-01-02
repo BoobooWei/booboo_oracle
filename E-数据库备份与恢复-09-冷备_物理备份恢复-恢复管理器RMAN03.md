@@ -320,7 +320,7 @@ RMAN> run {
 allocate channel ch1 device type disk;
 allocate channel ch2 device type disk;
 allocate channel ch3 device type disk;
-ackup incremental level=0
+backup incremental level=0
 format '/u01/app/oracle/rmanbak/df_%d_%U'
 (datafile 1 channel ch1 tag='sys')
 (datafile 3 channel ch2 tag='aux')
