@@ -1,0 +1,15 @@
+run {
+configure retention policy to recovery window of 14 days;
+configure controlfile autobackup on;
+allocate channel ch1 type disk;
+backup as compressed backupset  incremental level 1
+format '/home/oracle/rmbk/%T/incr1_%d_%U'
+tag 'day_incr1'
+database plus archivelog delete input;
+crosscheck backup;
+crosscheck archivelog all;
+delete noprompt obsolete;
+delete noprompt  expired backup;
+delete noprompt  expired archivelog all;
+release channel ch1;
+}
