@@ -1,0 +1,347 @@
+centos6.7 intall oracle 11g rac 2nodes
+
+
+配置重点：
+1.所有节点都要关闭防火墙和SeLinux
+2.每个节点都要有至少两个物理网卡
+3.所有节点的public IP指定网关
+4.安装集群之前VIP不能ping通
+5.配置所有节点的grid用户的信任关系、oracle用户的信任关系
+6.配置NTP(x)
+7.配置DNS
+8.配置共享存储
+
+
+规划两个节点的IP地址：
+[root@node1 named]# cat /etc/hosts
+# Public Network - (eth1)
+192.168.14.146 node1
+192.168.14.147 node2
+
+# Private Interconnect - (eth2)
+192.168.220.128 node1-priv
+192.168.220.129 node2-priv
+
+# Public Virtual IP (eth0:xx)
+192.168.14.200 node1-vip
+192.168.14.201 node2-vip
+
+按照hosts文件配置两个节点的网卡，public ip一定要指定网关！
+[root@node1 ~]# vim /etc/sysconfig/network-scripts/ifcfg-eth0
+DEVICE="eth1"
+BOOTPROTO="static"
+HWADDR="00:0C:29:BB:7B:CD"
+IPADDR=192.168.14.146
+NETMASK=255.255.255.0
+GATEWAY=192.168.14.2
+IPV6INIT="yes"
+NM_CONTROLLED="yes"
+ONBOOT="yes"
+TYPE="Ethernet"
+UUID="63398f7d-c992-40fa-8b6b-11613d66a618"
+DNS=192.168.14.146
+
+
+[root@node2 ~]# vim /etc/sysconfig/network-scripts/ifcfg-eth0
+DEVICE="eth1"
+BOOTPROTO="static"
+HWADDR="00:0C:29:F5:00:3D"
+IPADDR=192.168.14.147
+NETMASK=255.255.255.0
+GATEWAY=192.168.14.2
+IPV6INIT="yes"
+NM_CONTROLLED="yes"
+ONBOOT="yes"
+TYPE="Ethernet"
+UUID="63398f7d-c992-40fa-8b6b-11613d66a618"
+DNS=192.168.4.146
+
+[root@node1 ~]# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.14.0    0.0.0.0         255.255.255.0   U     1      0        0 eth1
+192.168.220.0   0.0.0.0         255.255.255.0   U     1      0        0 eth2
+0.0.0.0         192.168.14.2    0.0.0.0         UG    0      0        0 eth1
+
+
+创建组:
+groupadd -g 501 oinstall
+groupadd -g 502 dba
+groupadd -g 503 oper
+groupadd -g 504 asmadmin
+groupadd -g 505 asmdba
+groupadd -g 506 asmoper
+创建用户
+useradd -u 502 -g oinstall -G dba,asmadmin,asmdba,asmoper grid
+useradd -u 501 -g oinstall -G dba,oper,asmdba,asmadmin oracle
+修改用户口令
+echo grid | passwd --stdin grid
+echo oracle | passwd --stdin oracle
+
+修改grid用户配置文件
+vi /home/grid/.bashrc
+----------------------------------------------------------
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=/u01/grid
+export ORACLE_OWNER=oracle
+export ORACLE_SID=+ASM1 #rac2节点为ORACLE_SID=+ASM2
+export ORACLE_TERM=vt100
+export THREADS_FLAG=native
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$LD_LIBRARY_PATH
+export PATH=$ORACLE_HOME/bin:$PATH
+export LANG=en_US
+alias sqlplus='rlwrap sqlplus'
+alias lsnrctl='rlwrap lsnrctl'
+alias asmcmd='rlwrap asmcmd'
+
+
+vi /home/grid/.bashrc
+----------------------------------------------------------
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=/u01/grid
+export ORACLE_OWNER=oracle
+export ORACLE_SID=+ASM2 
+export ORACLE_TERM=vt100
+export THREADS_FLAG=native
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$LD_LIBRARY_PATH
+export PATH=$ORACLE_HOME/bin:$PATH
+export LANG=en_US
+alias sqlplus='rlwrap sqlplus'
+alias lsnrctl='rlwrap lsnrctl'
+alias asmcmd='rlwrap asmcmd'
+
+
+
+修改oracle用户配置文件
+vi /home/oracle/.bashrc
+----------------------------------------------------------
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=$ORACLE_BASE/product/11.2.0/db_1
+export ORACLE_OWNER=oracle
+export ORACLE_SID=orcl1
+export ORACLE_TERM=vt100
+export THREADS_FLAG=native
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$LD_LIBRARY_PATH
+export PATH=$ORACLE_HOME/bin:$PATH
+export EDITOR=vi
+export SQLPATH=/home/oracle
+export LANG=en_US
+alias sqlplus='rlwrap sqlplus'
+alias lsnrctl='rlwrap lsnrctl'
+alias rman='rlwrap rman'
+alias dgmgrl='rlwrap dgmgrl'
+
+
+修改主机shell限制
+vi /etc/security/limits.conf
+------------------------------------------
+#grid & oracle configure shell parameters
+grid soft nofile 65536
+grid hard nofile 65536
+grid soft nproc 16384
+grid hard nproc 16384
+
+oracle soft nofile 65536
+oracle hard nofile 65536
+oracle soft nproc 16384
+oracle hard nproc 16384
+------------------------------------------
+修改主机内核参数
+vi /etc/sysctl.conf
+------------------------------------------
+kernel.shmmax = 4294967296
+kernel.shmmni = 4096
+kernel.shmall = 2097152
+kernel.sem = 250 32000 100 128
+fs.file-max = 6815744
+fs.aio-max-nr = 1048576
+net.ipv4.ip_local_port_range = 9000 65500
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048586
+
+使内核参数生效
+/sbin/sysctl -p
+
+
+共享存储
+yum install -y iscsi-initiator-utils lsscsi
+iscsiadm -m discovery -t st -p 192.168.14.148
+iscsiadm -m node -l -p 192.168.14.148
+iscsiadm -m node -u -p 192.168.14.148
+
+在node1,和node2将磁盘初始化为rawdevice:
+vi /etc/udev/rules.d/60-raw.rules
+ACTION=="add", KERNEL=="sdb", RUN+="/bin/raw /dev/raw/raw1 %N"
+ACTION=="add", KERNEL=="sdc", RUN+="/bin/raw /dev/raw/raw2 %N"
+ACTION=="add", KERNEL=="sdd", RUN+="/bin/raw /dev/raw/raw3 %N"
+KERNEL=="raw[1-3]", MODE="0660", GROUP="asmadmin", OWNER="grid"
+
+start_udev
+
+[root@node2 ~]# ll /dev/raw
+total 0
+crw-rw---- 1 grid asmadmin 162, 1 Jan  5 23:15 raw1
+crw-rw---- 1 grid asmadmin 162, 2 Jan  5 23:15 raw2
+crw-rw---- 1 grid asmadmin 162, 3 Jan  5 23:15 raw3
+crw-rw---- 1 root disk     162, 0 Jan  5 23:15 rawctl
+
+
+创建相关目录：
+mkdir -p /u01/grid
+chown -R grid:oinstall /u01/grid
+mkdir -p /u01/app/oracle
+chown -R oracle:oinstall /u01/app/
+chmod -R 775 /u01/
+mkdir -p /u01/install
+chown -R grid:oinstall /u01/install
+chmod -R 777 /u01/install
+
+###############################################################################
+将grid安装包上传到rac1:
+scp p13390677_112040_Linux-x86-64_* root@192.168.14.146:/u01/install/
+
+
+
+配置NTP 删除ntpd
+矫正
+ntpdate 120.25.115.20 
+
+
+配置grid用户的信任关系
+
+待图形化界面配置
+
+
+
+配置DNS
+
+
+yum install -y bind bind-chroot
+
+vim /etc/named.conf
+//
+// named.conf
+//
+// Provided by Red Hat bind package to configure the ISC BIND named(8) DNS
+// server as a caching only nameserver (as a localhost DNS resolver only).
+//
+// See /usr/share/doc/bind*/sample/ for example named configuration files.
+//
+
+options {
+	listen-on port 53 { any; };
+	listen-on-v6 port 53 { any; };
+	directory 	"/var/named";
+	dump-file 	"/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        memstatistics-file "/var/named/data/named_mem_stats.txt";
+	allow-query     { any; };
+	recursion yes;
+
+	dnssec-enable yes;
+	dnssec-validation yes;
+	dnssec-lookaside auto;
+
+	/* Path to ISC DLV key */
+	bindkeys-file "/etc/named.iscdlv.key";
+
+	managed-keys-directory "/var/named/dynamic";
+};
+
+logging {
+        channel default_debug {
+                file "data/named.run";
+                severity dynamic;
+        };
+};
+
+zone "." IN {
+	type hint;
+	#file "named.ca";
+        file "/dev/null";
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
+
+sed -i 's/{ .*; };/{ any; };/' /etc/named.conf
+
+vim /etc/named.rfc1912.zones
+
+zone "oracle.com" IN {
+       type master;
+       file "oracle.com.zone";
+       allow-update { none; };
+};
+
+zone "14.168.192.in-addr.arpa" IN {
+       type master;
+       file "14.168.192.local";
+       allow-update { none; };
+};
+
+
+cat /var/named/14.168.192.local 
+$TTL    86400
+@       IN      SOA     dns.oracle.com. root.oracle.com.  (
+                                      1997022700 ; Serial
+                                      28800      ; Refresh
+                                      14400      ; Retry
+                                      3600000    ; Expire
+                                      86400 )    ; Minimum
+@       IN      NS      dns.oracle.com.
+146       IN      PTR     node1.oracle.com.
+147      IN      PTR     node2.oracle.com.
+12     IN      PTR     scan.oracle.com.
+11     IN      PTR     scan.oracle.com.
+10     IN      PTR     scan.oracle.com. 
+
+
+[root@node1 named]# cat /var/named/oracle.com.zone 
+$TTL 1D
+@       IN SOA  @ rname.invalid. (
+                                        0       ; serial
+                                        1D      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+        NS      @
+	 	IN 	A	192.168.14.146
+node1    	IN      A       192.168.14.146
+node2    	IN      A       192.168.14.147
+scan    	IN      A       192.168.14.12
+scan    	IN      A       192.168.14.11
+scan    	IN      A       192.168.14.10
+
+
+[root@node1 ~]# service named start
+Generating /etc/rndc.key:                                  [  OK  ]
+Starting named:                                            [  OK  ]
+[root@node1 ~]# chkconfig named on
+
+
+开始安装
+======================
+解压缩：
+su - grid
+unzip p13390677_112040_Linux-x86-64_3of7.zip
+
+所有节点都要安装校验磁盘组需要的rpm包：
+rpm -ivh /home/grid/grid/rpm/cvuqdisk-1.0.9-1.rpm
+
+校验集群安装的可行性：
+cd grid/
+./runcluvfy.sh stage -pre crsinst -n rac1,rac2 -fixup -verbose
+
+/u01/grid/bin/cluvfy stage -post crsinst -n rac1,rac2 -verbose
+
+
+
+
+
+
+
+
+
