@@ -6,15 +6,15 @@
 set_resource_plan(){
 ## 节点主机名，公网ip，内网ip，外网虚拟ip，scan-ip
 node1_hostname=rac1
-node1_public_ip=eth0:172.16.1.19
-node1_public_vip=172.16.1.29
+node1_public_ip=eth0:172.16.10.19
+node1_public_vip=172.16.10.29
 node1_private_ip=eth1:172.16.2.75
-scan_ip=172.16.1.88
+scan_ip=172.16.10.88
 scan_name=rac-cluster
 
 node2_hostname=rac2
-node2_public_ip=eth0:172.16.1.20
-node2_public_vip=172.16.1.30
+node2_public_ip=eth0:172.16.10.20
+node2_public_vip=172.16.10.30
 node2_private_ip=eth1:172.16.2.76
 
 ## 路径
@@ -316,19 +316,21 @@ make && make install
 
 # rac1
 supernode -l 22087 >/dev/null 2>&1 &
-/usr/sbin/edge -a 172.16.1.29 -s 255.255.255.0 -E -c racnet1 -k Password -l 172.16.1.19:22087 -d eth2  -r
+/usr/sbin/edge -a 172.16.10.19 -s 255.255.255.0 -E -c racnet1 -k Password -l 172.16.1.19:22087 -d eth2  -r
 
 cat >> /etc/rc.local << "EOF"
-/usr/sbin/edge -a 172.16.1.29 -s 255.255.255.0 -E -c racnet1 -k Password -l 172.16.1.19:22087 -d eth2  -r
-EOF
+supernode -l 22087 >/dev/null 2>&1 &
+/usr/sbin/edge -a 172.16.10.19 -s 255.255.255.0 -E -c racnet1 -k Password -l 172.16.1.19:22087 -d eth2  -r
 
 # rac2
 supernode -l 22087 >/dev/null 2>&1 &
-/usr/sbin/edge -a 172.16.1.30 -s 255.255.255.0 -E -c racnet1 -k Password -l 172.16.1.19:22087 -d eth2  -r
+/usr/sbin/edge -a 172.16.10.20 -s 255.255.255.0 -E -c racnet1 -k Password -l 172.16.1.19:22087 -d eth2  -r
 
 cat >> /etc/rc.local << "EOF"
-/usr/sbin/edge -a 172.16.1.30 -s 255.255.255.0 -E -c racnet1 -k Password -l 172.16.1.19:22087 -d eth2  -r
+supernode -l 22087 >/dev/null 2>&1 &
+/usr/sbin/edge -a 172.16.10.20 -s 255.255.255.0 -E -c racnet1 -k Password -l 172.16.1.19:22087 -d eth2  -r
 EOF
+
 
 
 # 16 配置节点间的ssh信任
@@ -370,6 +372,14 @@ start_udev
 
 
 # 18 grid安装验证
+cd /lib64/
+ln -s libcap.so.2.16 libcap.so.1
+
+crs_stat -t
+
+# 19 创建DATA 磁盘组
+asmca
+
 }
 
 set_resource_plan
