@@ -341,7 +341,7 @@ ENDF
 
 start_udev
 lsscsi
-ll /dev/raw
+ls -l /dev/raw
 }
 
 set_oracle_pre_install(){
