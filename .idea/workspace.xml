@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="8f60284b-d130-42b8-be7b-c0c9d7741cce" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rac/00-在阿里云ECS上搭建Oracle11g RAC说明.md" beforeDir="false" afterPath="$PROJECT_DIR$/rac/00-在阿里云ECS上搭建Oracle11g RAC说明.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rac/01-在阿里云ECS上搭建Oracle11g RAC实施方案.md" beforeDir="false" afterPath="$PROJECT_DIR$/rac/01-在阿里云ECS上搭建Oracle11g RAC实施方案.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/AutoInstallRac.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/AutoInstallRac.sh" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -18,19 +16,17 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scripts/AutoInstallRac.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="420">
-              <caret line="419" selection-start-line="419" selection-end-line="419" />
-              <folding>
-                <element signature="n#!!block;n#set_resource_plan#0" />
-                <element signature="n#!!block;n#set_oracle_comm_env#0" />
-                <element signature="n#!!block;n#set_oracle_rac1_env#0" />
-                <element signature="n#!!block;n#set_oracle_rac2_env#0" />
-                <element signature="n#!!block;n#set_n2n#0" />
-                <element signature="n#!!block;n#set_n2n_node1#1" />
-                <element signature="n#!!block;n#set_isscsi_node1#0" />
-                <element signature="n#!!block;n#set_isscsi_node2#0" />
-                <element signature="n#!!block;n#set_oracle_pre_install#0" />
-              </folding>
+            <state relative-caret-position="353">
+              <caret line="505" selection-start-line="505" selection-end-line="505" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/rac/grid.rsp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="15">
+              <caret line="1" column="32" lean-forward="true" selection-start-line="1" selection-start-column="16" selection-end-line="1" selection-end-column="32" />
             </state>
           </provider>
         </entry>
@@ -45,7 +41,12 @@
       <find>export PS1=[\`whoami\`@\`hostname\`:'\$PWD']&quot;# &quot;</find>
       <find>scan_name</find>
       <find>node2_domain_pub</find>
+      <find>scsi</find>
+      <find>echo_read</find>
     </findStrings>
+    <replaceStrings>
+      <replace>echo_red</replace>
+    </replaceStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -71,6 +72,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -92,7 +94,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -131,12 +132,13 @@
       <option name="presentableId" value="Default" />
       <updated>1578371156319</updated>
       <workItem from="1578371159095" duration="20158000" />
-      <workItem from="1578405829516" duration="15070000" />
+      <workItem from="1578405829516" duration="18358000" />
+      <workItem from="1578535085564" duration="1715000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="35228000" />
+    <option name="totallyTimeSpent" value="40231000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -151,7 +153,7 @@
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24297924" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24603175" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -165,7 +167,7 @@
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info anchor="bottom" id="Terminal" order="11" visible="true" weight="0.2387755" />
+      <window_info anchor="bottom" id="Terminal" order="11" visible="true" weight="0.21632653" />
       <window_info anchor="bottom" id="Python Console" order="12" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -188,26 +190,15 @@
     <entry file="file://$PROJECT_DIR$/rac/11.2.0-grid-root.sh" />
     <entry file="file://$PROJECT_DIR$/rac/grid.rsp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="506">
-          <caret line="47" column="12" lean-forward="true" selection-start-line="47" selection-start-column="12" selection-end-line="47" selection-end-column="12" />
+        <state relative-caret-position="15">
+          <caret line="1" column="32" lean-forward="true" selection-start-line="1" selection-start-column="16" selection-end-line="1" selection-end-column="32" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/AutoInstallRac.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="419" selection-start-line="419" selection-end-line="419" />
-          <folding>
-            <element signature="n#!!block;n#set_resource_plan#0" />
-            <element signature="n#!!block;n#set_oracle_comm_env#0" />
-            <element signature="n#!!block;n#set_oracle_rac1_env#0" />
-            <element signature="n#!!block;n#set_oracle_rac2_env#0" />
-            <element signature="n#!!block;n#set_n2n#0" />
-            <element signature="n#!!block;n#set_n2n_node1#1" />
-            <element signature="n#!!block;n#set_isscsi_node1#0" />
-            <element signature="n#!!block;n#set_isscsi_node2#0" />
-            <element signature="n#!!block;n#set_oracle_pre_install#0" />
-          </folding>
+        <state relative-caret-position="353">
+          <caret line="505" selection-start-line="505" selection-end-line="505" />
         </state>
       </provider>
     </entry>

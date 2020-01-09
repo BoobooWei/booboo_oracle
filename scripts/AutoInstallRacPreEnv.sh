@@ -3,7 +3,7 @@
 # Usage: bash AutoInstallRac.sh 1|2
 # 测试脚本，共享存储通过node1节点搭建iscsi实现。
 
-echo_read(){
+echo_red(){
 echo -e "\e[1;31m$1\033[0m"
 }
 
@@ -12,12 +12,11 @@ echo -e "\e[1;32m$1\033[0m"
 }
 
 set_resource_plan(){
-
 ssh_port=22
 database_name=racdb # 数据库名称
 
 node1_hostname=rac1 # 节点1 名称，主机名，实例名
-node1_physic_ip=eth0:172.16.1.19 # 节点1 真实的物理网卡和地址
+node1_physic_ip=eth0:172.16.1.24 # 节点1 真实的物理网卡和地址
 node1_public_ip=eth1:172.16.10.19 # 节点1 公共IP 网卡和地址
 node1_public_vip=172.16.10.29 # 节点1 虚拟IP 网卡和地址
 node1_private_ip=eth2:172.16.2.75 # 节点1 专用IP 网卡和地址
@@ -27,7 +26,7 @@ node1_domain_pri=(rac1-priv rac1-priv.example.com) # 节点1 专用IP 域名
 
 
 node2_hostname=rac2 # 节点2 名称，主机名，实例名
-node2_physic_ip=eth0:172.16.1.20 # 节点2 真实的物理网卡和地址
+node2_physic_ip=eth0:172.16.1.23 # 节点2 真实的物理网卡和地址
 node2_public_ip=eth1:172.16.10.20 # 节点2 公共IP 网卡和地址
 node2_public_vip=172.16.10.30 # 节点2 虚拟IP 网卡和地址
 node2_private_ip=eth2:172.16.2.76 # 节点2 专用IP 网卡和地址
@@ -79,24 +78,24 @@ node2_mem=`ssh ${node2_physic_ip_addr} -p ${ssh_port} cat /proc/meminfo | grep M
 node1_os=`cat /etc/redhat-release`
 node2_os=`ssh ${node2_physic_ip_addr} -p ${ssh_port} cat /etc/redhat-release`
 
-echo_read "节点信息"
+echo_red "节点信息"
 printf "%-20s %-10s %-20s %-20s %-20s %-20s \n"  节点名称 数据库名称 处理器 内存 操作系统
 printf "%-20s %-10s %-10s %-10s %-10s %-20s \n"  ${node1_hostname} ${database_name} ${node1_cpu} ${node1_mem} "${node1_os}"
 printf "%-20s %-10s %-10s %-10s %-10s %-20s \n"  ${node2_hostname} ${database_name} ${node2_cpu} ${node2_mem} "${node2_os}"
 
-echo_read "资源规划-全局参数配置"
+echo_red "资源规划-全局参数配置"
 printf "%-25s %-25s %-25s %-25s %-20s %-20s \n"  节点名称 公共IP-网卡 虚拟IP-网卡 专用IP-网卡 SCAN-IP SCAN名称
-printf "%-20s %-20s %-20s %-20s %-20s %-20s \n"  ${node1_hostname} ${node1_public_ip_addr}-${node1_public_ip_eth} ${node1_public_vip}-${node1_public_vip_eth} ${node1_private_ip_addr}-${node1_private_ip_eth} ${scan_ip} ${scan_name}
-printf "%-20s %-20s %-20s %-20s %-20s %-20s \n"  ${node2_hostname} ${node2_public_ip_addr}-${node2_public_ip_eth} ${node2_public_vip}-${node2_public_vip_eth} ${node2_private_ip_addr}-${node2_private_ip_eth}
+printf "%-20s %-20s %-20s %-20s %-20s %-20s \n"  ${node1_hostname} ${node1_public_ip_addr}-${node1_public_ip_eth} ${node1_public_vip} ${node1_private_ip_addr}-${node1_private_ip_eth} ${scan_ip} ${scan_name}
+printf "%-20s %-20s %-20s %-20s %-20s %-20s \n"  ${node2_hostname} ${node2_public_ip_addr}-${node2_public_ip_eth} ${node2_public_vip} ${node2_private_ip_addr}-${node2_private_ip_eth}
 
-echo_read "Oracle 软件组件"
+echo_red "Oracle 软件组件"
 printf "%-30s %-30s %-30s %-25s %-30s %-20s \n"  软件组件 操作系统用户 主组 辅助组 主目录 Oracle基目录/Oracle主目录
 printf "%-30s %-20s %-20s %-30s %-20s %-20s \n"  "Grid Infrastructure" "grid  " "oinstall" "asmadmin、asmdba、asmoper" "/home/grid  " "/alidata/app/grid,/u01/app/11.2.0/grid"
 printf "%-30s %-20s %-20s %-30s %-20s %-20s \n"  "Oracle RAC         " "oracle" "oinstall" "dba、oper、asmdba        " "/home/oracle" "/alidata/app/oracle,/alidata/app/oracle/product/11.2.0/dbhome_1"
 }
 
 set_oracle_comm_env(){
-echo_read "Oracle RAM COMMON 环境配置 开始"
+echo_red "Oracle RAM COMMON 环境配置 开始"
 echo_green "设置/etc/hosts文件"
 cat > /etc/hosts << ENDF
 # Public Network - (${node1_public_ip_eth})
@@ -215,7 +214,7 @@ mv /etc/ntp.conf /etc/ntp.conf.org
 }
 
 set_oracle_rac1_env(){
-echo_read "rac1环境配置 开始"
+echo_red "rac1环境配置 开始"
 echo_green "修改主机名"
 sed -i "/HOSTNAME/d;1aHOSTNAME=${node1_hostname}" /etc/sysconfig/network
 echo_green "设置oracle用户环境变量"
@@ -269,11 +268,11 @@ ENDF
 
 
 cat /tmp/ssh_oracle.sh
-echo_read "rac1环境配置 开始"
+echo_red "rac1环境配置 开始"
 }
 
 set_oracle_rac2_env(){
-echo_read "rac2环境配置 开始"
+echo_red "rac2环境配置 开始"
 echo_green "修改主机名"
 sed -i "/HOSTNAME/d;1aHOSTNAME=${node2_hostname}" /etc/sysconfig/network
 echo_green "设置oracle用户环境变量"
@@ -307,7 +306,7 @@ echo_green "配置节点间的ssh信任"
 cat > /tmp/ssh_grid.sh << ENDF
 ssh-keygen
 ssh-copy-id "-p ${ssh_port} grid@${node1_physic_ip_addr}"
-for i in ${node1_domain_pub[@]} ${node1_domain_pub_v[@]} ${node1_domain_pri[@]};do ssh $i date;done
+for i in ${node1_domain_pub[@]} ${node1_domain_pri[@]};do ssh \$i -p ${ssh_port} date;done
 # ssh grid@${node1_physic_ip_addr} bash /tmp/ssh_grid.sh
 # ssh oracle@${node1_physic_ip_addr} bash /tmp/ssh_oracle.sh
 ENDF
@@ -315,25 +314,25 @@ ENDF
 cat > /tmp/ssh_oracle.sh << ENDF
 ssh-keygen
 ssh-copy-id "-p ${ssh_port} grid@${node1_physic_ip_addr}"
-for i in ${node1_domain_pub[@]} ${node1_domain_pub_v[@]} ${node1_domain_pri[@]};do ssh $i date;done
+for i in ${node1_domain_pub[@]} ${node1_domain_pri[@]};do ssh \$i -p ${ssh_port} date;done
 # ssh grid@${node1_physic_ip_addr} bash /tmp/ssh_grid.sh
 # ssh oracle@${node1_physic_ip_addr} bash /tmp/ssh_oracle.sh
 ENDF
 
-echo_read "rac2环境配置 结束"
+echo_red "rac2环境配置 结束"
 }
 
 set_n2n_node1(){
-echo_read "安装配置N2N"
+echo_red "安装配置N2N"
 echo_green "下载N2N软件到目录 /software/patch"
 mkdir -p /software/patch
 cd /software/patch
-wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/n2n.tgz
+wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/n2n.tgz &> /dev/null
 cp /software/patch/n2n.tgz /alidata/
 cd /alidata
-tar -xvf n2n.tgz
+tar -xvf n2n.tgz &> /dev/null
 cd /alidata/n2n/n2n_v2/
-make && make install
+make  &> /dev/null && make install &> /dev/null
 echo_green "N2N 安装编译成功"
 echo_green "N2N 配置公共IP 网卡和地址和 专用IP 网卡和地址"
 
@@ -341,25 +340,28 @@ supernode -l 22087 >/dev/null 2>&1 &
 /usr/sbin/edge -a ${node1_public_ip_addr} -s 255.255.255.0 -E -c racnet1 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node1_public_ip_eth}  -r
 /usr/sbin/edge -a ${node1_private_ip_addr} -s 255.255.255.0 -E -c racnet2 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node1_private_ip_eth}  -r
 
-cat >> /etc/rc.local << "EOF"
+sed -i '/auto_install_rac_n2n_s/,/auto_install_rac_n2n_e/d' /etc/rc.local
+cat >> /etc/rc.local << ENDF
+# auto_install_rac_n2n_s
 supernode -l 22087 >/dev/null 2>&1 &
 /usr/sbin/edge -a ${node1_public_ip_addr} -s 255.255.255.0 -E -c racnet1 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node1_public_ip_eth}  -r
 /usr/sbin/edge -a ${node1_private_ip_addr} -s 255.255.255.0 -E -c racnet2 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node1_private_ip_eth}  -r
-EOF
-echo_read "安装配置N2N 结束"
+# auto_install_rac_n2n_e
+ENDF
+echo_red "安装配置N2N 结束"
 }
 
 set_n2n_node2(){
-echo_read "安装配置N2N 开始"
+echo_red "安装配置N2N 开始"
 echo_green "下载N2N软件到目录 /software/patch"
 mkdir -p /software/patch
 cd /software/patch
-wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/n2n.tgz
+wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/n2n.tgz  &> /dev/null
 cp /software/patch/n2n.tgz /alidata/
 cd /alidata
-tar -xvf n2n.tgz
+tar -xvf n2n.tgz &> /dev/null
 cd /alidata/n2n/n2n_v2/
-make && make install
+make  &> /dev/null && make install &> /dev/null
 echo_green "N2N 安装编译成功"
 echo_green "N2N 配置公共IP 网卡和地址和 专用IP 网卡和地址"
 
@@ -367,17 +369,20 @@ supernode -l 22087 >/dev/null 2>&1 &
 /usr/sbin/edge -a ${node2_public_ip_addr} -s 255.255.255.0 -E -c racnet1 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node2_public_ip_eth}  -r
 /usr/sbin/edge -a ${node2_private_ip_addr} -s 255.255.255.0 -E -c racnet2 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node2_private_ip_eth}  -r
 
-cat >> /etc/rc.local << "EOF"
+sed -i '/auto_install_rac_n2n_s/,/auto_install_rac_n2n_e/d' /etc/rc.local
+cat >> /etc/rc.local << ENDF
+# auto_install_rac_n2n_s
 /usr/sbin/edge -a ${node2_public_ip_addr} -s 255.255.255.0 -E -c racnet1 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node2_public_ip_eth}  -r
 /usr/sbin/edge -a ${node2_private_ip_addr} -s 255.255.255.0 -E -c racnet2 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node2_private_ip_eth}  -r
-EOF
-echo_read "安装配置N2N 结束"
+# auto_install_rac_n2n_e
+ENDF
+echo_red "安装配置N2N 结束"
 }
 
 set_isscsi_node1(){
-echo_read "配置存储target-测试使用"
+echo_red "配置存储target-测试使用"
 echo_green "服务端（rac1)"
-yum install -y scsi-target-utils
+yum install -y scsi-target-utils &> /dev/null
 cat >> /etc/tgt/targets.conf << ENDF
 <target iqn.2020-001.com.iscsi:oracle>
 backing-store ${shared_storage[0]}
@@ -390,7 +395,7 @@ chkconfig tgtd on
 tgtadm --lld iscsi --mode target --op show
 
 echo_green "配置存储客户端-测试使用(rac1)"
-yum install -y iscsi-initiator-utils lsscsi
+yum install -y iscsi-initiator-utils lsscsi  &> /dev/null
 iscsiadm -m discovery -t st -p ${node1_physic_ip_addr}
 iscsiadm -m node -l
 cat >> /etc/udev/rules.d/60-raw.rules << ENDF
@@ -400,12 +405,13 @@ KERNEL=="raw[1-2]", MODE="0660", GROUP="asmadmin", OWNER="grid"
 ENDF
 
 start_udev
-
+lsscsi
+ls -l  /dev/raw
 }
 
 set_isscsi_node2(){
-echo_read "配置存储客户端-测试使用(rac2)"
-yum install -y iscsi-initiator-utils lsscsi
+echo_red "配置存储客户端-测试使用(rac2)"
+yum install -y iscsi-initiator-utils lsscsi  &> /dev/null
 iscsiadm -m discovery -t st -p ${node1_physic_ip_addr}
 iscsiadm -m node -l
 
@@ -416,41 +422,43 @@ KERNEL=="raw[1-2]", MODE="0660", GROUP="asmadmin", OWNER="grid"
 ENDF
 
 start_udev
+lsscsi
+ll /dev/raw
 }
 
 set_oracle_pre_install(){
-echo_read "依赖软件包安装和Oracle RAC软件下载 开始"
+echo_red "依赖软件包安装和Oracle RAC软件下载 开始"
 echo_green "依赖软件包安装"
-yum groupinstall -y "Desktop"
-yum groupinstall -y "Desktop Platform"
-yum groupinstall -y "Desktop Platform Development"
-yum groupinstall -y "Fonts"
-yum groupinstall -y "General Purpose Desktop"
-yum groupinstall -y "Graphical Administration Tools"
-yum groupinstall -y "Graphics Creation Tools"
-yum groupinstall -y "Input Methods"
-yum groupinstall -y "X Window System"
-yum groupinstall -y "Chinese Support [zh]"
-yum groupinstall -y "Internet Browser"
-yum install libaio-devel -y
-yum install compat-libstdc++-33 -y
-yum install elfutils-libelf-devel -y
-yum install tcl -y
-yum install expect -y
-yum install glibc -y
-yum install libc.so.6 -y
-yum install libcap.so.1 -y
-yum install unixODBC-devel -y
-yum install sysstat -y
-yum install make -y
-yum install unzip -y
-yum install lrzsz -y
-yum install libstdc++-devel -y
-yum install gcc-c++ -y
-yum install smartmontools -y
-yum install subversion gcc-c++ openssl-devel -y
-yum install bind bind-chroot bind-util bind-libs -y
-yum install tigervnc-server -y
+yum groupinstall -y "Desktop"  &> /dev/null
+yum groupinstall -y "Desktop Platform"  &> /dev/null
+yum groupinstall -y "Desktop Platform Development"  &> /dev/null
+yum groupinstall -y "Fonts"  &> /dev/null
+yum groupinstall -y "General Purpose Desktop"  &> /dev/null
+yum groupinstall -y "Graphical Administration Tools"  &> /dev/null
+yum groupinstall -y "Graphics Creation Tools"  &> /dev/null
+yum groupinstall -y "Input Methods"  &> /dev/null
+yum groupinstall -y "X Window System"  &> /dev/null
+yum groupinstall -y "Chinese Support [zh]"  &> /dev/null
+yum groupinstall -y "Internet Browser"  &> /dev/null
+yum install libaio-devel -y  &> /dev/null
+yum install compat-libstdc++-33 -y  &> /dev/null
+yum install elfutils-libelf-devel -y  &> /dev/null
+yum install tcl -y  &> /dev/null
+yum install expect -y  &> /dev/null
+yum install glibc -y  &> /dev/null
+yum install libc.so.6 -y  &> /dev/null
+yum install libcap.so.1 -y  &> /dev/null
+yum install unixODBC-devel -y  &> /dev/null
+yum install sysstat -y  &> /dev/null
+yum install make -y  &> /dev/null
+yum install unzip -y  &> /dev/null
+yum install lrzsz -y  &> /dev/null
+yum install libstdc++-devel -y  &> /dev/null
+yum install gcc-c++ -y  &> /dev/null
+yum install smartmontools -y  &> /dev/null
+yum install subversion gcc-c++ openssl-devel -y  &> /dev/null
+yum install bind bind-chroot bind-util bind-libs -y  &> /dev/null
+yum install tigervnc-server -y  &> /dev/null
 
 echo_green "设置主机启动级别为5，即图形界面"
 sed -i 's/id:3:initdefault:/id:5:initdefault:/' /etc/inittab
@@ -460,47 +468,45 @@ mkdir -p /software/database
 mkdir -p /software/grid
 mkdir -p /software/patch
 
+echo_green "Oracle 集群软件 开始下载解压"
 cd /software/grid
-wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/p13390677_112040_Linux-x86-64_3of7.zip
-unzip p13390677_112040_Linux-x86-64_3of7.zip
+wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/p13390677_112040_Linux-x86-64_3of7.zip  &> /dev/null
+unzip p13390677_112040_Linux-x86-64_3of7.zip  &> /dev/null
+echo_green "Oracle 集群软件 下载解压完成"
 
+echo_green "Oracle 数据库软件 开始下载解压"
 cd /software/database
-wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/p13390677_112040_Linux-x86-64_1of7.zip
-wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/p13390677_112040_Linux-x86-64_2of7.zip
-unzip p13390677_112040_Linux-x86-64_1of7.zip
-unzip p13390677_112040_Linux-x86-64_2of7.zip
+wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/p13390677_112040_Linux-x86-64_1of7.zip  &> /dev/null
+wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/p13390677_112040_Linux-x86-64_2of7.zip  &> /dev/null
+unzip p13390677_112040_Linux-x86-64_1of7.zip  &> /dev/null
+unzip p13390677_112040_Linux-x86-64_2of7.zip  &> /dev/null
 chown -R oracle:oinstall /software/database
 chown -R grid:oinstall   /software/grid
+echo_green "Oracle 数据库软件 下载解压完成"
 
+echo_green "Oracle 其他软件 开始下载解压"
 cd /software/patch
-wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/n2n.tgz
-wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/oracleasmlib-2.0.4-1.el6.x86_64.rpm
-wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/cvuqdisk-1.0.9-1.rpm
-wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/oracleasm-support-2.1.8-1.el6.x86_64.rpm
-wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/kmod-oracleasm-2.0.8-15.el6_9.x86_64.rpm
-wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/pdksh-5.2.14-30.x86_64.rpm
+wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/oracleasmlib-2.0.4-1.el6.x86_64.rpm  &> /dev/null
+wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/cvuqdisk-1.0.9-1.rpm  &> /dev/null
+wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/oracleasm-support-2.1.8-1.el6.x86_64.rpm  &> /dev/null
+wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/kmod-oracleasm-2.0.8-15.el6_9.x86_64.rpm  &> /dev/null
+wget http://zy-res.oss-cn-hangzhou.aliyuncs.com/oracle/pdksh-5.2.14-30.x86_64.rpm  &> /dev/null
+echo_green "Oracle 其他软件 下载解压完成"
 
 echo_green "添加软连接/lib64/libcap.so.1"
 ln -s /lib64/libcap.so.2.16 /lib64/libcap.so.1
 
 echo_green "安装依赖包pdksh 和 cvuqdisk"
-rpm -ivh /software/patch/cvuqdisk-1.0.9-1.rpm
-rpm -ivh /software/patch/pdksh-5.2.14-30.x86_64.rpm
+rpm -ivh /software/patch/cvuqdisk-1.0.9-1.rpm &> /dev/null
+rpm -ivh /software/patch/pdksh-5.2.14-30.x86_64.rpm &> /dev/null
 
 echo_green "依赖软件包安装和Oracle RAC软件下载 结束"
 }
 
 
-others(){
-#图形化安装grid
-#检查grid状态
-crs_stat -t
-#创建DATA 磁盘组
-asmca
-}
-
 set_resource_plan
 set_oracle_comm_env
+set_oracle_pre_install
 if [[ $1 == 1 ]]
 then
     set_oracle_rac1_env
@@ -509,9 +515,11 @@ then
 elif [[ $1 == 2 ]]
 then
     set_oracle_rac2_env
-    set_n2n_node1
+    set_n2n_node2
     set_isscsi_node2
 fi
-set_oracle_pre_install
 
-
+echo_red "搭建GRID前还需要手动执行以下操作："
+echo_green "1.重启服务器完成主机名的变更。"
+echo_green "2.切换到grid用户手动执行/tmp/ssh_grid.sh"
+echo_green "3.切换到oracle用户手动执行/tmp/ssh_oracle.sh"
