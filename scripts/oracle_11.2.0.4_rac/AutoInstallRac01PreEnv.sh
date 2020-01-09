@@ -424,7 +424,6 @@ echo_green "依赖软件包安装和Oracle RAC软件下载 结束"
 echo_red "开始时间："
 date +'%Y%m%d %H:%M:%S'
 check_user root
-set_resource_plan
 set_oracle_comm_env
 set_oracle_pre_install
 if [[ $1 == 1 ]]
