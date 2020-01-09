@@ -438,7 +438,7 @@ then
     set_n2n_node2
     set_isscsi_node2
 fi
-source set_resource_plan.sh
+source get_resource_plan.sh
 echo_red "搭建GRID前还需要手动执行以下操作："
 echo_green "1.重启服务器完成主机名的变更。"
 echo_green "2.切换到grid用户手动执行/tmp/ssh_grid_oracle.sh"
