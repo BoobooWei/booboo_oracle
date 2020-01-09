@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8f60284b-d130-42b8-be7b-c0c9d7741cce" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/rac/01-在阿里云ECS上搭建Oracle11g RAC实施方案.md" beforeDir="false" afterPath="$PROJECT_DIR$/rac/01-在阿里云ECS上搭建Oracle11g RAC实施方案.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/AutoInstallRac02Grid.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/AutoInstallRac02Grid.sh" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -16,8 +15,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/AutoInstallRac01PreEnv.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1593">
-              <caret line="188" column="136" selection-start-line="188" selection-start-column="136" selection-end-line="188" selection-end-column="136" />
+            <state relative-caret-position="282">
+              <caret line="313" selection-start-line="313" selection-end-line="313" selection-end-column="19" />
             </state>
           </provider>
         </entry>
@@ -25,8 +24,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/AutoInstallRac02Grid.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="279">
-              <caret line="96" column="25" selection-start-line="96" selection-start-column="25" selection-end-line="96" selection-end-column="25" />
+            <state relative-caret-position="438">
+              <caret line="95" column="85" selection-start-line="95" selection-start-column="85" selection-end-line="95" selection-end-column="85" />
             </state>
           </provider>
         </entry>
@@ -61,8 +60,8 @@
       <find>node2_domain_pub</find>
       <find>scsi</find>
       <find>echo_read</find>
-      <find>set_resource_plan</find>
       <find>passw</find>
+      <find>set_resource_plan</find>
     </findStrings>
     <replaceStrings>
       <replace>echo_red</replace>
@@ -169,12 +168,12 @@
       <updated>1578371156319</updated>
       <workItem from="1578371159095" duration="20158000" />
       <workItem from="1578405829516" duration="18358000" />
-      <workItem from="1578535085564" duration="9513000" />
+      <workItem from="1578535085564" duration="9681000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="48029000" />
+    <option name="totallyTimeSpent" value="48197000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -189,7 +188,7 @@
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24603175" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24603175" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -203,7 +202,7 @@
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info anchor="bottom" id="Terminal" order="11" visible="true" weight="0.31530613" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.31530613" />
       <window_info anchor="bottom" id="Python Console" order="12" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -239,13 +238,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/AutoInstallRac01PreEnv.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1593">
-          <caret line="188" column="136" selection-start-line="188" selection-start-column="136" selection-end-line="188" selection-end-column="136" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/get_resource_plan.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="300">
@@ -260,10 +252,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/AutoInstallRac01PreEnv.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="282">
+          <caret line="313" selection-start-line="313" selection-end-line="313" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/AutoInstallRac02Grid.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="279">
-          <caret line="96" column="25" selection-start-line="96" selection-start-column="25" selection-end-line="96" selection-end-column="25" />
+        <state relative-caret-position="438">
+          <caret line="95" column="85" selection-start-line="95" selection-start-column="85" selection-end-line="95" selection-end-column="85" />
         </state>
       </provider>
     </entry>

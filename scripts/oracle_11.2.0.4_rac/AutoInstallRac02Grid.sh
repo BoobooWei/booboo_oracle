@@ -93,7 +93,7 @@ echo_green "grid检查环境 结束"
 install_grid(){
 echo_red "grid静默安装 开始"
 cd /software/grid/grid
-./runInstaller -showProgress -ignorePrereq -silent -responseFile ${grid_tmp}/grid.rsp  &> ${grid_tmp}/install_grid.result
+./runInstaller -showProgress -ignorePrereq -silent -responseFile ${grid_tmp}/grid.rsp
 echo_green "grid静默安装 安装中"
 }
 
