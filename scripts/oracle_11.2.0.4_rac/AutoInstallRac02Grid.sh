@@ -1,7 +1,7 @@
 #!/bin/bash
 # centos6 install oracle 11.2.0.4 rac 静默安装grid
-# Usage: bash AutoInstallRac.sh 1|2
-# 必须使用grid用户
+# Usage: bash AutoInstallRac02Grid.sh
+# 在节点1上，使用grid用户执行
 
 
 echo_red(){
@@ -79,14 +79,14 @@ PROXY_USER=
 PROXY_PWD=
 PROXY_REALM=
 ENDF
-echo_red "静默安装grid应答文件准备 结束"
+echo_green "静默安装grid应答文件准备 结束"
 }
 
 check_before_install_grid(){
 echo_red "grid检查环境 开始"
 cd /software/grid/grid
 ./runcluvfy.sh stage -pre crsinst -n ${node1_domain_pub[0]},${node2_domain_pub[0]} -fixup -verbose &> ${grid_tmp}check.result
-echo_red "grid检查环境 结束"
+echo_green "grid检查环境 结束"
 
 }
 
@@ -94,12 +94,35 @@ install_grid(){
 echo_red "grid静默安装 开始"
 cd /software/grid/grid
 ./runInstaller -showProgress -ignorePrereq -silent -responseFile ${grid_tmp}/grid.rsp  &> ${grid_tmp}/install_grid.result
-echo_red "grid静默安装 结束"
+echo_green "grid静默安装 结束"
 }
 
+check_grid(){
+echo_red "grid集群检查 开始"
+${rac_dir}/grid/app/11.2.0/grid/bin/crsctl check cluster -all
+${rac_dir}/grid/app/11.2.0/grid/bin/crs_stat -t
+echo_green "grid集群检查 结束"
+}
 
+install_adm(){
+echo_red "静默安装asm实例 开始"
+
+echo_green "静默安装asm实例 开始"
+}
 
 check_user grid
 set_grid_rsp
 #check_before_install_grid
 install_grid
+echo_red "请查看日志，确认是否安装成功"
+read -p "成功输入1 失败输入0" num
+if [[ $num == 1 ]]
+then
+    echo_green "1. /u01/app/oraInventory/orainstRoot.sh 2. /u01/app/11.2.0/grid/root.sh"
+    read -p "请打开新的终端执行脚本，执行完成后按回车继续"
+    read -p "开始检查集群，按回车"
+    check_grid
+else
+    echo_red "安装失败，结束程序"
+    exit
+fi
