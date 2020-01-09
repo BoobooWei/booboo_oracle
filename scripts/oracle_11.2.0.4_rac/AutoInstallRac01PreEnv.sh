@@ -187,8 +187,6 @@ ssh-keygen
 ssh-copy-id "-p ${ssh_port} ${node1_physic_ip_addr}"
 ssh-copy-id "-p ${ssh_port} ${node2_physic_ip_addr}"
 for i in ${node1_domain_pub[@]} ${node1_domain_pri[@]} ${node2_domain_pub[@]} ${node2_domain_pri[@]};do ssh \$i -p ${ssh_port} date;done
-# ssh grid@${node1_physic_ip_addr} bash /tmp/ssh_grid.sh
-# ssh oracle@${node1_physic_ip_addr} bash /tmp/ssh_oracle.sh
 ENDF
 
 
@@ -233,8 +231,6 @@ ssh-keygen
 ssh-copy-id "-p ${ssh_port} ${node1_physic_ip_addr}"
 ssh-copy-id "-p ${ssh_port} ${node2_physic_ip_addr}"
 for i in ${node1_domain_pub[@]} ${node1_domain_pri[@]} ${node2_domain_pub[@]} ${node2_domain_pri[@]};do ssh \$i -p ${ssh_port} date;done
-# ssh grid@${node1_physic_ip_addr} bash /tmp/ssh_grid.sh
-# ssh oracle@${node1_physic_ip_addr} bash /tmp/ssh_oracle.sh
 ENDF
 
 echo_red "rac2环境配置 结束"
