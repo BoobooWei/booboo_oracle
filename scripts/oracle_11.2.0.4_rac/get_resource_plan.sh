@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
+# get_resource_plan.sh
 # Auth: BoooBooWei 2020.01.09
+
+echo_red(){
+echo -e "\e[1;31m$1\033[0m"
+}
+
+echo_green(){
+echo -e "\e[1;32m$1\033[0m"
+}
 
 get_resource_plan(){
 # 交互式创建root用户无密钥登陆两个节点

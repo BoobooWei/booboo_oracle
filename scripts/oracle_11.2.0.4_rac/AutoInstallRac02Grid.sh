@@ -110,6 +110,9 @@ echo_red "静默安装asm实例 开始"
 echo_green "静默安装asm实例 开始"
 }
 
+
+echo_red "开始时间："
+date +'%Y%m%d %H:%M:%S'
 check_user grid
 set_grid_rsp
 #check_before_install_grid
@@ -126,3 +129,6 @@ else
     echo_red "安装失败，结束程序"
     exit
 fi
+
+echo_red "结束时间："
+date +'%Y%m%d %H:%M:%S'

@@ -421,7 +421,9 @@ rpm -ivh /software/patch/pdksh-5.2.14-30.x86_64.rpm &> /dev/null
 echo_green "依赖软件包安装和Oracle RAC软件下载 结束"
 }
 
-
+echo_red "开始时间："
+date +'%Y%m%d %H:%M:%S'
+check_user root
 set_resource_plan
 set_oracle_comm_env
 set_oracle_pre_install
@@ -436,11 +438,10 @@ then
     set_n2n_node2
     set_isscsi_node2
 fi
-
-
-check_user root
 source set_resource_plan.sh
 echo_red "搭建GRID前还需要手动执行以下操作："
 echo_green "1.重启服务器完成主机名的变更。"
 echo_green "2.切换到grid用户手动执行/tmp/ssh_grid_oracle.sh"
 echo_green "3.切换到oracle用户手动执行/tmp/ssh_grid_oracle.sh"
+echo_red "结束时间："
+date +'%Y%m%d %H:%M:%S'
