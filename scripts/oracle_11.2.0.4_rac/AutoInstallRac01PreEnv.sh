@@ -1,6 +1,7 @@
 #!/bin/bash
-# centos6 install oracle 11.2.0.4 rac
+# centos6 install oracle 11.2.0.4 rac 环境配置
 # Usage: bash AutoInstallRac.sh 1|2
+# Auth: BoooBooWei 2020.01.09
 # 测试脚本，共享存储通过node1节点搭建iscsi实现。
 
 echo_red(){
@@ -11,87 +12,17 @@ echo_green(){
 echo -e "\e[1;32m$1\033[0m"
 }
 
-set_resource_plan(){
-ssh_port=22
-database_name=racdb # 数据库名称
+source set_resource_plan.sh
 
-node1_hostname=rac1 # 节点1 名称，主机名，实例名
-node1_physic_ip=eth0:172.16.1.24 # 节点1 真实的物理网卡和地址
-node1_public_ip=eth1:172.16.10.19 # 节点1 公共IP 网卡和地址
-node1_public_vip=172.16.10.29 # 节点1 虚拟IP 网卡和地址
-node1_private_ip=eth2:172.16.2.75 # 节点1 专用IP 网卡和地址
-node1_domain_pub=(rac1 rac1.example.com) # 节点1 公共IP 域名
-node1_domain_pub_v=(rac1-vip rac1-vip.example.com) # 节点1 虚拟IP 域名
-node1_domain_pri=(rac1-priv rac1-priv.example.com) # 节点1 专用IP 域名
-
-
-node2_hostname=rac2 # 节点2 名称，主机名，实例名
-node2_physic_ip=eth0:172.16.1.23 # 节点2 真实的物理网卡和地址
-node2_public_ip=eth1:172.16.10.20 # 节点2 公共IP 网卡和地址
-node2_public_vip=172.16.10.30 # 节点2 虚拟IP 网卡和地址
-node2_private_ip=eth2:172.16.2.76 # 节点2 专用IP 网卡和地址
-node2_domain_pub=(rac2 rac2.example.com) # 节点2 公共IP 域名
-node2_domain_pub_v=(rac2-vip rac2-vip.example.com) # 节点2 虚拟IP 域名
-node2_domain_pri=(rac2-priv rac2-priv.example.com) # 节点2 专用IP 域名
-
-scan_ip=172.16.10.88 # SCAN IP 地址
-scan_name=rac-cluster-scan # SCAN名称
-
-rac_dir=/alidata/ # rac和oracle安装最顶级目录
-shared_storage=("/dev/vdb1" "/dev/vdb2") # 共享存储块设备
-
-
-# 获取真实的物理网卡IP和网卡
-node1_physic_ip_addr=${node1_physic_ip#*:}
-node1_physic_ip_eth=${node1_physic_ip/:*}
-node2_physic_ip_addr=${node2_physic_ip#*:}
-node2_physic_ip_eth=${node2_physic_ip/:*}
-
-# 获取专用IP和网卡
-node1_private_ip_addr=${node1_private_ip#*:}
-node1_private_ip_eth=${node1_private_ip/:*}
-node2_private_ip_addr=${node2_private_ip#*:}
-node2_private_ip_eth=${node2_private_ip/:*}
-
-# 获取公共IP和网卡
-node1_public_ip_addr=${node1_public_ip#*:}
-node1_public_ip_eth=${node1_public_ip/:*}
-node2_public_ip_addr=${node2_public_ip#*:}
-node2_public_ip_eth=${node2_public_ip/:*}
-
-# 交互式创建root用户无密钥登陆两个节点
-rm -rf /root/.ssh/id_rsa
-ssh-keygen -t rsa -P "" -f /root/.ssh/id_rsa
-for i in ${node1_physic_ip_addr} ${node2_physic_ip_addr}
-do
-    ssh-copy-id "-p ${ssh_port} root@${i}"
-done
-
-
-# 获取节点物理信息
-node1_cpu=`lscpu| grep ^CPU\(s\): | awk '{print $2}'`
-node2_cpu=`ssh ${node2_physic_ip_addr} -p ${ssh_port} lscpu| grep ^CPU\(s\): | awk '{print $2}'`
-
-node1_mem=`cat /proc/meminfo | grep MemTotal| awk '{print $2 $3}'`
-node2_mem=`ssh ${node2_physic_ip_addr} -p ${ssh_port} cat /proc/meminfo | grep MemTotal| awk '{print $2 $3}'`
-
-node1_os=`cat /etc/redhat-release`
-node2_os=`ssh ${node2_physic_ip_addr} -p ${ssh_port} cat /etc/redhat-release`
-
-echo_red "节点信息"
-printf "%-20s %-10s %-20s %-20s %-20s %-20s \n"  节点名称 数据库名称 处理器 内存 操作系统
-printf "%-20s %-10s %-10s %-10s %-10s %-20s \n"  ${node1_hostname} ${database_name} ${node1_cpu} ${node1_mem} "${node1_os}"
-printf "%-20s %-10s %-10s %-10s %-10s %-20s \n"  ${node2_hostname} ${database_name} ${node2_cpu} ${node2_mem} "${node2_os}"
-
-echo_red "资源规划-全局参数配置"
-printf "%-25s %-25s %-25s %-25s %-20s %-20s \n"  节点名称 公共IP-网卡 虚拟IP-网卡 专用IP-网卡 SCAN-IP SCAN名称
-printf "%-20s %-20s %-20s %-20s %-20s %-20s \n"  ${node1_hostname} ${node1_public_ip_addr}-${node1_public_ip_eth} ${node1_public_vip} ${node1_private_ip_addr}-${node1_private_ip_eth} ${scan_ip} ${scan_name}
-printf "%-20s %-20s %-20s %-20s %-20s %-20s \n"  ${node2_hostname} ${node2_public_ip_addr}-${node2_public_ip_eth} ${node2_public_vip} ${node2_private_ip_addr}-${node2_private_ip_eth}
-
-echo_red "Oracle 软件组件"
-printf "%-30s %-30s %-30s %-25s %-30s %-20s \n"  软件组件 操作系统用户 主组 辅助组 主目录 Oracle基目录/Oracle主目录
-printf "%-30s %-20s %-20s %-30s %-20s %-20s \n"  "Grid Infrastructure" "grid  " "oinstall" "asmadmin、asmdba、asmoper" "/home/grid  " "/alidata/app/grid,/u01/app/11.2.0/grid"
-printf "%-30s %-20s %-20s %-30s %-20s %-20s \n"  "Oracle RAC         " "oracle" "oinstall" "dba、oper、asmdba        " "/home/oracle" "/alidata/app/oracle,/alidata/app/oracle/product/11.2.0/dbhome_1"
+check_user(){
+username=`whoami`
+echo_green "当前用户为 ${username}"
+if [[ ${username} == $1 ]]
+then
+    echo_green "执行用户与要求一致"
+else
+    echo_red "执行用户与要求不一致，请切换用户为 $1"
+fi
 }
 
 set_oracle_comm_env(){
@@ -211,6 +142,12 @@ echo_green "配置NTP"
 /sbin/service ntpd stop
 chkconfig ntpd off
 mv /etc/ntp.conf /etc/ntp.conf.org
+
+
+echo_green "swap分区150M"
+dd if=/dev/zero of=/home/swap bs=1024 count=154000
+mkswap /home/swap
+swapon /home/swap
 }
 
 set_oracle_rac1_env(){
@@ -245,25 +182,13 @@ export ORACLE_SID=+ASM1
 AENDF
 
 echo_green "配置节点间的ssh信任"
-echo_green "自动生成脚本文件，需要切换到grid用户手动执行/tmp/ssh_grid.sh"
-cat > /tmp/ssh_grid.sh << ENDF
+cat > /tmp/ssh_grid_oracle.sh << ENDF
 ssh-keygen
-ssh-copy-id "-p ${ssh_port} grid@${node2_physic_ip_addr}"
-for i in ${node2_domain_pub[@]} ${node2_domain_pri[@]};do ssh \$i -p ${ssh_port} date;done
-# ssh grid@${node2_physic_ip_addr} bash /tmp/ssh_grid.sh
-# ssh oracle@${node2_physic_ip_addr} bash /tmp/ssh_oracle.sh
-ENDF
-
-cat /tmp/ssh_grid.sh
-
-
-echo_green "自动生成脚本文件，需要切换到oracle用户手动执行/tmp/ssh_oracle.sh"
-cat > /tmp/ssh_oracle.sh << ENDF
-ssh-keygen
-ssh-copy-id "-p ${ssh_port} oracle@${node2_physic_ip_addr}"
-for i in ${node2_domain_pub[@]} ${node2_domain_pri[@]};do ssh \$i -p ${ssh_port} date;done
-# ssh grid@${node2_physic_ip_addr} bash /tmp/ssh_grid.sh
-# ssh oracle@${node2_physic_ip_addr} bash /tmp/ssh_oracle.sh
+ssh-copy-id "-p ${ssh_port} ${node1_physic_ip_addr}"
+ssh-copy-id "-p ${ssh_port} ${node2_physic_ip_addr}"
+for i in ${node1_domain_pub[@]} ${node1_domain_pri[@]} ${node2_domain_pub[@]} ${node2_domain_pri[@]};do ssh \$i -p ${ssh_port} date;done
+# ssh grid@${node1_physic_ip_addr} bash /tmp/ssh_grid.sh
+# ssh oracle@${node1_physic_ip_addr} bash /tmp/ssh_oracle.sh
 ENDF
 
 
@@ -303,18 +228,11 @@ export ORACLE_SID=+ASM2
 AENDF
 
 echo_green "配置节点间的ssh信任"
-cat > /tmp/ssh_grid.sh << ENDF
+cat > /tmp/ssh_grid_oracle.sh << ENDF
 ssh-keygen
-ssh-copy-id "-p ${ssh_port} grid@${node1_physic_ip_addr}"
-for i in ${node1_domain_pub[@]} ${node1_domain_pri[@]};do ssh \$i -p ${ssh_port} date;done
-# ssh grid@${node1_physic_ip_addr} bash /tmp/ssh_grid.sh
-# ssh oracle@${node1_physic_ip_addr} bash /tmp/ssh_oracle.sh
-ENDF
-
-cat > /tmp/ssh_oracle.sh << ENDF
-ssh-keygen
-ssh-copy-id "-p ${ssh_port} grid@${node1_physic_ip_addr}"
-for i in ${node1_domain_pub[@]} ${node1_domain_pri[@]};do ssh \$i -p ${ssh_port} date;done
+ssh-copy-id "-p ${ssh_port} ${node1_physic_ip_addr}"
+ssh-copy-id "-p ${ssh_port} ${node2_physic_ip_addr}"
+for i in ${node1_domain_pub[@]} ${node1_domain_pri[@]} ${node2_domain_pub[@]} ${node2_domain_pri[@]};do ssh \$i -p ${ssh_port} date;done
 # ssh grid@${node1_physic_ip_addr} bash /tmp/ssh_grid.sh
 # ssh oracle@${node1_physic_ip_addr} bash /tmp/ssh_oracle.sh
 ENDF
@@ -519,7 +437,10 @@ then
     set_isscsi_node2
 fi
 
+
+check_user root
+source set_resource_plan.sh
 echo_red "搭建GRID前还需要手动执行以下操作："
 echo_green "1.重启服务器完成主机名的变更。"
-echo_green "2.切换到grid用户手动执行/tmp/ssh_grid.sh"
-echo_green "3.切换到oracle用户手动执行/tmp/ssh_oracle.sh"
+echo_green "2.切换到grid用户手动执行/tmp/ssh_grid_oracle.sh"
+echo_green "3.切换到oracle用户手动执行/tmp/ssh_grid_oracle.sh"
