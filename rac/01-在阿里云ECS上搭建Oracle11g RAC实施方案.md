@@ -61,24 +61,32 @@ Oracle 物理数据库文件（数据、联机重做日志、控制文件、存�
 ### 资源规划-全局参数配置
 
 ```bash
+#!/bin/bash
+# set_resource_plan.sh
+# Auth: BoooBooWei 2020.01.09
+
+set_resource_plan(){
+ssh_port=22
+grid_tmp=/home/grid/grid_tmp/ # grid 安装记录临时存放路径
+grid_passwd=Zyadmin123 # grid 应答文件中SYSASMPassword 和 monitorPassword 的密码
 database_name=racdb # 数据库名称
 
 node1_hostname=rac1 # 节点1 名称，主机名，实例名
-node1_physic_ip=eth0:172.16.1.19 # 节点1 真实的物理网卡和地址
+node1_physic_ip=eth0:172.16.1.24 # 节点1 真实的物理网卡和地址
 node1_public_ip=eth1:172.16.10.19 # 节点1 公共IP 网卡和地址
-node1_public_vip=eth2:172.16.10.29 # 节点1 虚拟IP 网卡和地址
-node1_private_ip=eth3:172.16.2.75 # 节点1 专用IP 网卡和地址
+node1_public_vip=172.16.10.29 # 节点1 虚拟IP 网卡和地址
+node1_private_ip=eth2:172.16.2.75 # 节点1 专用IP 网卡和地址
 node1_domain_pub=(rac1 rac1.example.com) # 节点1 公共IP 域名
 node1_domain_pub_v=(rac1-vip rac1-vip.example.com) # 节点1 虚拟IP 域名
 node1_domain_pri=(rac1-priv rac1-priv.example.com) # 节点1 专用IP 域名
 
 
 node2_hostname=rac2 # 节点2 名称，主机名，实例名
-node2_physic_ip=eth0:172.16.1.20 # 节点2 真实的物理网卡和地址
+node2_physic_ip=eth0:172.16.1.23 # 节点2 真实的物理网卡和地址
 node2_public_ip=eth1:172.16.10.20 # 节点2 公共IP 网卡和地址
-node2_public_vip=eth2:172.16.10.30 # 节点2 虚拟IP 网卡和地址
-node2_private_ip=eth3:172.16.2.76 # 节点2 专用IP 网卡和地址
-node2_domain_phy=(rac2 rac2.example.com) # 节点2 公共IP 域名
+node2_public_vip=172.16.10.30 # 节点2 虚拟IP 网卡和地址
+node2_private_ip=eth2:172.16.2.76 # 节点2 专用IP 网卡和地址
+node2_domain_pub=(rac2 rac2.example.com) # 节点2 公共IP 域名
 node2_domain_pub_v=(rac2-vip rac2-vip.example.com) # 节点2 虚拟IP 域名
 node2_domain_pri=(rac2-priv rac2-priv.example.com) # 节点2 专用IP 域名
 
@@ -87,6 +95,29 @@ scan_name=rac-cluster-scan # SCAN名称
 
 rac_dir=/alidata/ # rac和oracle安装最顶级目录
 shared_storage=("/dev/vdb1" "/dev/vdb2") # 共享存储块设备
+
+
+# 获取真实的物理网卡IP和网卡
+node1_physic_ip_addr=${node1_physic_ip#*:}
+node1_physic_ip_eth=${node1_physic_ip/:*}
+node2_physic_ip_addr=${node2_physic_ip#*:}
+node2_physic_ip_eth=${node2_physic_ip/:*}
+
+# 获取专用IP和网卡
+node1_private_ip_addr=${node1_private_ip#*:}
+node1_private_ip_eth=${node1_private_ip/:*}
+node2_private_ip_addr=${node2_private_ip#*:}
+node2_private_ip_eth=${node2_private_ip/:*}
+
+# 获取公共IP和网卡
+node1_public_ip_addr=${node1_public_ip#*:}
+node1_public_ip_eth=${node1_public_ip/:*}
+node2_public_ip_addr=${node2_public_ip#*:}
+node2_public_ip_eth=${node2_public_ip/:*}
+}
+
+
+set_resource_plan
 ```
 
 ### 通用配置
@@ -116,6 +147,8 @@ shared_storage=("/dev/vdb1" "/dev/vdb2") # 共享存储块设备
 
 ### rac1/rac2配置N2N
 
+待解决：开机启动时如何在集群前启动？
+
 | No.  | 配置项                 | 自动化 |
 | ---- | ---------------------- | ------ |
 | 1    | 修改主机名             | Yes    |
@@ -128,17 +161,31 @@ shared_storage=("/dev/vdb1" "/dev/vdb2") # 共享存储块设备
 | 1    | 修改主机名             | Yes    |
 | 2    | 设置oracle用户环境变量 | Yes    |
 
+如果修改了主机名需要先重启服务器让其永久生效。
+
 ### 软件安装
 
 | No.  | 配置项                       | 自动化 |
 | ---- | ---------------------------- | ------ |
-| 12   | 依赖软件包安装               | Yes    |
-| 13   | 设置主机启动级别为5 图形界面 | Yes    |
-| 14   | 获取RAC安装包                | Yes    |
-
-
+| 1    | 依赖软件包安装               | Yes    |
+| 2    | 设置主机启动级别为5 图形界面 | Yes    |
+| 3    | 获取RAC安装包                | Yes    |
 
 ### 安装grid
+
+| No.  | 配置项                   | 自动化 |
+| ---- | ------------------------ | ------ |
+| 1    | 静默安装grid应答文件准备 | Yes    |
+| 2    | grid检查环境             | Yes    |
+| 3    | grid静默安装             | Yes    |
+|      | root执行脚本             | No     |
+
+### 安装ASM实例
+
+| No.  | 配置项                  | 自动化 |
+| ---- | ----------------------- | ------ |
+| 1    | 静默安装asm应答文件准备 | Yes    |
+| 2    |                         | Yes    |
 
 ### 安装oracle
 
