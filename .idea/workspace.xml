@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8f60284b-d130-42b8-be7b-c0c9d7741cce" name="Default Changelist" comment="" />
+    <list default="true" id="8f60284b-d130-42b8-be7b-c0c9d7741cce" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/readme.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rac/01-在阿里云ECS上搭建Oracle11g RAC实施方案.md" beforeDir="false" afterPath="$PROJECT_DIR$/rac/01-在阿里云ECS上搭建Oracle11g RAC实施方案.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/AutoInstallRac01PreEnv.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/AutoInstallRac01PreEnv.sh" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -9,7 +15,32 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/readme.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor relative-caret-position="30">
+                <caret line="2" selection-start-line="2" selection-end-line="2" />
+              </first_editor>
+              <second_editor />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/readme.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor>
+                <caret column="51" selection-start-column="51" selection-end-column="51" />
+              </first_editor>
+              <second_editor />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
@@ -24,6 +55,7 @@
       <find>set_resource_plan</find>
       <find>passw</find>
       <find>swap</find>
+      <find>echo</find>
     </findStrings>
     <replaceStrings>
       <replace>echo_red</replace>
@@ -47,6 +79,9 @@
         <option value="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/set_resource_plan.sh" />
         <option value="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/install_multi.sh" />
         <option value="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/AutoInstallRac01PreEnv.sh" />
+        <option value="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/AutoInstallRac01PreEnv.sh" />
+        <option value="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/readme.md" />
+        <option value="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/readme.md" />
       </list>
     </option>
   </component>
@@ -82,6 +117,12 @@
               <item name="scripts" type="462c0819:PsiDirectoryNode" />
               <item name="oracle_11.2.0.4_rac_multi" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="booboo_oracle" type="b2602c69:ProjectViewProjectNode" />
+              <item name="booboo_oracle" type="462c0819:PsiDirectoryNode" />
+              <item name="scripts" type="462c0819:PsiDirectoryNode" />
+              <item name="oracle_11.2.0.4_rac_n2n" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -92,7 +133,7 @@
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/scripts" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -103,11 +144,12 @@
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/scripts" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n" />
+      <recent name="$PROJECT_DIR$/scripts" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -135,12 +177,12 @@
       <workItem from="1578371159095" duration="20158000" />
       <workItem from="1578405829516" duration="18358000" />
       <workItem from="1578535085564" duration="19974000" />
-      <workItem from="1578622403056" duration="2896000" />
+      <workItem from="1578622403056" duration="4120000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="61386000" />
+    <option name="totallyTimeSpent" value="62610000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -153,6 +195,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24908425" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -204,13 +247,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/AutoInstallRac01PreEnv.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1376">
-          <caret line="237" lean-forward="true" selection-start-line="237" selection-end-line="237" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/AutoInstallRac02Grid.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="341">
@@ -218,38 +254,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/set_resource_plan.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="301">
-          <caret line="40" column="41" lean-forward="true" selection-start-line="40" selection-start-column="41" selection-end-line="40" selection-end-column="41" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/get_resource_plan.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="20" lean-forward="true" selection-start-line="20" selection-end-line="20" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/AutoInstallRac02Grid.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1134">
-          <caret line="101" column="11" lean-forward="true" selection-start-line="101" selection-start-column="10" selection-end-line="101" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/AutoInstallRac01PreEnv.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="294">
-          <caret line="151" column="68" selection-start-line="151" selection-start-column="68" selection-end-line="151" selection-end-column="68" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/install_multi.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="72" selection-start-line="72" selection-end-line="72" selection-end-column="30" />
+    <entry file="file://$PROJECT_DIR$/rac/01-在阿里云ECS上搭建Oracle11g RAC实施方案.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor />
+          <second_editor />
         </state>
       </provider>
     </entry>
@@ -260,10 +269,77 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/get_resource_plan.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="20" lean-forward="true" selection-start-line="20" selection-end-line="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/AutoInstallRac01PreEnv.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="451">
+          <caret line="443" selection-start-line="443" selection-end-line="443" selection-end-column="9" />
+          <folding>
+            <element signature="n#!!block;n#set_oracle_rac2_env#0" />
+            <element signature="n#!!block;n#set_isscsi_node1#0" />
+            <element signature="n#!!block;n#set_isscsi_node2#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/AutoInstallRac02Grid.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="616">
+          <caret line="101" column="11" lean-forward="true" selection-start-line="101" selection-start-column="10" selection-end-line="101" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/install_multi.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1515">
+          <caret line="101" column="46" lean-forward="true" selection-end-line="114" selection-end-column="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/set_resource_plan.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="24" column="50" lean-forward="true" selection-start-line="24" selection-start-column="50" selection-end-line="24" selection-end-column="50" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/AutoInstallRac01PreEnv.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5550">
+          <caret line="370" column="23" lean-forward="true" selection-start-line="370" selection-start-column="23" selection-end-line="370" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/set_resource_plan.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="22" column="49" lean-forward="true" selection-start-line="22" selection-start-column="49" selection-end-line="22" selection-end-column="49" />
+        <state relative-caret-position="556">
+          <caret line="57" lean-forward="true" selection-start-line="57" selection-end-line="57" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/readme.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="30">
+            <caret line="2" selection-start-line="2" selection-end-line="2" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/readme.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor>
+            <caret column="51" selection-start-column="51" selection-end-column="51" />
+          </first_editor>
+          <second_editor />
         </state>
       </provider>
     </entry>

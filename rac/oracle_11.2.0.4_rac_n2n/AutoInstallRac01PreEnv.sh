@@ -1,8 +1,9 @@
 #!/bin/bash
 # centos6 install oracle 11.2.0.4 rac 环境配置
+# AutoInstallRac01PreEnv.sh
 # Usage: bash AutoInstallRac.sh 1|2
 # Auth: BoooBooWei 2020.01.09
-# 测试脚本，共享存储通过node1节点搭建iscsi实现。
+# 网络通n2n实现；共享存储通过node1节点搭建iscsi实现。
 
 echo_red(){
 echo -e "\e[1;31m$1\033[0m"
@@ -148,6 +149,12 @@ echo_green "swap分区150M"
 dd if=/dev/zero of=/home/swap bs=1024 count=154000
 mkswap /home/swap
 swapon /home/swap
+sed -i '/auto install rac start/,/auto install rac end/d' /etc/fstab
+echo >> /etc/fatab << ENDF
+# auto install rac start
+/home/swap swap swap defaults 0 0
+# auto install rac end
+ENDF
 }
 
 set_oracle_rac1_env(){
@@ -258,8 +265,8 @@ sed -i '/auto_install_rac_n2n_s/,/auto_install_rac_n2n_e/d' /etc/rc.local
 cat >> /etc/rc.local << ENDF
 # auto_install_rac_n2n_s
 supernode -l 22087 >/dev/null 2>&1 &
-/usr/sbin/edge -a ${node1_public_ip_addr} -s 255.255.255.0 -E -c racnet1 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node1_public_ip_eth}  -r
-/usr/sbin/edge -a ${node1_private_ip_addr} -s 255.255.255.0 -E -c racnet2 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node1_private_ip_eth}  -r
+/usr/sbin/edge -a node1publicipaddr−s255.255.255.0−E−cracnet1−kPassword−l{node1_physic_ip_addr}:22087 -d ${node1_public_ip_eth}  -r
+/usr/sbin/edge -a node1privateipaddr−s255.255.255.0−E−cracnet2−kPassword−l{node1_physic_ip_addr}:22087 -d ${node1_private_ip_eth}  -r
 # auto_install_rac_n2n_e
 ENDF
 echo_red "安装配置N2N 结束"
@@ -286,12 +293,13 @@ supernode -l 22087 >/dev/null 2>&1 &
 sed -i '/auto_install_rac_n2n_s/,/auto_install_rac_n2n_e/d' /etc/rc.local
 cat >> /etc/rc.local << ENDF
 # auto_install_rac_n2n_s
-/usr/sbin/edge -a ${node2_public_ip_addr} -s 255.255.255.0 -E -c racnet1 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node2_public_ip_eth}  -r
-/usr/sbin/edge -a ${node2_private_ip_addr} -s 255.255.255.0 -E -c racnet2 -k Password -l ${node1_physic_ip_addr}:22087 -d ${node2_private_ip_eth}  -r
+/usr/sbin/edge -a node2publicipaddr−s255.255.255.0−E−cracnet1−kPassword−l{node1_physic_ip_addr}:22087 -d ${node2_public_ip_eth}  -r
+/usr/sbin/edge -a node2privateipaddr−s255.255.255.0−E−cracnet2−kPassword−l{node1_physic_ip_addr}:22087 -d ${node2_private_ip_eth}  -r
 # auto_install_rac_n2n_e
 ENDF
 echo_red "安装配置N2N 结束"
 }
+
 
 set_isscsi_node1(){
 echo_red "配置存储target-测试使用"
@@ -433,6 +441,7 @@ then
     set_n2n_node2
     set_isscsi_node2
 fi
+cd /root/
 source get_resource_plan.sh
 echo_red "搭建GRID前还需要手动执行以下操作："
 echo_green "1.重启服务器完成主机名的变更。"
