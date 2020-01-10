@@ -1,8 +1,20 @@
 # 阿里云ECSCentos6.9自动化安装Oracle11.2.0.4.0Rac2Nodes.N2N
 
+<!-- MDTOC maxdepth:6 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
+
+- [阿里云ECSCentos6.9自动化安装Oracle11.2.0.4.0Rac2Nodes.N2N](#阿里云ecscentos69自动化安装oracle112040rac2nodesn2n)   
+- [脚本简介](#脚本简介)   
+   - [RAC资源规划](#rac资源规划)   
+- [脚本测试](#脚本测试)   
+   - [自动化配置环境](#自动化配置环境)   
+   - [N2N](#n2n)   
+- [安装集群软件GRID](#安装集群软件grid)   
+
+<!-- /MDTOC -->
+
 > 每个ECS1个物理网卡
 >
-> 使用N2N 
+> 使用N2N
 >
 > 通过一块数据盘安装ISCSI服务，模拟共享存储
 >
@@ -67,7 +79,7 @@ oracle_11.2.0.4_rac_ n2n
 
 脚本自动跑
 
-## N2N 
+## N2N
 
 n2n 配置注意：
 
@@ -90,4 +102,3 @@ n2n 配置注意：
 ![](../../pic/rac01.png)
 
 ![](../../pic/rac02.png)
-

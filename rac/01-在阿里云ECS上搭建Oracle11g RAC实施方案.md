@@ -1,6 +1,35 @@
 # 在阿里云ECS上搭建Oracle11g RAC实施方案
 
-[TOC]
+<!-- MDTOC maxdepth:6 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
+
+- [在阿里云ECS上搭建Oracle11g RAC实施方案](#在阿里云ecs上搭建oracle11g-rac实施方案)   
+   - [Oracle11g RAC说明](#oracle11g-rac说明)   
+      - [RAC 的概念](#rac-的概念)   
+      - [ECS 上主机安装 RAC 的问题](#ecs-上主机安装-rac-的问题)   
+   - [规划](#规划)   
+      - [环境需求](#环境需求)   
+      - [需要提供的信息](#需要提供的信息)   
+      - [安装实施周期](#安装实施周期)   
+      - [网络方案1-N2N](#网络方案1-n2n)   
+      - [网络方案2-组播协议](#网络方案2-组播协议)   
+   - [安装配置](#安装配置)   
+      - [资源规划-全局参数配置](#资源规划-全局参数配置)   
+      - [安装集群前的环境配置](#安装集群前的环境配置)   
+         - [通用配置](#通用配置)   
+         - [环境配置](#环境配置)   
+         - [配置组播（生产中使用）](#配置组播（生产中使用）)   
+         - [配置N2N（测试环境中使用）](#配置n2n（测试环境中使用）)   
+         - [配置ISCSI（测试环境中使用）](#配置iscsi（测试环境中使用）)   
+         - [依赖软件安装](#依赖软件安装)   
+      - [RAC中间件和数据库安装](#rac中间件和数据库安装)   
+         - [安装grid](#安装grid)   
+         - [安装ASM实例](#安装asm实例)   
+         - [安装oracle](#安装oracle)   
+         - [创建数据库](#创建数据库)   
+         - [配置监听](#配置监听)   
+      - [其他优化](#其他优化)   
+
+<!-- /MDTOC -->
 
 ## Oracle11g RAC说明
 
@@ -8,11 +37,11 @@
 
 [Real Application Clusters Administration and Deployment Guide ](https://docs.oracle.com/cd/E11882_01/rac.112/e41960/toc.htm)
 
-Oracle RAC 是 Oracle Real Application Cluster  的简写，Oracle Real Application Clusters通过将单个数据库服务器作为单个故障点删除而为客户提供了最高的数据库可用性。在群集服务器环境中，数据库本身在服务器池之间共享，这意味着，如果服务器池中的任何服务器发生故障，数据库将继续在正常运行的服务器上运行。Oracle RAC不仅使客户能够在服务器发生故障时继续处理数据库工作负载，而且还可以通过减少数据库脱机进行计划内维护操作的时间来进一步降低停机成本。 
+Oracle RAC 是 Oracle Real Application Cluster  的简写，Oracle Real Application Clusters通过将单个数据库服务器作为单个故障点删除而为客户提供了最高的数据库可用性。在群集服务器环境中，数据库本身在服务器池之间共享，这意味着，如果服务器池中的任何服务器发生故障，数据库将继续在正常运行的服务器上运行。Oracle RAC不仅使客户能够在服务器发生故障时继续处理数据库工作负载，而且还可以通过减少数据库脱机进行计划内维护操作的时间来进一步降低停机成本。
 
-Oracle Real Application Clusters使Oracle数据库跨集群服务器池的透明部署成为可能。这使客户可以轻松地将其单服务器Oracle数据库重新部署到数据库服务器集群上，从而充分利用集群数据库服务器提供的组合内存容量和处理能力。 
+Oracle Real Application Clusters使Oracle数据库跨集群服务器池的透明部署成为可能。这使客户可以轻松地将其单服务器Oracle数据库重新部署到数据库服务器集群上，从而充分利用集群数据库服务器提供的组合内存容量和处理能力。
 
-Oracle Real Application Clusters提供了在服务器池中轻松部署Oracle数据库并充分利用群集提供的性能，可伸缩性和可用性所需的所有软件组件。Oracle RAC利用Oracle Grid Infrastructure作为Oracle RAC数据库系统的基础。Oracle Grid Infrastructure包括Oracle集群件和Oracle自动存储管理（ASM），它们可以在高度可用且可扩展的数据库云环境中高效共享服务器和存储资源。 
+Oracle Real Application Clusters提供了在服务器池中轻松部署Oracle数据库并充分利用群集提供的性能，可伸缩性和可用性所需的所有软件组件。Oracle RAC利用Oracle Grid Infrastructure作为Oracle RAC数据库系统的基础。Oracle Grid Infrastructure包括Oracle集群件和Oracle自动存储管理（ASM），它们可以在高度可用且可扩展的数据库云环境中高效共享服务器和存储资源。
 
 Oracle RAC 根本的功能就在于多节点的负载均衡（Loadbalance）以及实例级的故障转移（Failover）。以下是 Oracle11g RAC 的原理图：
 

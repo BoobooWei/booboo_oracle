@@ -1,6 +1,24 @@
 # 阿里云ECSCentos6.9自动化安装Oracle11.2.0.4.0Rac2Nodes.HAVIP
 
-[toc]
+<!-- MDTOC maxdepth:6 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
+
+- [阿里云ECSCentos6.9自动化安装Oracle11.2.0.4.0Rac2Nodes.HAVIP](#阿里云ecscentos69自动化安装oracle112040rac2nodeshavip)   
+- [运行步骤](#运行步骤)   
+   - [手动升级内核](#手动升级内核)   
+   - [根据服务器网卡地址规划资源，修改脚本set_resource_plan.sh](#根据服务器网卡地址规划资源，修改脚本set_resource_plansh)   
+   - [安装集群前的环境配置](#安装集群前的环境配置)   
+      - [RAC1上运行脚本 bash AutoInstallRac01PreEnv.sh 1](#rac1上运行脚本-bash-autoinstallrac01preenvsh-1)   
+      - [RAC2上运行脚本 bash AutoInstallRac01PreEnv.sh 2](#rac2上运行脚本-bash-autoinstallrac01preenvsh-2)   
+   - [安装阿里云内核组播工具install_multi.sh](#安装阿里云内核组播工具install_multish)   
+      - [RAC1运行 bash install_multi.sh 1](#rac1运行-bash-install_multish-1)   
+      - [RAC2运行 bash install_multi.sh 2](#rac2运行-bash-install_multish-2)   
+- [图形化安装grid](#图形化安装grid)   
+   - [rac1](#rac1)   
+   - [rac2](#rac2)   
+      - [节点2报错如下](#节点2报错如下)   
+      - [解决方法：禁止HAIP](#解决方法：禁止haip)   
+
+<!-- /MDTOC -->
 
 > 使用阿里云组播方式
 >
@@ -429,7 +447,7 @@ Zyadmin123
 [grid@rac2 ~]$ bash /tmp/ssh_grid_oracle.sh
 ```
 
-## 安装阿里云内核组播工具install_multi.sh 
+## 安装阿里云内核组播工具install_multi.sh
 
 ### RAC1运行 bash install_multi.sh 1
 
@@ -1389,7 +1407,7 @@ Failed to start ASM at /alidata/grid/app/11.2.0/grid/crs/install/crsconfig_lib.p
    /alidata/grid/app/11.2.0/grid/bin/crsctl stop crs
    ```
 
-   
+
 
 2. 节点1执行
 
@@ -1401,7 +1419,7 @@ Failed to start ASM at /alidata/grid/app/11.2.0/grid/crs/install/crsconfig_lib.p
    /alidata/grid/app/11.2.0/grid/bin/crsctl stop crs
    ```
 
-   
+
 
 3. 节点2执行
 
@@ -1413,7 +1431,7 @@ Failed to start ASM at /alidata/grid/app/11.2.0/grid/crs/install/crsconfig_lib.p
    /alidata/grid/app/11.2.0/grid/bin/crsctl stop crs
    ```
 
-   
+
 
 4. 两个节点执行启动集群crs
 
@@ -1427,7 +1445,7 @@ Failed to start ASM at /alidata/grid/app/11.2.0/grid/crs/install/crsconfig_lib.p
    /alidata/grid/app/11.2.0/grid/bin/crsctl status res -t
    ```
 
-   
+
 
 6. grid 用户 执行安装GI的 post检查，尤其确保节点连通性和组播通过检查
 
@@ -1435,7 +1453,3 @@ Failed to start ASM at /alidata/grid/app/11.2.0/grid/crs/install/crsconfig_lib.p
    cd /software/grid/grid/
    ./runcluvfy.sh stage -post hwos -n rac1,rac2 -verbose
    ```
-
-   
-
-   

@@ -2,11 +2,37 @@
 
 > 2020.01.04 BoobooWei
 
-[TOC]
+<!-- MDTOC maxdepth:6 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
+
+- [搭建ISCSI2Nodes + LVM的镜像模式实现Failover](#搭建iscsi2nodes-lvm的镜像模式实现failover)   
+   - [iSCSI简介](#iscsi简介)   
+      - [ISCSI target](#iscsi-target)   
+      - [ISCSI initintor](#iscsi-initintor)   
+      - [图解](#图解)   
+   - [iSCSI 服务端配置](#iscsi-服务端配置)   
+      - [操作系统和内核信息](#操作系统和内核信息)   
+      - [查看内核是否支持`iscsi_tcp`](#查看内核是否支持iscsi_tcp)   
+      - [查看系统中可用的磁盘](#查看系统中可用的磁盘)   
+      - [划分分区](#划分分区)   
+      - [安装软件`scsi-target-utils`](#安装软件scsi-target-utils)   
+      - [修改配置文件](#修改配置文件)   
+      - [启动`tgtd`服务](#启动tgtd服务)   
+      - [查看共享存储](#查看共享存储)   
+   - [Oracle RAC节点使用共享存储块](#oracle-rac节点使用共享存储块)   
+      - [操作系统和内核信息](#操作系统和内核信息)   
+      - [查看内核是否支持`iscsi_tcp`](#查看内核是否支持iscsi_tcp)   
+      - [安装软件`iscsi-initiator-utils`](#安装软件iscsi-initiator-utils)   
+      - [启动服务`iscsid`](#启动服务iscsid)   
+      - [登陆共享存储](#登陆共享存储)   
+      - [查看SCSI设备](#查看scsi设备)   
+      - [LVM镜像模式](#lvm镜像模式)   
+   - [总结](#总结)   
+
+<!-- /MDTOC -->
 
 ## iSCSI简介
 
-iSCSI服务器称为“Target（目标器）”，它提供服务器上的存储共享。iSCSI客户端称为“Initiator（发起程序）”，它访问目标器共享的存储。市场中有卖的用于大型存储服务如SAN的iSCSI适配器。 
+iSCSI服务器称为“Target（目标器）”，它提供服务器上的存储共享。iSCSI客户端称为“Initiator（发起程序）”，它访问目标器共享的存储。市场中有卖的用于大型存储服务如SAN的iSCSI适配器。
 
 - iSCSI target：就是储存设备端，存放磁盘或 RAID 的设备，目前也能够将 Linux 主机仿真成 iSCSI target 了！目的在提供其他主机使用的**磁盘**；
 -  iSCSI initiator：就是能够使用 target 的客户端，通常是服务器。 也就是说，想要连接到 iSCSI target 的服务器，也必须要安装 iSCSI initiator 的相关功能后才能够使用 iSCSI target 提供的磁盘就。
@@ -71,7 +97,7 @@ mount
 ```bash
 [root@iscsi ~]# uname -a
 Linux iscsi 2.6.32-573.el6.x86_64 #1 SMP Wed Jul 1 18:23:37 EDT 2015 x86_64 x86_64 x86_64 GNU/Linux
-[root@iscsi ~]# cat /etc/redhat-release 
+[root@iscsi ~]# cat /etc/redhat-release
 Red Hat Enterprise Linux Server release 6.7 (Santiago)
 ```
 
@@ -87,7 +113,7 @@ scsi_transport_spi     25447  1 mptspi
 ```
 
 * `=m`代表支持;
-* `CONFIG_ISCSI_TCP is not set`表示没有支持 
+* `CONFIG_ISCSI_TCP is not set`表示没有支持
 
 ### 查看系统中可用的磁盘
 
@@ -149,9 +175,9 @@ brw-rw---- 1 root disk 8, 19 Jan  4 17:12 /dev/sdb3
 
 ```bash
 root@iscsi ~]# yum list|grep scsi
-iscsi-initiator-utils.x86_64           6.2.0.873-14.el6              local.repo 
-lsscsi.x86_64                          0.23-3.el6                    local.repo 
-scsi-target-utils.x86_64               1.0.24-16.el6                 local.repo 
+iscsi-initiator-utils.x86_64           6.2.0.873-14.el6              local.repo
+lsscsi.x86_64                          0.23-3.el6                    local.repo
+scsi-target-utils.x86_64               1.0.24-16.el6                 local.repo
 root@iscsi ~]# yum install -y scsi-target-utils
 [root@iscsi ~]# rpm -ql scsi-target-utils
 /etc/rc.d/init.d/tgtd
@@ -179,7 +205,7 @@ root@iscsi ~]# yum install -y scsi-target-utils
 iSCSI 有一套自己分享 target 档名的定义，基本上，藉由 iSCSI 分享出来的 target 檔名都是以 iqn 为开头，意思是：`iSCSI Qualified Name (iSCSI 合格名称)`的意思。那么在 iqn 后面要接啥档名呢？通常是这样的：
 
 ```bash
-iqn.yyyy-mm.<reversed domain name>:identifier 
+iqn.yyyy-mm.<reversed domain name>:identifier
 iqn.年年-月.单位网域名的反转写法 :这个分享的target名称
 ```
 
@@ -240,7 +266,7 @@ Target 1: iqn.2020-001.com.iscsi:oracle
             Readonly: No
             Backing store type: null
             Backing store path: None
-            Backing store flags: 
+            Backing store flags:
         LUN: 1
             Type: disk
             SCSI ID: IET     00010001
@@ -252,7 +278,7 @@ Target 1: iqn.2020-001.com.iscsi:oracle
             Readonly: No
             Backing store type: rdwr
             Backing store path: /dev/sdb1
-            Backing store flags: 
+            Backing store flags:
         LUN: 2
             Type: disk
             SCSI ID: IET     00010002
@@ -264,7 +290,7 @@ Target 1: iqn.2020-001.com.iscsi:oracle
             Readonly: No
             Backing store type: rdwr
             Backing store path: /dev/sdb2
-            Backing store flags: 
+            Backing store flags:
         LUN: 3
             Type: disk
             SCSI ID: IET     00010003
@@ -276,7 +302,7 @@ Target 1: iqn.2020-001.com.iscsi:oracle
             Readonly: No
             Backing store type: rdwr
             Backing store path: /dev/sdb3
-            Backing store flags: 
+            Backing store flags:
     Account information:
     ACL information:
         ALL
@@ -289,7 +315,7 @@ Target 1: iqn.2020-001.com.iscsi:oracle
 ```bash
 root@node1 ~]# uname -a
 Linux node1 2.6.32-573.el6.x86_64 #1 SMP Wed Jul 1 18:23:37 EDT 2015 x86_64 x86_64 x86_64 GNU/Linux
-[root@node1 ~]# cat /etc/redhat-release 
+[root@node1 ~]# cat /etc/redhat-release
 Red Hat Enterprise Linux Server release 6.7 (Santiago)
 ```
 
@@ -305,13 +331,13 @@ scsi_transport_spi     25447  1 mptspi
 ```
 
 - `=m`代表支持;
-- `CONFIG_ISCSI_TCP is not set`表示没有支持 
+- `CONFIG_ISCSI_TCP is not set`表示没有支持
 
 ### 安装软件`iscsi-initiator-utils`
 
 ```bash
 [root@node1 ~]# yum list|grep iscsi
-iscsi-initiator-utils.x86_64           6.2.0.873-14.el6              local.repo 
+iscsi-initiator-utils.x86_64           6.2.0.873-14.el6              local.repo
 [root@node1 ~]# yum install -y lsscsi
 [root@node1 ~]# yum install -y iscsi-initiator-utils
 [root@node1 ~]# rpm -ql iscsi-initiator-utils
@@ -371,20 +397,20 @@ Login to [iface: default, target: iqn.2020-001.com.iscsi:oracle, portal: 192.168
 Login to [iface: default, target: iqn.2020-001.com.iscsi2:oracle, portal: 192.168.14.149,3260] successful.
 ```
 
-### 查看SCSI设备 
+### 查看SCSI设备
 
 ```bash
 [root@node1 ~]# lsscsi
-[0:0:0:0]    disk    VMware,  VMware Virtual S 1.0   /dev/sda 
-[4:0:0:0]    cd/dvd  NECVMWar VMware SATA CD01 1.00  /dev/sr0 
+[0:0:0:0]    disk    VMware,  VMware Virtual S 1.0   /dev/sda
+[4:0:0:0]    cd/dvd  NECVMWar VMware SATA CD01 1.00  /dev/sr0
 [34:0:0:0]   storage IET      Controller       0001  -       
-[34:0:0:1]   disk    IET      VIRTUAL-DISK     0001  /dev/sdb 
-[34:0:0:2]   disk    IET      VIRTUAL-DISK     0001  /dev/sdc 
-[34:0:0:3]   disk    IET      VIRTUAL-DISK     0001  /dev/sdd 
+[34:0:0:1]   disk    IET      VIRTUAL-DISK     0001  /dev/sdb
+[34:0:0:2]   disk    IET      VIRTUAL-DISK     0001  /dev/sdc
+[34:0:0:3]   disk    IET      VIRTUAL-DISK     0001  /dev/sdd
 [35:0:0:0]   storage IET      Controller       0001  -       
-[35:0:0:1]   disk    IET      VIRTUAL-DISK     0001  /dev/sde 
-[35:0:0:2]   disk    IET      VIRTUAL-DISK     0001  /dev/sdf 
-[35:0:0:3]   disk    IET      VIRTUAL-DISK     0001  /dev/sdg 
+[35:0:0:1]   disk    IET      VIRTUAL-DISK     0001  /dev/sde
+[35:0:0:2]   disk    IET      VIRTUAL-DISK     0001  /dev/sdf
+[35:0:0:3]   disk    IET      VIRTUAL-DISK     0001  /dev/sdg
 ```
 
 从返回的信息可以看到，已成功获取了6块共享存储设备。
@@ -407,7 +433,7 @@ Login to [iface: default, target: iqn.2020-001.com.iscsi2:oracle, portal: 192.16
   Physical volume "/dev/sdf" successfully created
   Physical volume "/dev/sdg" successfully created
 [root@node1 ~]# pvs
-  PV         VG   Fmt  Attr PSize  PFree 
+  PV         VG   Fmt  Attr PSize  PFree
   /dev/sdb        lvm2 ---  20.01g 20.01g
   /dev/sdc        lvm2 ---  20.01g 20.01g
   /dev/sdd        lvm2 ---  10.00g 10.00g
@@ -421,7 +447,7 @@ Login to [iface: default, target: iqn.2020-001.com.iscsi2:oracle, portal: 192.16
 [root@node1 ~]# vgcreate vg3 /dev/sdd /dev/sdg
   Volume group "vg3" successfully created
 [root@node1 ~]# vgs
-  VG   #PV #LV #SN Attr   VSize  VFree 
+  VG   #PV #LV #SN Attr   VSize  VFree
   vg1    2   0   0 wz--n- 40.02g 40.02g
   vg2    2   0   0 wz--n- 40.02g 40.02g
   vg3    2   0   0 wz--n- 20.00g 20.00g
@@ -474,4 +500,3 @@ lrwxrwxrwx 1 root root      7 Jan  4 20:38 vg3-mirror3_mimage_1 -> ../dm-7
 1. 基础搭建
 2. 双向认证
 3. 更新/删除/新增 target 数据的方法
-
