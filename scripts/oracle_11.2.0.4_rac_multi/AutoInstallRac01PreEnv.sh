@@ -149,6 +149,12 @@ echo_green "swap分区150M"
 dd if=/dev/zero of=/home/swap bs=1024 count=154000
 mkswap /home/swap
 swapon /home/swap
+sed -i '/auto install rac start/,/auto install rac end/d' /etc/fstab
+echo >> /etc/fatab << ENDF
+# auto install rac start
+/home/swap swap swap defaults 0 0
+# auto install rac end
+ENDF
 }
 
 set_oracle_rac1_env(){

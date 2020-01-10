@@ -2,17 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8f60284b-d130-42b8-be7b-c0c9d7741cce" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/install_multi.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/AutoInstallRac01PreEnv.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/AutoInstallRac02Grid.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/get_resource_plan.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_n2n/set_resource_plan.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rac/01-在阿里云ECS上搭建Oracle11g RAC实施方案.md" beforeDir="false" afterPath="$PROJECT_DIR$/rac/01-在阿里云ECS上搭建Oracle11g RAC实施方案.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/AutoInstallRac01PreEnv.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/AutoInstallRac01PreEnv.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/AutoInstallRac02Grid.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/AutoInstallRac02Grid.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/get_resource_plan.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/get_resource_plan.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac/set_resource_plan.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/set_resource_plan.sh" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -52,8 +42,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/install_multi.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="303">
-              <caret line="33" column="16" selection-start-line="33" selection-start-column="16" selection-end-line="33" selection-end-column="16" />
+            <state relative-caret-position="347">
+              <caret line="40" column="27" selection-start-line="40" selection-start-column="27" selection-end-line="40" selection-end-column="27" />
             </state>
           </provider>
         </entry>
@@ -177,12 +167,12 @@
       <workItem from="1578371159095" duration="20158000" />
       <workItem from="1578405829516" duration="18358000" />
       <workItem from="1578535085564" duration="19974000" />
-      <workItem from="1578622403056" duration="1615000" />
+      <workItem from="1578622403056" duration="2274000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="60105000" />
+    <option name="totallyTimeSpent" value="60764000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -305,8 +295,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/oracle_11.2.0.4_rac_multi/install_multi.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="33" column="16" selection-start-line="33" selection-start-column="16" selection-end-line="33" selection-end-column="16" />
+        <state relative-caret-position="347">
+          <caret line="40" column="27" selection-start-line="40" selection-start-column="27" selection-end-line="40" selection-end-column="27" />
         </state>
       </provider>
     </entry>
