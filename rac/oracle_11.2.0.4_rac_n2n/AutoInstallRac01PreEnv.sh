@@ -197,8 +197,7 @@ for i in ${node1_domain_pub[@]} ${node1_domain_pri[@]} ${node2_domain_pub[@]} ${
 ENDF
 
 
-cat /tmp/ssh_oracle.sh
-echo_red "rac1环境配置 开始"
+echo_red "rac1环境配置 结束"
 }
 
 set_oracle_rac2_env(){

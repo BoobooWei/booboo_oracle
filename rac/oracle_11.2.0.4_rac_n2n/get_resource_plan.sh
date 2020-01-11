@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # get_resource_plan.sh
 # Auth: BoooBooWei 2020.01.09
 

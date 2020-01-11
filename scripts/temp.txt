@@ -332,16 +332,47 @@ unzip p13390677_112040_Linux-x86-64_3of7.zip
 rpm -ivh /home/grid/grid/rpm/cvuqdisk-1.0.9-1.rpm
 
 校验集群安装的可行性：
-cd grid/
-./runcluvfy.sh stage -pre crsinst -n rac1,rac2 -fixup -verbose
-
-/u01/grid/bin/cluvfy stage -post crsinst -n rac1,rac2 -verbose
+cd /u01/install/grid/
+./runcluvfy.sh stage -pre crsinst -n node1,node2 -fixup -verbose
 
 
+rpm -e --nodeps ksh
+yum localinstall -y /u01/install/pdksh-5.2.14-30.x86_64.rpm
+ 
+yum localinstall -y elfutils-libelf-devel
 
+图形化界面安装grid
 
+[root@node1 install]# bash /u01/app/oracle/product/11.2.0/grid/root.sh
+Performing root user operation for Oracle 11g 
 
+The following environment variables are set as:
+    ORACLE_OWNER= grid
+    ORACLE_HOME=  /u01/app/oracle/product/11.2.0/grid
 
+Enter the full pathname of the local bin directory: [/usr/local/bin]: 
+The contents of "dbhome" have not changed. No need to overwrite.
+The contents of "oraenv" have not changed. No need to overwrite.
+The contents of "coraenv" have not changed. No need to overwrite.
+
+Entries will be added to the /etc/oratab file as needed by
+Database Configuration Assistant when a database is created
+Finished running generic part of root script.
+Now product-specific root actions will be performed.
+Using configuration parameter file: /u01/app/oracle/product/11.2.0/grid/crs/install/crsconfig_params
+Creating trace directory
+LOCAL ADD MODE 
+Creating OCR keys for user 'grid', privgrp 'oinstall'..
+Operation successful.
+LOCAL ONLY MODE 
+Successfully accumulated necessary OCR keys.
+Creating OCR keys for user 'root', privgrp 'root'..
+Operation successful.
+CRS-4664: Node node1 successfully pinned.
+Adding Clusterware entries to upstart
+
+node1     2020/01/06 00:06:38     /u01/app/oracle/product/11.2.0/grid/cdata/node1/backup_20200106_000638.olr
+Successfully configured Oracle Grid Infrastructure for a Standalone Server
 
 
 
