@@ -1,4 +1,4 @@
-# 阿里云ECSCentos6.9自动化安装Oracle11.2.0.4.0Rac2Nodes.HAVIP
+# VMWareCentos6.9自动化安装Oracle11.2.0.4.0Rac2Nodes.
 
 <!-- MDTOC maxdepth:6 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
 
