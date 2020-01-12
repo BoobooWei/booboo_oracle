@@ -1,5 +1,5 @@
 #!/bin/bash
-# centos6 install oracle 11.2.0.4 rac 静默安装oracle
+# centos6 install oracle 11.2.0.4 rac 静默安装oracle实例
 # Usage: bash AutoInstallRac03Oracle.sh
 # 在节点1上，使用oracle用户执行
 
@@ -89,7 +89,7 @@ echo_green "静默安装oracle应答文件准备 结束"
 }
 
 
-install_racle(){
+install_oracle(){
 echo_red "oracle实例静默安装 开始"
 cd /software/database/database
 ./runInstaller -ignorePrereq -silent -force -responseFile ${oracle_tmp}/db.rsp
@@ -102,6 +102,19 @@ date +'%Y%m%d %H:%M:%S'
 check_user oracle
 set_oracle_rsp
 install_oracle
+read
+echo_red "请查看日志，确认是否安装成功"
+read
+echo_green "成功输入1 失败输入0："
+read num
+if [[ $num == 1 ]]
+then
+    echo_green "请打开新的终端执行脚本，执行完成后按回车继续"
+    read
+else
+    echo_red "安装失败，结束程序"
+    exit
+fi
 
 echo_red "结束时间："
 date +'%Y%m%d %H:%M:%S'

@@ -13,14 +13,16 @@
    - [rac1手动执行脚本](#rac1手动执行脚本)   
    - [rac2手动执行脚本](#rac2手动执行脚本)   
    - [grid用户继续运行脚本AutoInstallRac02Grid.sh](#grid用户继续运行脚本autoinstallrac02gridsh)   
-- [安装oracle](#安装oracle)   
-   - [运行脚本](#运行脚本)   
-   - [rac1运行脚本](#rac1运行脚本)   
-   - [rac2运行脚本](#rac2运行脚本)   
-- [安装数据库](#安装数据库)   
-- [检查RAC集群](#检查rac集群)   
+- [静默安装oracle实例](#静默安装oracle实例)   
+   - [oracle用户运行脚本AutoInstallRac03Oracle.sh](#oracle用户运行脚本autoinstallrac03oraclesh)   
+   - [rac1手动执行脚本](#rac1手动执行脚本)   
+   - [rac2手动执行脚本](#rac2手动执行脚本)   
+- [静默创建数据库](#静默创建数据库)   
+   - [oracle用户运行脚本](#oracle用户运行脚本)   
+- [业务测试](#业务测试)   
 
 <!-- /MDTOC -->
+
 # 运行步骤
 
 > 运行脚本前需要注意将网卡变更为静态ip模式后重启服务，并分配好iscsi要使用的磁盘
@@ -566,14 +568,102 @@ Grant succeeded.
 
 grid + asm 大概21分钟
 
-# 安装oracle
+# 静默安装oracle实例
 
-## 运行脚本
+## oracle用户运行脚本AutoInstallRac03Oracle.sh
 
-## rac1运行脚本
+```bash
+[oracle@rac1 ~]$ bash AutoInstallRac03Oracle.sh
+开始时间：
+20200112 11:50:02
+当前用户为 oracle
+执行用户与要求一致
+静默安装oracle应答文件准备 开始
+静默安装oracle应答文件准备 结束
+oracle实例静默安装 开始
+Starting Oracle Universal Installer...
 
-## rac2运行脚本
+Checking Temp space: must be greater than 120 MB.   Actual 19212 MB    Passed
+Checking swap space: must be greater than 150 MB.   Actual 3999 MB    Passed
+Preparing to launch Oracle Universal Installer from /tmp/OraInstall2020-01-12_11-50-02AM. Please wait ...oracle实例静默安装 安装中
+You can find the log of this install session at:
+ /alidata//grid/app/oraInventory/logs/installActions2020-01-12_11-50-02AM.log
+The installation of Oracle Database 11g was successful.
+Please check '/alidata//grid/app/oraInventory/logs/silentInstall2020-01-12_11-50-02AM.log' for more details.
 
-# 安装数据库
+As a root user, execute the following script(s):
+	1. /alidata/oracle/product/11.2.0/dbhome_1/root.sh
 
-# 检查RAC集群
+Execute /alidata/oracle/product/11.2.0/dbhome_1/root.sh on the following nodes:
+[rac1, rac2]
+
+Successfully Setup Software.
+```
+
+继续回车
+
+```bash
+请查看日志，确认是否安装成功
+
+成功输入1 失败输入0：
+1
+请打开新的终端执行脚本，执行完成后按回车继续
+```
+
+
+
+## rac1手动执行脚本
+
+```bash
+[root@rac1 ~]# bash /alidata/oracle/product/11.2.0/dbhome_1/root.sh
+Check /alidata/oracle/product/11.2.0/dbhome_1/install/root_rac1_2020-01-12_12-00-39.log for the output of root script
+[root@rac1 ~]# tailf /alidata/oracle/product/11.2.0/dbhome_1/install/root_rac1_2020-01-12_12-00-39.log
+   Copying dbhome to /usr/local/bin ...
+   Copying oraenv to /usr/local/bin ...
+   Copying coraenv to /usr/local/bin ...
+
+Entries will be added to the /etc/oratab file as needed by
+Database Configuration Assistant when a database is created
+Finished running generic part of root script.
+Now product-specific root actions will be performed.
+Finished product-specific root actions.
+Finished product-specific root actions.
+```
+
+## rac2手动执行脚本
+
+```bash
+[root@rac2 ~]# bash /alidata/oracle/product/11.2.0/dbhome_1/root.sh
+Check /alidata/oracle/product/11.2.0/dbhome_1/install/root_rac2_2020-01-12_12-04-00.log for the output of root script
+[root@rac2 ~]# tailf /alidata/oracle/product/11.2.0/dbhome_1/install/root_rac2_2020-01-12_12-04-00.log
+   Copying dbhome to /usr/local/bin ...
+   Copying oraenv to /usr/local/bin ...
+   Copying coraenv to /usr/local/bin ...
+
+Entries will be added to the /etc/oratab file as needed by
+Database Configuration Assistant when a database is created
+Finished running generic part of root script.
+Now product-specific root actions will be performed.
+Finished product-specific root actions.
+Finished product-specific root actions.
+
+## 安装结束
+
+两个节点运行完成后按回车。
+
+```bash
+结束时间：
+20200112 12:06:31
+```
+创建数据库实例耗时在10分钟。
+
+# 静默创建数据库
+
+## oracle用户运行脚本
+
+
+
+
+
+
+# 业务测试

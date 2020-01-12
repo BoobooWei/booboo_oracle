@@ -8,6 +8,7 @@ grid_tmp=/home/grid/grid_tmp/ # grid 安装时的临时文件
 oracle_tmp=/home/oracle/oracle_tmp/ # oracle 安装时的临时文件
 grid_passwd=Zyadmin123 # grid 应答文件中SYSASMPassword 和 monitorPassword 的密码
 database_name=rac # 数据库名称
+LANG=ZHS16GBK # 数据库字符集 ZHS16GBK\AL32UTF8\AL16UTF16
 
 node1_hostname=rac1 # 节点1 名称，主机名，实例名
 node1_physic_ip=eth0:192.168.14.150 # 节点1 真实的物理网卡和地址

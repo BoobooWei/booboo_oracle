@@ -118,6 +118,7 @@ install_adm(){
 echo_red "静默安装asm实例 开始"
 sqlplus -S / as sysasm << ENDF
 CREATE DISKGROUP DATA EXTERNAL REDUNDANCY DISK '/dev/raw/raw2';
+alter diskgroup data mount;
 select inst_id,name,state from gv\$asm_diskgroup;
 exit;
 ENDF
