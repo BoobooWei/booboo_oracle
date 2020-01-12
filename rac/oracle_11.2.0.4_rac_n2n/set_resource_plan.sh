@@ -39,6 +39,8 @@ node1_physic_ip_addr=${node1_physic_ip#*:}
 node1_physic_ip_eth=${node1_physic_ip/:*}
 node2_physic_ip_addr=${node2_physic_ip#*:}
 node2_physic_ip_eth=${node2_physic_ip/:*}
+node1_physic_ip_net=`echo ${node1_physic_ip_addr} | awk -F '.' '{print $1"."$2"."$3".0"}'`
+node2_physic_ip_net=`echo ${node2_physic_ip_addr} | awk -F '.' '{print $1"."$2"."$3".0"}'`
 
 # 获取专用IP和网卡
 node1_private_ip_addr=${node1_private_ip#*:}
@@ -46,11 +48,20 @@ node1_private_ip_eth=${node1_private_ip/:*}
 node2_private_ip_addr=${node2_private_ip#*:}
 node2_private_ip_eth=${node2_private_ip/:*}
 
+# 获取专用IP的网段（/24）
+node1_private_ip_net=`echo ${node1_private_ip_addr} | awk -F '.' '{print $1"."$2"."$3".0"}'`
+node2_private_ip_net=`echo ${node2_private_ip_addr} | awk -F '.' '{print $1"."$2"."$3".0"}'`
+
 # 获取公共IP和网卡
 node1_public_ip_addr=${node1_public_ip#*:}
 node1_public_ip_eth=${node1_public_ip/:*}
 node2_public_ip_addr=${node2_public_ip#*:}
 node2_public_ip_eth=${node2_public_ip/:*}
+
+# 获取公共IP的网段（/24）
+node1_public_ip_net=`echo ${node1_public_ip_addr} | awk -F '.' '{print $1"."$2"."$3".0"}'`
+node2_public_ip_net=`echo ${node2_public_ip_addr} | awk -F '.' '{print $1"."$2"."$3".0"}'`
+
 }
 
 

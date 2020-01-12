@@ -49,7 +49,7 @@ oracle.install.crs.config.gpnp.gnsVIPAddress=
 oracle.install.crs.config.autoConfigureClusterNodeVIP=false
 oracle.install.crs.config.clusterNodes=${node1_domain_pub[1]}:${node1_domain_pub_v[1]},${node2_domain_pub[1]}:${node2_domain_pub_v[1]}
 # 1 pub 2 priv 3 nouse
-oracle.install.crs.config.networkInterfaceList=${node1_physic_ip_eth}:${node1_physic_ip_addr}:3,${node1_public_ip_eth}:${node1_public_ip_addr}:1,${node1_private_ip_eth}:${node1_private_ip_addr}:2
+oracle.install.crs.config.networkInterfaceList=*:${node1_public_ip_net}:1,*:${node1_private_ip_net}:2
 oracle.install.crs.config.storageOption=ASM_STORAGE
 oracle.install.crs.config.sharedFileSystemStorage.diskDriveMapping=
 oracle.install.crs.config.sharedFileSystemStorage.votingDiskLocations=

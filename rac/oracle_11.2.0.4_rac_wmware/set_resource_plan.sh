@@ -6,7 +6,7 @@ set_resource_plan(){
 ssh_port=22
 grid_tmp=/home/grid/grid_tmp/ # grid 安装记录临时存放路径
 grid_passwd=Zyadmin123 # grid 应答文件中SYSASMPassword 和 monitorPassword 的密码
-database_name=racdb # 数据库名称
+database_name=rac # 数据库名称
 
 node1_hostname=rac1 # 节点1 名称，主机名，实例名
 node1_physic_ip=eth0:192.168.14.150 # 节点1 真实的物理网卡和地址
@@ -46,11 +46,20 @@ node1_private_ip_eth=${node1_private_ip/:*}
 node2_private_ip_addr=${node2_private_ip#*:}
 node2_private_ip_eth=${node2_private_ip/:*}
 
+# 获取专用IP的网段（/24）
+node1_private_ip_net=`echo ${node1_private_ip_addr} | awk -F '.' '{print $1"."$2"."$3".0"}'`
+node2_private_ip_net=`echo ${node2_private_ip_addr} | awk -F '.' '{print $1"."$2"."$3".0"}'`
+
 # 获取公共IP和网卡
 node1_public_ip_addr=${node1_public_ip#*:}
 node1_public_ip_eth=${node1_public_ip/:*}
 node2_public_ip_addr=${node2_public_ip#*:}
 node2_public_ip_eth=${node2_public_ip/:*}
+
+# 获取公共IP的网段（/24）
+node1_public_ip_net=`echo ${node1_public_ip_addr} | awk -F '.' '{print $1"."$2"."$3".0"}'`
+node2_public_ip_net=`echo ${node2_public_ip_addr} | awk -F '.' '{print $1"."$2"."$3".0"}'`
+
 }
 
 
