@@ -4,7 +4,8 @@
 
 set_resource_plan(){
 ssh_port=22
-grid_tmp=/home/grid/grid_tmp/ # grid 安装记录临时存放路径
+grid_tmp=/home/grid/grid_tmp/ # grid 安装时的临时文件
+oracle_tmp=/home/oracle/oracle_tmp/ # oracle 安装时的临时文件
 grid_passwd=Zyadmin123 # grid 应答文件中SYSASMPassword 和 monitorPassword 的密码
 database_name=rac # 数据库名称
 
@@ -31,6 +32,12 @@ scan_ip=192.168.14.180 # SCAN IP 地址
 scan_name=rac-cluster-scan # SCAN名称
 
 rac_dir=/alidata/ # rac和oracle安装最顶级目录
+grid_oracle_base=${rac_dir}/grid/app/grid
+grid_oracle_home=${rac_dir}/grid/app/11.2.0/grid
+oracle_oracle_base=${rac_dir}/oracle
+oracle_oracle_home=${rac_dir}/oracle/product/11.2.0/dbhome_1
+INVENTORY_LOCATION=${rac_dir}/grid/app/oraInventory
+
 shared_storage=("/dev/sdb1" "/dev/sdb2") # 共享存储块设备
 
 

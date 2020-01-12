@@ -166,8 +166,8 @@ sed -i '/autoinstall_rac_s/,/autoinstall_rac_e/d' /home/oracle/.bash_profile
 cat >> /home/oracle/.bash_profile << ENDF
 # autoinstall_rac_s
 export PATH
-export ORACLE_BASE=/alidata/oracle
-export ORACLE_HOME=\$ORACLE_BASE/product/11.2.0/dbhome_1
+export ORACLE_BASE=${oracle_oracle_base}
+export ORACLE_HOME=${oracle_oracle_home}
 export ORACLE_SID=${database_name}1
 #export NLS_LANG=AMERICAN_AMERICA.ZHS16GBK
 #export NLS_LANG=AMERICAN_AMERICA.UTF8
@@ -179,8 +179,8 @@ echo_green "设置grid用户环境变量"
 sed -i '/autoinstall_rac_s/,/autoinstall_rac_e/d' /home/grid/.bash_profile
 cat >> /home/grid/.bash_profile << AENDF
 # autoinstall_rac_s
-export ORACLE_BASE=/alidata/grid/app/grid
-export ORACLE_HOME=/alidata/grid/app/11.2.0/grid
+export ORACLE_BASE=${grid_oracle_base}
+export ORACLE_HOME=${grid_oracle_home}
 export PATH=\$ORACLE_HOME/bin:\$PATH:/usr/local/bin/
 export ORACLE_SID=+ASM1
 #export NLS_LANG=AMERICAN_AMERICA.ZHS16GBK
@@ -208,8 +208,8 @@ sed -i '/autoinstall_rac_s/,/autoinstall_rac_e/d' /home/oracle/.bash_profile
 cat >> /home/oracle/.bash_profile << ENDF
 # autoinstall_rac_s
 export PATH
-export ORACLE_BASE=/alidata/oracle
-export ORACLE_HOME=\$ORACLE_BASE/product/11.2.0/dbhome_1
+export ORACLE_BASE=${oracle_oracle_base}
+export ORACLE_HOME=${oracle_oracle_home}
 export ORACLE_SID=${database_name}2
 #export NLS_LANG=AMERICAN_AMERICA.ZHS16GBK
 #export NLS_LANG=AMERICAN_AMERICA.UTF8
@@ -221,8 +221,8 @@ echo_green "设置grid用户环境变量"
 sed -i '/autoinstall_rac_s/,/autoinstall_rac_e/d' /home/grid/.bash_profile
 cat >> /home/grid/.bash_profile << AENDF
 # autoinstall_rac_s
-export ORACLE_BASE=/alidata/grid/app/grid
-export ORACLE_HOME=/alidata/grid/app/11.2.0/grid
+export ORACLE_BASE=${grid_oracle_base}
+export ORACLE_HOME=${grid_oracle_home}
 export PATH=\$ORACLE_HOME/bin:\$PATH:/usr/local/bin/
 export ORACLE_SID=+ASM2
 #export NLS_LANG=AMERICAN_AMERICA.ZHS16GBK

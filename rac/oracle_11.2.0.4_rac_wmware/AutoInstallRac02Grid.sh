@@ -1,5 +1,5 @@
 #!/bin/bash
-# centos6 install oracle 11.2.0.4 rac 静默安装grid
+# centos6 install oracle 11.2.0.4 rac 静默安装grid+asm
 # Usage: bash AutoInstallRac02Grid.sh
 # 在节点1上，使用grid用户执行
 
@@ -32,11 +32,11 @@ echo_red "静默安装grid应答文件准备 开始"
 cat > ${grid_tmp}/grid.rsp << ENDF
 oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v11_2_0
 ORACLE_HOSTNAME=${node1_domain_pub[1]}
-INVENTORY_LOCATION=${rac_dir}/grid/app/oraInventory
+INVENTORY_LOCATION=${INVENTORY_LOCATION}
 SELECTED_LANGUAGES=en
 oracle.install.option=CRS_CONFIG
-ORACLE_BASE=${rac_dir}/grid/app/grid
-ORACLE_HOME=${rac_dir}/grid/app/11.2.0/grid
+ORACLE_BASE=${grid_oracle_base}
+ORACLE_HOME=${grid_oracle_home}
 oracle.install.asm.OSDBA=asmdba
 oracle.install.asm.OSOPER=asmoper
 oracle.install.asm.OSASM=asmadmin
@@ -99,17 +99,17 @@ echo_green "grid静默安装 安装中"
 
 check_grid(){
 echo_red "grid集群检查 开始"
-${rac_dir}/grid/app/11.2.0/grid/bin/crsctl check cluster -all
-${rac_dir}/grid/app/11.2.0/grid/bin/crs_stat -t
+${grid_oracle_home}/bin/crsctl check cluster -all
+${grid_oracle_home}/bin/crs_stat -t
 echo_red "防止监听没有成功启动,可在两个节点执行以下命令保证监听都启动。"
 echo_green "srvctl add listener"
 echo_green "srvctl start listener"
-${rac_dir}/grid/app/11.2.0/grid/bin/srvctl add listener
-${rac_dir}/grid/app/11.2.0/grid/bin/srvctl  start listener
-${rac_dir}/grid/app/11.2.0/grid/bin/srvctl status listener
-ssh rac2 ${rac_dir}/grid/app/11.2.0/grid/bin/srvctl add listener
-ssh rac2 ${rac_dir}/grid/app/11.2.0/grid/bin/srvctl start listener
-ssh rac2 ${rac_dir}/grid/app/11.2.0/grid/bin/srvctl status listener
+${grid_oracle_home}/bin/srvctl add listener
+${grid_oracle_home}/bin/srvctl  start listener
+${grid_oracle_home}/bin/srvctl status listener
+ssh rac2 ${grid_oracle_home}/bin/srvctl add listener
+ssh rac2 ${grid_oracle_home}/bin/srvctl start listener
+ssh rac2 ${grid_oracle_home}/bin/srvctl status listener
 crs_stat -t
 echo_green "grid集群检查 结束"
 }
@@ -122,9 +122,9 @@ select inst_id,name,state from gv\$asm_diskgroup;
 exit;
 ENDF
 
-cd /alidata/grid/app/11.2.0/grid/dbs
+cd ${grid_oracle_home}/dbs
 orapwd file='orapw+ASM' entries=5 password=Zyadmin123 force=y
-scp /alidata/grid/app/11.2.0/grid/dbs/orapw+ASM rac2:/alidata/grid/app/11.2.0/grid/dbs/orapw+ASM
+scp ${grid_oracle_home}/dbs/orapw+ASM rac2:${grid_oracle_home}/dbs/orapw+ASM
 sqlplus -S / as sysasm << ENDF
 create user asmsnmp identified by Zyadmin123;
 grant sysdba to asmsnmp;

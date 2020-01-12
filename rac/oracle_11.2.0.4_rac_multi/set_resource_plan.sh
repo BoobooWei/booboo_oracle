@@ -31,6 +31,12 @@ scan_ip=172.16.1.88 # SCAN IP 地址
 scan_name=rac-cluster-scan # SCAN名称
 
 rac_dir=/alidata/ # rac和oracle安装最顶级目录
+grid_oracle_base=${rac_dir}/grid/app/grid
+grid_oracle_home=${rac_dir}/grid/app/11.2.0/grid
+oracle_oracle_base=${rac_dir}/oracle
+oracle_oracle_home=${rac_dir}/oracle/product/11.2.0/dbhome_1
+INVENTORY_LOCATION=${rac_dir}/grid/app/oraInventory
+
 shared_storage=("/dev/vdb1" "/dev/vdb2") # 共享存储块设备
 
 
