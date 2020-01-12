@@ -101,13 +101,37 @@ check_grid(){
 echo_red "grid集群检查 开始"
 ${rac_dir}/grid/app/11.2.0/grid/bin/crsctl check cluster -all
 ${rac_dir}/grid/app/11.2.0/grid/bin/crs_stat -t
+echo_red "防止监听没有成功启动,可在两个节点执行以下命令保证监听都启动。"
+echo_green "srvctl add listener"
+echo_green "srvctl start listener"
+${rac_dir}/grid/app/11.2.0/grid/bin/srvctl add listener
+${rac_dir}/grid/app/11.2.0/grid/bin/srvctl  start listener
+${rac_dir}/grid/app/11.2.0/grid/bin/srvctl status listener
+ssh rac2 ${rac_dir}/grid/app/11.2.0/grid/bin/srvctl add listener
+ssh rac2 ${rac_dir}/grid/app/11.2.0/grid/bin/srvctl start listener
+ssh rac2 ${rac_dir}/grid/app/11.2.0/grid/bin/srvctl status listener
+crs_stat -t
 echo_green "grid集群检查 结束"
 }
 
 install_adm(){
 echo_red "静默安装asm实例 开始"
+sqlplus -S / as sysasm << ENDF
+CREATE DISKGROUP DATA EXTERNAL REDUNDANCY DISK '/dev/raw/raw2';
+select inst_id,name,state from gv\$asm_diskgroup;
+exit;
+ENDF
 
-echo_green "静默安装asm实例 开始"
+cd /alidata/grid/app/11.2.0/grid/dbs
+orapwd file='orapw+ASM' entries=5 password=Zyadmin123 force=y
+scp /alidata/grid/app/11.2.0/grid/dbs/orapw+ASM rac2:/alidata/grid/app/11.2.0/grid/dbs/orapw+ASM
+sqlplus -S / as sysasm << ENDF
+create user asmsnmp identified by Zyadmin123;
+grant sysdba to asmsnmp;
+select * from gv\$pwfile_users;
+ENDF
+
+echo_green "静默安装asm实例 结束"
 }
 
 
@@ -118,13 +142,17 @@ set_grid_rsp
 #check_before_install_grid
 install_grid
 echo_red "请查看日志，确认是否安装成功"
-read -p "成功输入1 失败输入0" num
+read
+echo_green "成功输入1 失败输入0："
+read num
 if [[ $num == 1 ]]
 then
-    echo_green "1. /u01/app/oraInventory/orainstRoot.sh 2. /u01/app/11.2.0/grid/root.sh"
-    read -p "请打开新的终端执行脚本，执行完成后按回车继续"
-    read -p "开始检查集群，按回车"
+    echo_green "请打开新的终端执行脚本，执行完成后按回车继续"
+    read
+    echo_green "开始检查集群，按回车"
+    read
     check_grid
+    install_adm
 else
     echo_red "安装失败，结束程序"
     exit
