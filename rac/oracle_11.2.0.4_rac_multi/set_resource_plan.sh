@@ -6,7 +6,7 @@ set_resource_plan(){
 ssh_port=22
 grid_tmp=/home/grid/grid_tmp/ # grid 安装记录临时存放路径
 grid_passwd=Zyadmin123 # grid 应答文件中SYSASMPassword 和 monitorPassword 的密码
-database_name=racdb # 数据库名称
+database_name=rac # 数据库名称
 
 node1_hostname=rac1 # 节点1 名称，主机名，实例名
 node1_physic_ip=eth0:172.16.1.31 # 节点1 真实的物理网卡和地址
