@@ -8,11 +8,13 @@
    - [安装集群前的环境配置](#安装集群前的环境配置)   
       - [RAC1上运行脚本 bash AutoInstallRac01PreEnv.sh 1](#rac1上运行脚本-bash-autoinstallrac01preenvsh-1)   
       - [RAC2上运行脚本 bash AutoInstallRac01PreEnv.sh 2](#rac2上运行脚本-bash-autoinstallrac01preenvsh-2)   
-- [安装grid](#安装grid)   
-   - [rac1运行脚本](#rac1运行脚本)   
-   - [rac2运行脚本](#rac2运行脚本)   
-   - [rac1配置ASM](#rac1配置asm)   
+- [静默安装grid](#静默安装grid)   
+   - [grid用户运行脚本AutoInstallRac02Grid.sh](#grid用户运行脚本autoinstallrac02gridsh)   
+   - [rac1手动执行脚本](#rac1手动执行脚本)   
+   - [rac2手动执行脚本](#rac2手动执行脚本)   
+   - [grid用户继续运行脚本AutoInstallRac02Grid.sh](#grid用户继续运行脚本autoinstallrac02gridsh)   
 - [安装oracle](#安装oracle)   
+   - [运行脚本](#运行脚本)   
    - [rac1运行脚本](#rac1运行脚本)   
    - [rac2运行脚本](#rac2运行脚本)   
 - [安装数据库](#安装数据库)   
@@ -64,6 +66,8 @@ shared_storage=("/dev/sdb1" "/dev/sdb2") # 共享存储块设备
 注意：rac1和rac2的脚本运行顺序-rac2延迟5分钟执行
 
 ### RAC1上运行脚本 bash AutoInstallRac01PreEnv.sh 1
+
+该脚本运行时间大概在15分钟
 
 ```bash
 [root@rac1 oracle_11.2.0.4_rac_multi]# bash AutoInstallRac01PreEnv.sh 1
@@ -332,15 +336,239 @@ Zyadmin123
 [grid@rac2 ~]$ bash /tmp/ssh_grid_oracle.sh
 ```
 
-# 安装grid
+# 静默安装grid
 
-## rac1运行脚本
+## grid用户运行脚本AutoInstallRac02Grid.sh
 
-## rac2运行脚本
+拷贝脚本 set_resource_plan.sh 和 AutoInstallRac02Grid.sh 到 grid家目录下。
 
-## rac1配置ASM
+```bash
+[grid@rac1 ~]$ bash AutoInstallRac02Grid.sh
+开始时间：
+20200111 23:13:27
+当前用户为 grid
+执行用户与要求一致
+静默安装grid应答文件准备 开始
+静默安装grid应答文件准备 结束
+grid静默安装 开始
+Starting Oracle Universal Installer...
+
+Checking Temp space: must be greater than 120 MB.   Actual 22914 MB    Passed
+Checking swap space: must be greater than 150 MB.   Actual 4150 MB    Passed
+Preparing to launch Oracle Universal Installer from /tmp/OraInstall2020-01-11_11-13-27PM. Please wait ...grid静默安装 安装中
+请查看日志，确认是否安装成功
+You can find the log of this install session at:
+ /alidata//grid/app/oraInventory/logs/installActions2020-01-11_11-13-27PM.log
+
+Prepare in progress.
+..................................................   9% Done.
+
+Prepare successful.
+
+Copy files in progress.
+..................................................   15% Done.
+..................................................   20% Done.
+..................................................   25% Done.
+..................................................   30% Done.
+..................................................   35% Done.
+..................................................   40% Done.
+..................................................   45% Done.
+........................................
+Copy files successful.
+
+Link binaries in progress.
+
+Link binaries successful.
+..................................................   62% Done.
+
+Setup files in progress.
+
+Setup files successful.
+..................................................   76% Done.
+
+Perform remote operations in progress.
+..................................................   89% Done.
+
+Perform remote operations successful.
+The installation of Oracle Grid Infrastructure 11g was successful.
+Please check '/alidata//grid/app/oraInventory/logs/silentInstall2020-01-11_11-13-27PM.log' for more details.
+..................................................   94% Done.
+
+Execute Root Scripts in progress.
+
+As a root user, execute the following script(s):
+	1. /alidata//grid/app/oraInventory/orainstRoot.sh
+	2. /alidata/grid/app/11.2.0/grid/root.sh
+
+Execute /alidata//grid/app/oraInventory/orainstRoot.sh on the following nodes:
+[rac1, rac2]
+Execute /alidata/grid/app/11.2.0/grid/root.sh on the following nodes:
+[rac1, rac2]
+
+..................................................   100% Done.
+
+Execute Root Scripts successful.
+As install user, execute the following script to complete the configuration.
+	1. /alidata/grid/app/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=<response_file>
+
+ 	Note:
+	1. This script must be run on the same host from where installer was run.
+	2. This script needs a small password properties file for configuration assistants that require passwords (refer to install guide documentation).
+
+
+Successfully Setup Software.
+```
+
+按回车，让自动化脚本继续
+
+```bash
+成功输入1 失败输入0：
+1
+请打开新的终端执行脚本，执行完成后按回车继续
+```
+
+## rac1手动执行脚本
+
+ ```bash
+[root@rac1 ~]# bash /alidata/grid/app/oraInventory/orainstRoot.sh
+Changing permissions of /alidata//grid/app/oraInventory.
+Adding read,write permissions for group.
+Removing read,write,execute permissions for world.
+
+Changing groupname of /alidata//grid/app/oraInventory to oinstall.
+The execution of the script is complete.
+[root@rac1 ~]# bash /alidata/grid/app/11.2.0/grid/root.sh
+Check /alidata/grid/app/11.2.0/grid/install/root_rac1_2020-01-11_22-00-10.log for the output of root script
+[root@rac1 ~]# tailf /alidata/grid/app/11.2.0/grid/install/root_rac1_2020-01-11_22-00-10.log
+Operation successful.
+CRS-4256: Updating the profile
+Successful addition of voting disk 9806babb40aa4f7dbff7e7e11953d3ec.
+Successfully replaced voting disk group with +OCR.
+CRS-4256: Updating the profile
+CRS-4266: Voting file(s) successfully replaced
+##  STATE    File Universal Id                File Name Disk group
+--  -----    -----------------                --------- ---------
+ 1. ONLINE   9806babb40aa4f7dbff7e7e11953d3ec (/dev/raw/raw1) [OCR]
+Located 1 voting disk(s).
+CRS-2672: Attempting to start 'ora.asm' on 'rac1'
+CRS-2676: Start of 'ora.asm' on 'rac1' succeeded
+CRS-2672: Attempting to start 'ora.OCR.dg' on 'rac1'
+CRS-2676: Start of 'ora.OCR.dg' on 'rac1' succeeded
+Configure Oracle Grid Infrastructure for a Cluster ... succeeded
+```
+
+## rac2手动执行脚本
+
+```bash
+[root@rac2 ~]# bash /alidata//grid/app/oraInventory/orainstRoot.sh
+Changing permissions of /alidata//grid/app/oraInventory.
+Adding read,write permissions for group.
+Removing read,write,execute permissions for world.
+
+Changing groupname of /alidata//grid/app/oraInventory to oinstall.
+The execution of the script is complete.
+[root@rac2 ~]# bash /alidata/grid/app/11.2.0/grid/root.sh
+Check /alidata/grid/app/11.2.0/grid/install/root_rac2_2020-01-11_22-09-23.log for the output of root script
+
+[root@rac2 ~]# tailf /alidata/grid/app/11.2.0/grid/install/root_rac2_2020-01-11_22-09-23.log
+Creating /etc/oratab file...
+Entries will be added to the /etc/oratab file as needed by
+Database Configuration Assistant when a database is created
+Finished running generic part of root script.
+Now product-specific root actions will be performed.
+Using configuration parameter file: /alidata/grid/app/11.2.0/grid/crs/install/crsconfig_params
+Creating trace directory
+User ignored Prerequisites during installation
+Installing Trace File Analyzer
+OLR initialization - successful
+Adding Clusterware entries to upstart
+CRS-4402: The CSS daemon was started in exclusive mode but found an active CSS daemon on node rac1, number 1, and is terminating
+An active cluster was found during exclusive startup, restarting to join the cluster
+Configure Oracle Grid Infrastructure for a Cluster ... succeeded
+```
+
+## grid用户继续运行脚本AutoInstallRac02Grid.sh
+
+按回车后
+
+```bash
+开始检查集群，按回车
+
+grid集群检查 开始
+**************************************************************
+rac1:
+CRS-4537: Cluster Ready Services is online
+CRS-4529: Cluster Synchronization Services is online
+CRS-4533: Event Manager is online
+**************************************************************
+rac2:
+CRS-4537: Cluster Ready Services is online
+CRS-4529: Cluster Synchronization Services is online
+CRS-4533: Event Manager is online
+**************************************************************
+Name           Type           Target    State     Host        
+------------------------------------------------------------
+ora....N1.lsnr ora....er.type ONLINE    ONLINE    rac1        
+ora.OCR.dg     ora....up.type ONLINE    ONLINE    rac1        
+ora.asm        ora.asm.type   ONLINE    ONLINE    rac1        
+ora.cvu        ora.cvu.type   ONLINE    ONLINE    rac1        
+ora.gsd        ora.gsd.type   OFFLINE   OFFLINE               
+ora....network ora....rk.type ONLINE    ONLINE    rac1        
+ora.oc4j       ora.oc4j.type  ONLINE    ONLINE    rac1        
+ora.ons        ora.ons.type   ONLINE    ONLINE    rac1        
+ora....SM1.asm application    ONLINE    ONLINE    rac1        
+ora.rac1.gsd   application    OFFLINE   OFFLINE               
+ora.rac1.ons   application    ONLINE    ONLINE    rac1        
+ora.rac1.vip   ora....t1.type ONLINE    ONLINE    rac1        
+ora....SM2.asm application    ONLINE    ONLINE    rac2        
+ora.rac2.gsd   application    OFFLINE   OFFLINE               
+ora.rac2.ons   application    ONLINE    ONLINE    rac2        
+ora.rac2.vip   ora....t1.type ONLINE    ONLINE    rac2        
+ora....ry.acfs ora....fs.type ONLINE    ONLINE    rac1        
+ora.scan1.vip  ora....ip.type ONLINE    ONLINE    rac1        
+防止监听没有成功启动,可在两个节点执行以下命令保证监听都启动。
+srvctl add listener
+srvctl start listener
+grid集群检查 结束
+静默安装asm实例 开始
+
+Diskgroup created.
+
+   INST_ID NAME 			  STATE
+---------- ------------------------------ -----------
+	 1 OCR				  MOUNTED
+	 1 DATA 			  MOUNTED
+	 2 OCR				  MOUNTED
+	 2 DATA 			  DISMOUNTED
+
+orapw+ASM                                                                                                                                                    100% 2048     2.0KB/s   00:00    
+
+User created.
+
+
+Grant succeeded.
+
+
+   INST_ID USERNAME			  SYSDB SYSOP SYSAS
+---------- ------------------------------ ----- ----- -----
+	 1 SYS				  TRUE	TRUE  FALSE
+	 1 ASMSNMP			  TRUE	FALSE FALSE
+	 2 SYS				  TRUE	TRUE  FALSE
+	 2 ASMSNMP			  TRUE	FALSE FALSE
+
+静默安装asm实例 结束
+结束时间：
+20200111 23:33:47
+```
+
+* 开始：23:13:27
+* 结束：23:33:47
+
+grid + asm 大概21分钟
 
 # 安装oracle
+
+## 运行脚本
 
 ## rac1运行脚本
 
