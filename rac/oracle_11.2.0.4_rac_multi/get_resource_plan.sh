@@ -49,5 +49,5 @@ echo_red "Oracle Grid 密码"
 echo ${grid_passwd}
 }
 
-source set_resource_plan.sh
+source ${scripts_dir}/set_resource_plan.sh
 get_resource_plan

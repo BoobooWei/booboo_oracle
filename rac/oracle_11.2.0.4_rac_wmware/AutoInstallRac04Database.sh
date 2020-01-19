@@ -14,7 +14,7 @@ echo_green(){
 echo -e "\e[1;32m$1\033[0m"
 }
 
-source set_resource_plan.sh
+source ${scripts_dir}/set_resource_plan.sh
 mkdir -p ${oracle_tmp}
 
 check_user(){

@@ -13,7 +13,7 @@ echo_green(){
 echo -e "\e[1;32m$1\033[0m"
 }
 
-source set_resource_plan.sh
+source ${scripts_dir}/set_resource_plan.sh
 
 check_user(){
 username=`whoami`
@@ -439,8 +439,8 @@ then
     set_n2n_node2
     set_isscsi_node2
 fi
-cd /root/
-source get_resource_plan.sh
+
+source ${scripts_dir}/get_resource_plan.sh
 echo_red "搭建GRID前还需要手动执行以下操作："
 echo_green "1.重启服务器完成主机名的变更。"
 echo_green "2.切换到grid用户手动执行/tmp/ssh_grid_oracle.sh"
