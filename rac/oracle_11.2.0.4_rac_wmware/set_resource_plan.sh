@@ -4,6 +4,7 @@
 
 set_resource_plan(){
 ssh_port=22
+scripts_dir=/root # 脚本存放路径
 grid_tmp=/home/grid/grid_tmp/ # grid 安装时的临时文件
 oracle_tmp=/home/oracle/oracle_tmp/ # oracle 安装时的临时文件
 grid_passwd=Zyadmin123 # grid 应答文件中SYSASMPassword 和 monitorPassword 的密码

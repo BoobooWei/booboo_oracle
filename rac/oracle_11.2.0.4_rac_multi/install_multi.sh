@@ -67,13 +67,11 @@ echo_green "这里用224.0.0.251 作为组播组的地址，端口是42424，两
 #节点1：
 multis_admin -A -m 224.0.0.251 -j ${node2_private_ip_addr} #配置组播服务端 节点2的privip
 multic_admin -A -i ${node2_private_ip_addr} -p 42424 -m 224.0.0.251 #配置组播客户端 节点2的privip
-multis_admin -A -m 224.0.0.251 -j ${node2_public_ip_addr}
-multic_admin -A -i ${node2_public_ip_addr} -p 42424 -m 224.0.0.251
 #查看配置情况
 multis_admin -L -m 224.0.0.251
 service multis restart
 service multic restart
-ip route add 224.0.0.0/24 via 172.16.2.160 dev eth1
+#ip route add 224.0.0.0/24 via 172.16.2.160 dev eth1
 cat /usr/local/etc/multi_server_startup_config
 cat /usr/local/etc/multi_server_running_config
 cat /usr/local/etc/multi_client_startup_config
@@ -86,9 +84,6 @@ echo_green "这里用224.0.0.251 作为组播组的地址，端口是42424，两
 #节点2：
 multis_admin -A -m 224.0.0.251 -j ${node1_private_ip_addr} #配置组播服务端 节点1的privip
 multic_admin -A -i ${node1_private_ip_addr} -p 42424 -m 224.0.0.251 #配置组播客户端 节点1的privip
-
-multis_admin -A -m 224.0.0.251 -j ${node1_public_ip_addr}
-multic_admin -A -i ${node1_public_ip_addr} -p 42424 -m 224.0.0.251
 
 #查看配置情况
 
@@ -104,7 +99,7 @@ cat /usr/local/etc/multi_client_running_config
 }
 
 
-source set_resource_plan.sh
+source ${scripts_dir}/set_resource_plan.sh
 common_configure
 if [[ $1 == 1 ]]
 then
