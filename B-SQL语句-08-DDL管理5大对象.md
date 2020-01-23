@@ -359,6 +359,15 @@ select CONSTRAINT_NAME,CONSTRAINT_TYPE,SEARCH_CONDITION from user_constraints wh
 ```
 
 ### 外键的级联操作
+
+使用`on delete set null`有一点需要注意的是，被参参照其他表的那一列必须能够被赋空，不能有not null约束，对于上面的例子来说是emp中dept列一定不能有not null约束，如果已经定义了not null约束，又使用了on delete set null来删除被参照的数据时，将会发生：ORA-01407: 无法更新 (”DD”.”EMP”.”DEPT”) 为 NULL的错误。
+
+总的来讲`on delete cascade`和`on delete set null`的作用是用来处理级联删除问题的，如果你需要删除的数据被其他数据所参照，那么你应该决定到底希望oracle怎么处理那些参照这些即将要删除数据的数据的，你可以有三种方式：
+
+* 禁止删除。这也是oracle默认的
+* 将那些参照本值的数据的对应列赋空，这个需要使用on delete set null关键字
+* 将那些参照本值的数据一并删除，这个需要使用on delete cascade关键字
+
 ```SQL
 alter table t02 drop constraint FK_T02_ID;
 alter table t02 add constraint FK_T02_ID foreign key (id) references t01 on delete set null;
@@ -391,6 +400,41 @@ insert into t04 values (1);
 alter table t04 mdify constraint u enable novalidate;
 create index i_t04_x on t04 (x);
 ```
+[约束的禁用和启用文档](https://docs.oracle.com/en/database/oracle/oracle-database/19/sqlrf/CREATE-TABLE.html#GUID-F9CE0CC3-13AE-4744-A43C-EAC7A71AAAB6)
+
+课堂练习题
+
+
+
+```sqlplus
+create table emp01 (
+    emp_no number(2) constraint emp_emp_no_pk primary key,
+    ename varchar2(15), 
+    salary number(8,2), 
+    mgr_no number(2)
+);
+
+新建表emp01，其中emp_no上有一个主键 emp_emp_no_pk
+alter table emp01 add constraint emp_mgr_fk
+    foreign key (mgr_no)
+    references emp01(emp_no)
+    on delete set null;
+新建一个外键 emp_mgr_fk，`on delete set null` 代表 删除emp_no时，mgr_no不删除变为null；
+
+alter table emp01 disable constraint emp_emp_no_pk cascade;
+禁用主键时，主键和外键都被禁用
+为何此处要有参数 cascade ？
+
+如果FOREIGN KEYs引用a UNIQUE或PRIMARY KEY，则必须在CASCADE CONSTRAINTS语句中包括该子句DROP，否则无法删除该约束。
+
+alter table emp01 enable constraint emp_emp_no_pk;
+启用主键，此时只启用主键，外键还是禁用状态。
+select  OWNER,CONSTRAINT_NAME, TABLE_NAME,STATUS from user_constraints where table_name='EMP01';
+检查约束状态
+```
+
+
+
 ### 其它操作
 
 ```SQL
