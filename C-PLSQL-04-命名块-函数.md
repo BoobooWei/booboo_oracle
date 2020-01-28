@@ -1,27 +1,59 @@
-######
-#函数#
-######
-函数一定要有返回值！
+# PLSQL-命名块-函数
 
-create or replace function tax
-(p_sal number)
+> 2020.01.28 BoobooWei
+
+<!-- MDTOC maxdepth:6 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
+
+- [PLSQL-命名块-函数](#plsql-命名块-函数)   
+   - [创建自定义函数语法](#创建自定义函数语法)   
+   - [使用自定义函数](#使用自定义函数)   
+   - [实践](#实践)   
+      - [实践1-根据工资等级交税](#实践1-根据工资等级交税)   
+      - [实践2-获取指定部门的工资总和](#实践2-获取指定部门的工资总和)   
+      - [实践3-使用函数校验部门存在否](#实践3-使用函数校验部门存在否)   
+      - [实践4-部门存在才可以添加新雇员](#实践4-部门存在才可以添加新雇员)   
+      - [实践4-确定性函数（确定返回值函数）](#实践4-确定性函数（确定返回值函数）)   
+
+<!-- /MDTOC -->
+
+
+通过 PL / SQL 实现自定义函数，注意：函数一定要有返回值！
+
+## 创建自定义函数语法
+
+```plsql
+create or replace function tax(p_sal number)
 return number
 is
 begin
   return p_sal*0.05;
 end;
 /
+```
 
+## 使用自定义函数
+
+```PLSQL
 select ename,sal,tax(sal) from emp;
+```
 
+## 实践
+
+### 实践1-根据工资等级交税
+
+要求：
+* 按照以下等级交税
+
+```
 grade 1 --> 0
 grade 2 --> 0.05
 grade 3 --> 0.07
 grade 4 --> 0.1
 grade 5 --> 0.12
+```
 
-create or replace function tax
-(p_sal number)
+```PLSQL
+create or replace function tax(p_sal number)
 return number
 is
   v_grade number;
@@ -37,10 +69,13 @@ begin
   return v_tax;
 end;
 /
+```
 
-获取指定部门的工资总和
-create or replace function subtotal
-(p_deptno number)
+
+### 实践2-获取指定部门的工资总和
+
+```PLSQL
+create or replace function subtotal(p_deptno number)
 return number
 is
   v_total number;
@@ -49,10 +84,16 @@ begin
   return v_total;
 end;
 /
+```
 
-使用函数校验部门存在否 return boolean
-create or replace function valid_deptno
-(p_deptno number)
+### 实践3-使用函数校验部门存在否
+
+* 校验部门存在否
+* return boolean
+
+
+```PLSQL
+create or replace function valid_deptno(p_deptno number)
 return boolean
 is
   v number;
@@ -64,8 +105,11 @@ exception
     return false;
 end;
 /
+```
 
-将校验本门存在否的函数引入到add_emp代码中，值有函数为true才可以添加新雇员
+### 实践4-部门存在才可以添加新雇员
+
+```PLSQL
 create or replace procedure add_emp
 (p_ename emp.ename%type,
 p_job emp.job%type default 'CLERK',
@@ -73,7 +117,8 @@ p_mgr emp.mgr%type default 7698,
 p_hiredate date default sysdate,
 p_sal emp.sal%type default 1000,
 p_comm emp.comm%type default null,
-p_deptno emp.deptno%type default 30)
+p_deptno emp.deptno%type default 30
+)
 is
 begin
   if valid_deptno(p_deptno) then
@@ -107,8 +152,14 @@ end;
 var g_ename varchar2(10)
 var g_sal number
 exec :g_sal:=get_ename(7369,:g_ename);
+```
 
-确定性函数（确定返回值函数）：
+
+
+
+### 实践4-确定性函数（确定返回值函数）
+
+```PLSQL
 create or replace function test_wait
 (p_char varchar2)
 return varchar2
@@ -130,3 +181,4 @@ begin
   return p_char;
 end;
 /
+```
