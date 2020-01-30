@@ -834,6 +834,10 @@ TO_CHAR(date, 'format_model')
 |DY| 一周中某日的三个字母缩写|
 |DAY| 一周中某日的完整名称|
 |DD| 用数字表示的月份中某日|
+|W| 星期几 |
+|HH| 小时 |
+|MI| 分钟 |
+|SS| 秒 |
 
 
 ```shell
@@ -842,6 +846,8 @@ SQL> select to_char(sysdate,'YYYY-MM-DD') from dual;
 TO_CHAR(SY
 ----------
 2017-07-03
+
+select to_char(sysdate,'YYYYMMDD W HH24:MI:SS') from dual; 
 
 SQL> select to_char(sysdate,'year-month-day') from dual;
 
